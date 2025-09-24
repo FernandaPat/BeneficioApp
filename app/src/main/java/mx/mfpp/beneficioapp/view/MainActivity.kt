@@ -1,4 +1,4 @@
-package mx.mfpp.beneficioapp
+package mx.mfpp.beneficioapp.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
