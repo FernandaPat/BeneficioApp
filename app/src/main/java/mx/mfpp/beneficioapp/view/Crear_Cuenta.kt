@@ -1,14 +1,18 @@
 package mx.mfpp.beneficioapp.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -24,7 +29,10 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun Crear_Cuenta(modifier: Modifier = Modifier) {
-    Column  () {
+    Column  (modifier = modifier
+        .fillMaxSize()
+        .background(Color(0xFF230448))
+        .padding(16.dp)) {
         Titulo()
         Etiqueta("Nombre(s)")
         CapturaTexto("Escribe aquí")
@@ -58,7 +66,7 @@ fun Titulo(modifier: Modifier = Modifier) {
 @Composable
 fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
     Text(texto,
-        style = MaterialTheme.typography.labelLarge,
+        style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
         modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp))
 }
 
@@ -74,8 +82,11 @@ fun CapturaTexto(
         placeholder = { Text(placeholder) },
         modifier = modifier
             .padding(start = 16.dp, end = 16.dp, bottom = 5.dp, top = 1.dp)
-            .fillMaxWidth()
-    )
+            .fillMaxWidth(),
+        textStyle = LocalTextStyle.current.copy(color = Color.White),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedPlaceholderColor = Color.White,
+        unfocusedPlaceholderColor = Color.White))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,7 +109,7 @@ fun Seleccionar_Genero(
             value = selected ?: "",
             onValueChange = {},
             readOnly = true,
-            label = { Text("Género") },
+            placeholder = {Text("Seleccione una opcion",color = Color.White)},
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .menuAnchor()
