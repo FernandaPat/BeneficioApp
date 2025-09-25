@@ -1,7 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
 import mx.mfpp.beneficioapp.R
-import androidx.compose.ui.res.painterResource
 
 sealed class Pantalla(
     val ruta: String,
@@ -20,8 +19,11 @@ sealed class Pantalla(
         const val RUTA_INICIO_APP = "InicioPage"
         const val RUTA_MAPA_APP = "MapaPage"
         const val RUTA_TARJETA_APP = "TarjetaPage"
-        const val RUTA_BUSCAR_APP = "Buscar"
-        const val RUTA_ACTIVIDAD_APP = "Actividad"
+        const val RUTA_BUSCAR_APP = "BuscarPage"
+        const val RUTA_ACTIVIDAD_APP = "ActividadPage"
+        const val RUTA_SOLICITUD_APP = "SolicitudPage"
+        const val RUTA_ESTATUS_SOLICITUD_APP = "EstatusSolicitudPage"
+        const val RUTA_NOTIFICACIONES_APP = "NotificacionesPage"
     }
 
     object BeneficioJovenINICIO:
@@ -34,4 +36,5 @@ sealed class Pantalla(
         Pantalla(RUTA_BUSCAR_APP, "Buscar", R.drawable.search)
     object BeneficioJovenACTIVIDAD:
         Pantalla(RUTA_ACTIVIDAD_APP, "Actividad", R.drawable.activity)
+
 }

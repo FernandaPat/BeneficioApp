@@ -56,8 +56,28 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppPrincipal(beneficioJovenVM: BeneficioJovenVM, modifier: Modifier = Modifier) {
     val navController = rememberNavController()
+
+    // CAMBIAR ESTO AL MODEL
+
+    val hiddenBottomBarRoutes = listOf(
+        Pantalla.RUTA_SOLICITUD_APP,
+        Pantalla.RUTA_ESTATUS_SOLICITUD_APP
+    )
+
+    val currentRoute = navController
+        .currentBackStackEntryAsState()
+        .value
+        ?.destination
+        ?.route
+
+    val showBottomBar = currentRoute !in hiddenBottomBarRoutes
+
     Scaffold(
-        bottomBar = { AppBottomBar(navController)},
+        bottomBar = {
+            if (showBottomBar) {
+                AppBottomBar(navController)
+            }
+        },
     ) { innerPadding ->
         AppNavHost(beneficioJovenVM,
             navController = navController,
@@ -72,7 +92,7 @@ fun AppNavHost(beneficioJovenVM: BeneficioJovenVM, navController: NavHostControl
         startDestination = Pantalla.RUTA_INICIO_APP,
         modifier = modifier.fillMaxSize()
     ) {
-        // Grafo de navegación
+        // Grafo de navegación Nav bar
         composable(Pantalla.RUTA_INICIO_APP) {
             InicioPage(navController)
         }
@@ -87,6 +107,17 @@ fun AppNavHost(beneficioJovenVM: BeneficioJovenVM, navController: NavHostControl
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             //Agregar
+        }
+
+        // Paginas fuera de la barra de navegacion
+        composable(Pantalla.RUTA_SOLICITUD_APP) {
+            SolicitudPage(navController)
+        }
+        composable(Pantalla.RUTA_ESTATUS_SOLICITUD_APP) {
+            EstatusSolicitudPage(navController)
+        }
+        composable(Pantalla.RUTA_NOTIFICACIONES_APP) {
+            NotificacionPage(navController)
         }
     }
 }

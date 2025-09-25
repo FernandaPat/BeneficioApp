@@ -10,23 +10,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
+fun NotificacionPage(navController: NavController) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier.
@@ -35,32 +30,23 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            TextoTitulo("Tu tarjeta digital")
+            TextoTitulo("Notificaciones")
             Spacer(modifier = Modifier.height(55.dp))
-            CardImage()
-            Spacer(modifier = Modifier.height(55.dp))
-            TextoMedioGrande("1234 5678 9012 0001")
-            Spacer(modifier = Modifier.height(70.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+            TextoMedioBold("HOLA AMIGOS")
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BotonRosa(navController, "Solicitar tarjeta física", Pantalla.RUTA_SOLICITUD_APP)
-                BotonBlanco(navController, "Ver estatus de la solicitud", Pantalla.RUTA_ESTATUS_SOLICITUD_APP)
             }
         }
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
-fun PreviewTarjeta() {
+fun PreviewNotificacionPage() {
     val navController = rememberNavController()
-    TarjetaPage((navController))
+    NotificacionPage(navController)
 }

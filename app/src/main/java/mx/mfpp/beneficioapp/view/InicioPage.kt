@@ -92,7 +92,7 @@ val cercaDeTi = listOf(
 @Composable
 fun InicioPage(navController: NavController, modifier: Modifier = Modifier) {
     Scaffold(
-        topBar = { HomeTopBar() }
+        topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
         Column(
             modifier = Modifier.
@@ -303,7 +303,7 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(modifier: Modifier = Modifier) {
+fun HomeTopBar(navController: NavController,modifier: Modifier = Modifier) {
     val barHeight = 120.dp
 
     Box(
@@ -345,7 +345,7 @@ fun HomeTopBar(modifier: Modifier = Modifier) {
 
             IconButton(
                 onClick = {
-                    // Acción al hacer clic en notificaciones
+                    navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
                 },
                 modifier = Modifier.size(40.dp)
             ) {
