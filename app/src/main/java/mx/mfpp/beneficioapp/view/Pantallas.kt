@@ -19,7 +19,7 @@ sealed class Pantalla(
 
         const val RUTA_INICIO_APP = "InicioPage"
         const val RUTA_MAPA_APP = "MapaPage"
-        const val RUTA_TARJETA_APP = "Tarjeta"
+        const val RUTA_TARJETA_APP = "TarjetaPage"
         const val RUTA_BUSCAR_APP = "Buscar"
         const val RUTA_ACTIVIDAD_APP = "Actividad"
     }

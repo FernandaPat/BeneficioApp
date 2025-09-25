@@ -363,7 +363,7 @@ fun HomeTopBar(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewAcercaDe() {
+fun HomePage() {
     val navController = rememberNavController()
     InicioPage(navController)
 }
