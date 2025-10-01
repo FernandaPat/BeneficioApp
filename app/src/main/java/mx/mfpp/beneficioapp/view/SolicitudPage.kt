@@ -26,7 +26,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
+fun SolicitudPage(navController: NavController) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier.
@@ -35,32 +35,25 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            TextoTitulo("Tu tarjeta digital")
+            TextoTitulo("Solicitar Tarjeta Física")
             Spacer(modifier = Modifier.height(55.dp))
-            CardImage()
-            Spacer(modifier = Modifier.height(55.dp))
-            TextoMedioGrande("1234 5678 9012 0001")
-            Spacer(modifier = Modifier.height(70.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
+            
+            TextoMedioBold("Selecciona una de las siguientes fechas para acudir a recibir tu tarjeta física:")
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BotonRosa(navController, "Solicitar tarjeta física", Pantalla.RUTA_SOLICITUD_APP)
-                BotonBlanco(navController, "Ver estatus de la solicitud", Pantalla.RUTA_ESTATUS_SOLICITUD_APP)
+                BotonRosa(navController, "Realizar Solicitud", Pantalla.RUTA_MAPA_APP)
             }
         }
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
-fun PreviewTarjeta() {
+fun SolicitudPagePrev() {
     val navController = rememberNavController()
-    TarjetaPage((navController))
+   SolicitudPage(navController)
 }

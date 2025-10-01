@@ -1,6 +1,8 @@
 package mx.mfpp.beneficioapp.view
 
+import mx.mfpp.beneficioapp.R
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,19 +20,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -91,10 +93,11 @@ val cercaDeTi = listOf(
 @Composable
 fun InicioPage(navController: NavController, modifier: Modifier = Modifier) {
     Scaffold(
-        topBar = { HomeTopBar() }
+        topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier
+            modifier = Modifier.
+                background(Color(0xFF230448))
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
@@ -135,7 +138,8 @@ fun SeccionHorizontal(
             text = titulo,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                color = Color.White
             ),
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -158,7 +162,7 @@ fun CardItemHorizontal(promocion: Promocion){
             .size(width = 176.dp, height = 108.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF170033))
     ) {
         Box(
             modifier = Modifier
@@ -174,9 +178,9 @@ fun CardItemHorizontal(promocion: Promocion){
                     text = promocion.nombre,
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
                     ),
-                    color = Color.Black,
+                    color = Color.White,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
@@ -208,7 +212,8 @@ fun Categorias() {
             text = "Categorías",
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
+                fontSize = 24.sp,
+                color = Color.White
             ),
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -235,12 +240,12 @@ fun Categorias() {
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         ),
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .width(80.dp),
-                        color = Color.Black
+                        color = Color.White
                     )
                 }
             }
@@ -269,7 +274,7 @@ fun Categorias() {
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .width(80.dp),
-                        color = Color.Black
+                        color = Color.White
                     )
                 }
             }
@@ -285,7 +290,7 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
             .size(70.dp),
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF170033))
     ) {
         Box(
             modifier = Modifier
@@ -297,16 +302,22 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(modifier: Modifier = Modifier) {
+fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     val barHeight = 120.dp
+    val interactionSourceCampana = remember { MutableInteractionSource() }
+    val (modifierCampana, colorCampana) = crearAnimacionIconosBotones(
+        interactionSource = interactionSourceCampana,
+        colorNormal = Color.White,
+        colorActivado = Color(0xFFFF2291),
+        escalaActivado = 1.3f
+    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(barHeight)
-            .background(Color(211,211,211))
+            .background(Color(0xFF230448))
             .padding(bottom = 16.dp)
     ) {
         Row(
@@ -325,27 +336,33 @@ fun HomeTopBar(modifier: Modifier = Modifier) {
                     contentDescription = "Foto de perfil",
                     modifier = Modifier
                         .size(93.dp)
-                        .padding(end = 12.dp)
+                        .padding(end = 12.dp),
+                    tint = Color.White
                 )
                 Text(
                     text = "Nombre",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp
+                        fontSize = 25.sp,
+                        color = Color.White
                     )
                 )
             }
 
             IconButton(
                 onClick = {
-                    // Acción al hacer clic en notificaciones
+                    navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
                 },
-                modifier = Modifier.size(40.dp)
+                interactionSource = interactionSourceCampana,
+                modifier = Modifier
+                    .size(40.dp)
+                    .then(modifierCampana)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Notifications,
+                    painter = painterResource(id = R.drawable.bell),
                     contentDescription = "Notificaciones",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    tint = colorCampana
                 )
             }
         }
@@ -354,7 +371,7 @@ fun HomeTopBar(modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewAcercaDe() {
+fun HomePage() {
     val navController = rememberNavController()
     InicioPage(navController)
 }
