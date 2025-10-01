@@ -1,10 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,14 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,64 +42,6 @@ import java.util.Calendar
 
 @Composable
 fun Crear_Cuenta(modifier: Modifier = Modifier) {
-    Column  (modifier = modifier
-        .fillMaxSize()
-        .background(Color(0xFF230448))
-        .padding(16.dp)) {
-        Titulo()
-        Etiqueta("Nombre(s)")
-        CapturaTexto("Escribe aquí")
-        Etiqueta("Apellido Materno")
-        CapturaTexto("Escribe aquí")
-        Etiqueta("Apellido Paterno")
-        CapturaTexto("Escribe aquí")
-        Etiqueta("Fecha de Nacimiento")
-        CapturaTexto("Escribe aquí")
-        Etiqueta("Dirección")
-        CapturaTexto("Escribe aquí")
-        Etiqueta("Género")
-        Seleccionar_Genero(listOf("Femenino", "Masculino", "Otro"))
-
-
-    }
-}
-
-@Composable
-fun Titulo(modifier: Modifier = Modifier) {
-    Text("Crear Cuenta",
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.titleLarge,
-        
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-    )
-
-}
-@Composable
-fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
-    Text(texto,
-        style = MaterialTheme.typography.labelLarge.copy(color = Color.White),
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp))
-}
-
-@Composable
-fun CapturaTexto(
-    placeholder: String,
-    modifier: Modifier = Modifier
-) {
-    var texto by remember { mutableStateOf("") }
-    OutlinedTextField(
-        value = texto,
-        onValueChange = { texto = it },
-        placeholder = { Text(placeholder) },
-        modifier = modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 5.dp, top = 1.dp)
-            .fillMaxWidth(),
-        textStyle = LocalTextStyle.current.copy(color = Color.White),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedPlaceholderColor = Color.White,
-        unfocusedPlaceholderColor = Color.White))
     val scrollState = rememberScrollState()
     var dia by rememberSaveable { mutableStateOf<Int?>(null) }
     Column  (modifier = modifier
@@ -183,11 +113,6 @@ fun Fecha_nacimiento(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Seleccionar_Genero(
-    options: List<String> = listOf("Femenino", "Masculino", "Otro"),
-    modifier: Modifier = Modifier
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
 private fun FechaNacimientoDropdowns(
     modifier: Modifier = Modifier,
     yearRange: IntRange,
@@ -392,20 +317,6 @@ fun SeleccionarGenero(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
         modifier = modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 5.dp)
-            .fillMaxWidth()
-    ) {
-        OutlinedTextField(
-            value = selected ?: "",
-            onValueChange = {},
-            readOnly = true,
-            placeholder = {Text("Seleccione una opcion",color = Color.White)},
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier
-                .menuAnchor()
-                .padding(horizontal = 10.dp)
-                .fillMaxWidth()
-        )
     ) {
         OutlinedTextField(
             value = selected.orEmpty(),
@@ -430,6 +341,7 @@ fun SeleccionarGenero(
                     text = { Text(option) },
                     onClick = {
                         selected = option
+                        onSelected(option)
                         expanded = false
                     }
                 )
