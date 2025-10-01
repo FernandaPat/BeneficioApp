@@ -5,11 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,18 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import java.util.Calendar
 
 
 @Composable
@@ -104,22 +87,6 @@ fun CapturaTexto(
         colors = OutlinedTextFieldDefaults.colors(
             focusedPlaceholderColor = Color.White,
         unfocusedPlaceholderColor = Color.White))
-    val scrollState = rememberScrollState()
-    var dia by rememberSaveable { mutableStateOf<Int?>(null) }
-    Column  (modifier = modifier
-        .fillMaxSize()
-        .verticalScroll(scrollState)
-        .imePadding()
-        .background(Color(0xFF230448))
-        Titulo("Crear Cuenta")
-        Etiqueta("Nombre(s)")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta("Apellido Materno")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta("Apellido Paterno")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta(texto = "Fecha de Nacimiento")
-        Fecha_nacimiento(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -127,30 +94,6 @@ fun CapturaTexto(
 fun Seleccionar_Genero(
     options: List<String> = listOf("Femenino", "Masculino", "Otro"),
     modifier: Modifier = Modifier
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-private fun FechaNacimientoDropdowns(
-    modifier: Modifier = Modifier,
-    onDateSelected: (d: Int?, m: Int?, y: Int?) -> Unit
-) {
-    var dia  by rememberSaveable { mutableStateOf<Int?>(null) }
-    var mes  by rememberSaveable { mutableStateOf<Int?>(null) }
-
-    fun daysInMonth(m: Int?, y: Int?): Int = when (m) {
-        1,3,5,7,8,10,12 -> 31
-        4,6,9,11 -> 30
-        2 -> if (y != null && ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))) 29 else 28
-        else -> 31
-    }
-    val maxDia = daysInMonth(mes, anio)
-
-    Row(
-        modifier = modifier
-            .padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        NumberDropdownField(
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
@@ -173,21 +116,6 @@ private fun FechaNacimientoDropdowns(
                 .padding(horizontal = 10.dp)
                 .fillMaxWidth()
         )
-    ) {
-        OutlinedTextField(
-            value = selected.orEmpty(),
-            onValueChange = {},
-            readOnly = true,
-            placeholder = { BeneficioPlaceholder("Seleccione una opción") },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-            modifier = Modifier
-                .beneficioInput()
-                .height(51.dp)
-                .menuAnchor(),
-            textStyle = beneficioTextStyle(),
-            colors   = beneficioTextFieldColors()
-        )
-
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
@@ -197,7 +125,6 @@ private fun FechaNacimientoDropdowns(
                     text = { Text(option) },
                     onClick = {
                         selected = option
-                        onSelected(option)
                         expanded = false
                     }
                 )
