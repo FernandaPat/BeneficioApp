@@ -2,6 +2,7 @@ package mx.mfpp.beneficioapp.view
 
 import mx.mfpp.beneficioapp.R
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,13 +22,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -301,16 +302,22 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopBar(navController: NavController,modifier: Modifier = Modifier) {
+fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     val barHeight = 120.dp
+    val interactionSourceCampana = remember { MutableInteractionSource() }
+    val (modifierCampana, colorCampana) = crearAnimacionIconosBotones(
+        interactionSource = interactionSourceCampana,
+        colorNormal = Color.White,
+        colorActivado = Color(0xFFFF2291),
+        escalaActivado = 1.3f
+    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(barHeight)
-            .background(Color(0xF230448))
+            .background(Color(0xFF230448))
             .padding(bottom = 16.dp)
     ) {
         Row(
@@ -338,7 +345,6 @@ fun HomeTopBar(navController: NavController,modifier: Modifier = Modifier) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 25.sp,
                         color = Color.White
-
                     )
                 )
             }
@@ -347,15 +353,17 @@ fun HomeTopBar(navController: NavController,modifier: Modifier = Modifier) {
                 onClick = {
                     navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
                 },
-                modifier = Modifier.size(40.dp)
+                interactionSource = interactionSourceCampana,
+                modifier = Modifier
+                    .size(40.dp)
+                    .then(modifierCampana)
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.bell),
                     contentDescription = "Notificaciones",
                     modifier = Modifier.size(40.dp),
-                    tint = Color.White
+                    tint = colorCampana
                 )
-
             }
         }
     }

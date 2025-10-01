@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,9 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,6 +33,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import java.time.format.TextStyle
 
 class MainActivity : ComponentActivity() {
 
@@ -128,7 +126,7 @@ fun AppBottomBar(navController: NavHostController) {
         modifier = Modifier
             .fillMaxWidth()
             .height(87.dp),
-        containerColor = Color(0xFF230448) // morado
+        containerColor = Color(0xFF230448)
     ) {
         val pilaNavegacion by navController.currentBackStackEntryAsState()
         val pantallaActual = pilaNavegacion?.destination
@@ -136,10 +134,14 @@ fun AppBottomBar(navController: NavHostController) {
         Pantalla.listaPantallas.forEach { pantalla ->
             val isSelected = pantallaActual?.route == pantalla.ruta
 
-            // Animación de escala para el icono
-            val scale by animateFloatAsState(targetValue = if (isSelected) 1.3f else 1f)
+            // Usamos la función específica para navegación
+            val (modifierAnimado, colorAnimado) = crearAnimacionNavegacion(
+                estaSeleccionado = isSelected,
+                colorNormal = Color.White,
+                colorActivado = Color(0xFFFF2291),
+                escalaActivado = 1.3f
+            )
 
-            // Gradiente para el label
             val gradientBrush = Brush.linearGradient(
                 colors = listOf(Color(0xFFFF2291), Color(0xFFFF7867))
             )
@@ -162,8 +164,8 @@ fun AppBottomBar(navController: NavHostController) {
                         contentDescription = pantalla.etiqueta,
                         modifier = Modifier
                             .size(30.dp)
-                            .graphicsLayer { scaleX = scale; scaleY = scale },
-                        tint = if (isSelected) Color(0xFFFF2291) else Color.White
+                            .then(modifierAnimado),
+                        tint = colorAnimado
                     )
                 },
                 label = {
@@ -172,17 +174,17 @@ fun AppBottomBar(navController: NavHostController) {
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         style = if (isSelected) {
-                            TextStyle(brush = gradientBrush)
+                            androidx.compose.ui.text.TextStyle(brush = gradientBrush)
                         } else {
-                            TextStyle(color = Color.White)
+                            androidx.compose.ui.text.TextStyle(color = Color.White)
                         }
                     )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White, // se ignora
+                    selectedIconColor = Color.White,
                     unselectedIconColor = Color.White,
-                    selectedTextColor = Color.White, // se ignora
+                    selectedTextColor = Color.White,
                     unselectedTextColor = Color.White,
                     indicatorColor = Color.Transparent
                 )
@@ -190,7 +192,6 @@ fun AppBottomBar(navController: NavHostController) {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable
