@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -186,21 +188,6 @@ fun CardImage() {
 }
 
 @Composable
-fun TextoMedioGrande (texto: String) {
-    Text(
-        text = texto,
-        modifier = Modifier
-            .fillMaxWidth(),
-        style = MaterialTheme.typography.headlineLarge.copy(
-            fontWeight = FontWeight.Bold,
-            fontSize = 26.sp,
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-    )
-}
-
-@Composable
 fun TextoMedioBold(texto: String) {
     Text(
         text = texto,
@@ -218,8 +205,13 @@ fun TextoMedioBold(texto: String) {
 }
 
 @Composable
-fun ArrowTopBar(navController: NavController, text: String, modifier: Modifier = Modifier) {
-    val barHeight = 120.dp
+fun ArrowTopBar(
+    navController: NavController,
+    text: String,
+    modifier: Modifier = Modifier,
+    barHeight: Dp = 72.dp,   // ajusta altura visual
+    topOffset: Dp = 6.dp      // baja un poco el título
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val (modifierAnimado, colorAnimado) = crearAnimacionIconosBotones(
         interactionSource = interactionSource,
@@ -228,34 +220,59 @@ fun ArrowTopBar(navController: NavController, text: String, modifier: Modifier =
         escalaActivado = 1.3f
     )
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(barHeight)
             .background(Color(0xFF230448))
-            .padding(bottom = 16.dp)
+            .statusBarsPadding()        // evita superponerse con la barra de estado/notch
+            .height(barHeight)
+            .padding(bottom = 16.dp)    // tu padding inferior original
     ) {
-
+        // Flecha atrás
         IconButton(
             onClick = { navController.popBackStack() },
             interactionSource = interactionSource,
             modifier = Modifier
-                .align(Alignment.Start)
-                .padding(start = 16.dp, top = 16.dp)
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.arrow_back),
                 contentDescription = "Regresar",
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(30.dp)
                     .then(modifierAnimado),
                 tint = colorAnimado
             )
         }
-        TextoMedioGrande(text)
+
+        // Título centrado absoluto y un pelín más abajo
+        TextoMedioGrande(
+            texto = text,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = topOffset)
+        )
     }
 }
 
+@Composable
+fun TextoMedioGrande(
+    texto: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = texto,
+        modifier = modifier
+            .fillMaxWidth(),
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.headlineLarge.copy(
+            fontWeight = FontWeight.Bold,
+            fontSize = 26.sp
+        ),
+        color = Color.White
+    )
+}
 
 // Aminacion botones
 @Composable

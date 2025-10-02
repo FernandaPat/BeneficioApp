@@ -195,7 +195,7 @@ fun AppBottomBar(navController: NavHostController) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun MainActivityPreview() {
     BeneficioAppTheme {
         AppPrincipal(BeneficioJovenVM())
     }

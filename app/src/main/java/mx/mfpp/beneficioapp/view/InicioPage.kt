@@ -371,7 +371,9 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun HomePage() {
-    val navController = rememberNavController()
-    InicioPage(navController)
+fun InicioPagePreview() {
+    MaterialTheme {
+        val navController = rememberNavController()
+        InicioPage(navController)
+    }
 }

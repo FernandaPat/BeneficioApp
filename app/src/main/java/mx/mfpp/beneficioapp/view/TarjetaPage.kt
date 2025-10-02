@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,7 +40,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(55.dp))
             CardImage()
             Spacer(modifier = Modifier.height(55.dp))
-            TextoMedioGrande("1234 5678 9012 0001")
+            TextoMedioGrande("1234 5678 9012 0001", modifier)
             Spacer(modifier = Modifier.height(70.dp))
 
             Column(
@@ -60,7 +61,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewTarjeta() {
+fun TarjetaPagePreview() {
     val navController = rememberNavController()
     TarjetaPage((navController))
 }

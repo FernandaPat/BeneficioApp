@@ -24,6 +24,7 @@ sealed class Pantalla(
         const val RUTA_SOLICITUD_APP = "SolicitudPage"
         const val RUTA_ESTATUS_SOLICITUD_APP = "EstatusSolicitudPage"
         const val RUTA_NOTIFICACIONES_APP = "NotificacionesPage"
+        const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
     }
 
     object BeneficioJovenINICIO:

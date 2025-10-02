@@ -22,12 +22,14 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -37,40 +39,58 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import java.util.Calendar
 
 
 @Composable
-fun Crear_Cuenta(modifier: Modifier = Modifier) {
+fun Crear_Cuenta(navController: NavController,modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     var dia by rememberSaveable { mutableStateOf<Int?>(null) }
-    Column  (modifier = modifier
-        .fillMaxSize()
-        .verticalScroll(scrollState)
-        .imePadding()
-        .background(Color(0xFF230448))
-        .padding(top = 30.dp)) {
-        Titulo("Crear Cuenta")
-        Etiqueta("Nombre(s)")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta("Apellido Materno")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta("Apellido Paterno")
-        CapturaTexto("Escribe aquí",30)
-        Etiqueta(texto = "Fecha de Nacimiento")
-        Fecha_nacimiento(
-            onFechaChange = { d, m, a ->}
-        )
-        Etiqueta("Dirección")
-        CapturaTexto("Escribe aquí",100)
-        Etiqueta("Género")
-        SeleccionarGenero(listOf("Femenino", "Masculino", "Otro"))
-        Etiqueta("Correo")
-        CapturaTexto("correo@ejemplo.com",50)
-        Etiqueta("Celular")
-        CapturaNumeroTelefono("10 dígitos")
-        Etiqueta("Contraseña")
-        CapturaTexto("8 caracteres",8)
+    Scaffold (
+        topBar = { ArrowTopBar(navController, "Crear Cuenta") },
+    ) { paddingValues ->
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .imePadding()
+                .padding(paddingValues)
+                .background(Color(0xFF230448))
+                .padding(top = 30.dp)
+        ) {
+            Etiqueta("Nombre(s)")
+            CapturaTexto("Escribe aquí", 30)
+            Etiqueta("Apellido Materno")
+            CapturaTexto("Escribe aquí", 30)
+            Etiqueta("Apellido Paterno")
+            CapturaTexto("Escribe aquí", 30)
+            Etiqueta(texto = "Fecha de Nacimiento")
+            Fecha_nacimiento(
+                onFechaChange = { d, m, a -> }
+            )
+            Etiqueta("Dirección")
+            CapturaTexto("Escribe aquí", 100)
+            Etiqueta("Género")
+            SeleccionarGenero(listOf("Femenino", "Masculino", "Otro"))
+            Etiqueta("Correo")
+            CapturaTexto("correo@ejemplo.com", 50)
+            Etiqueta("Celular")
+            CapturaNumeroTelefono("10 dígitos")
+            Etiqueta("Contraseña")
+            CapturaTexto("8 caracteres", 8)
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 80.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                BotonRosa(navController, "Crear Cuenta", Pantalla.RUTA_INICIAR_SESION)
+            }
+        }
     }
 }
 fun Modifier.beneficioInput(): Modifier = this
@@ -141,7 +161,9 @@ private fun FechaNacimientoDropdowns(
             range = 1..maxDia,
             selected = dia,
             onSelected = { dia = it; onDateSelected(dia, mes, anio) },
-            modifier = Modifier.weight(1f).padding(top = 20.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 20.dp)
         )
         NumberDropdownField(
             placeholder = "Mes",
@@ -153,7 +175,9 @@ private fun FechaNacimientoDropdowns(
                 if ((dia ?: 0) > nuevoMax) dia = nuevoMax
                 onDateSelected(dia, mes, anio)
             },
-            modifier = Modifier.weight(1f).padding(top = 20.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 20.dp)
         )
         NumberDropdownField(
             placeholder = "Año",
@@ -165,7 +189,9 @@ private fun FechaNacimientoDropdowns(
                 if ((dia ?: 0) > nuevoMax) dia = nuevoMax
                 onDateSelected(dia, mes, anio)
             },
-            modifier = Modifier.weight(1f).padding(top = 20.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 20.dp)
 
         )
     }
@@ -356,6 +382,7 @@ fun SeleccionarGenero(
 @Composable
 fun CrearCuentaPreview() {
     MaterialTheme {
-        Crear_Cuenta()
+        val navController = rememberNavController()
+        Crear_Cuenta(navController)
     }
 }
