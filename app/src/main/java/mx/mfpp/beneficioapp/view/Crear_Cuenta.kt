@@ -1,6 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,41 +13,50 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import java.util.Calendar
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.OutlinedTextFieldDefaults
 
 
 @Composable
-fun Crear_Cuenta(navController: NavController,modifier: Modifier = Modifier) {
+fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     var dia by rememberSaveable { mutableStateOf<Int?>(null) }
-    Scaffold (
+
+    var password by rememberSaveable { mutableStateOf("") }
+    Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
     ) { paddingValues ->
         Column(
@@ -57,7 +65,6 @@ fun Crear_Cuenta(navController: NavController,modifier: Modifier = Modifier) {
                 .verticalScroll(scrollState)
                 .imePadding()
                 .padding(paddingValues)
-                .background(Color(0xFF230448))
                 .padding(top = 30.dp)
         ) {
             Etiqueta("Nombre(s)")
@@ -76,10 +83,15 @@ fun Crear_Cuenta(navController: NavController,modifier: Modifier = Modifier) {
             SeleccionarGenero(listOf("Femenino", "Masculino", "Otro"))
             Etiqueta("Correo")
             CapturaTexto("correo@ejemplo.com", 50)
-            Etiqueta("Celular")
+            Etiqueta("Número de teléfono")
             CapturaNumeroTelefono("10 dígitos")
             Etiqueta("Contraseña")
-            CapturaTexto("8 caracteres", 8)
+            BeneficioPasswordField(
+                value = password,
+                onValueChange = { input -> password = input.take(16)},
+                placeholder = "Mín. 8 caracteres"
+            )
+            PasswordChecklist(password)
 
             Column(
                 modifier = Modifier
@@ -93,43 +105,28 @@ fun Crear_Cuenta(navController: NavController,modifier: Modifier = Modifier) {
         }
     }
 }
-fun Modifier.beneficioInput(): Modifier = this
-    .padding(start = 20.dp, top = 20.dp)
-    .width(380.dp)
-    .height(51.dp)
-    .clip(RoundedCornerShape(10.dp))
-@Composable
-private fun beneficioTextFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedContainerColor   = Color(0xFF170033),
-    unfocusedContainerColor = Color(0xFF170033),
-    focusedBorderColor = Color.Transparent,
-    unfocusedBorderColor = Color.Transparent,
-    focusedPlaceholderColor = Color(0xFFE6E1E5),
-    unfocusedPlaceholderColor = Color(0xFFE6E1E5),
-    cursorColor = Color.White
-)
 
-@Composable
-private fun beneficioTextStyle() = LocalTextStyle.current.copy(
-    fontSize = 16.sp,
-    lineHeight = 20.sp,
-    color = Color(0xFFF2ECF4)
-)
+fun Modifier.beneficioInput(): Modifier = this
+    .padding(start = 20.dp, end = 20.dp, bottom = 8.dp, top = 13.dp)
+    .width(380.dp)
+    .height(53.dp)
+
+
 @Composable
 fun Fecha_nacimiento(
     modifier: Modifier = Modifier,
     yearRange: IntRange = (1900..Calendar.getInstance().get(Calendar.YEAR)),
-    onFechaChange: (Int?, Int?, Int?) -> Unit = { _,_,_ -> }
+    onFechaChange: (Int?, Int?, Int?) -> Unit = { _, _, _ -> }
 ) {
-    // Si ya pones la etiqueta fuera, puedes quitar esta línea:
-    // Etiqueta(texto = "Fecha de Nacimiento")
-
     FechaNacimientoDropdowns(
         modifier = modifier,
         yearRange = yearRange,
         onDateSelected = onFechaChange
     )
+    modifier.beneficioInput()
+
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,17 +135,19 @@ private fun FechaNacimientoDropdowns(
     yearRange: IntRange,
     onDateSelected: (d: Int?, m: Int?, y: Int?) -> Unit
 ) {
-    var dia  by rememberSaveable { mutableStateOf<Int?>(null) }
-    var mes  by rememberSaveable { mutableStateOf<Int?>(null) }
+    var dia by rememberSaveable { mutableStateOf<Int?>(null) }
+    var mes by rememberSaveable { mutableStateOf<Int?>(null) }
     var anio by rememberSaveable { mutableStateOf<Int?>(null) }
 
     fun daysInMonth(m: Int?, y: Int?): Int = when (m) {
-        1,3,5,7,8,10,12 -> 31
-        4,6,9,11 -> 30
+        1, 3, 5, 7, 8, 10, 12 -> 31
+        4, 6, 9, 11 -> 30
         2 -> if (y != null && ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))) 29 else 28
         else -> 31
     }
+
     val maxDia = daysInMonth(mes, anio)
+
 
     Row(
         modifier = modifier
@@ -192,7 +191,6 @@ private fun FechaNacimientoDropdowns(
             modifier = Modifier
                 .weight(1f)
                 .padding(top = 20.dp)
-
         )
     }
 }
@@ -211,7 +209,7 @@ private fun NumberDropdownField(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier   // <- este recibe el weight(1f) del Row
+        modifier = modifier
     ) {
         OutlinedTextField(
             value = selected?.toString() ?: "",
@@ -221,18 +219,14 @@ private fun NumberDropdownField(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()           // <- CLAVE para que se vea
-                .height(51.dp)
-                .clip(RoundedCornerShape(10.dp)),
-            textStyle = beneficioTextStyle(),
-            colors   = beneficioTextFieldColors()
+                .fillMaxWidth()
+                .height(53.dp)
+                .clip(RoundedCornerShape(3.dp)),
         )
-
         ExposedDropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
-            // Si quieres años descendentes: for (n in range.reversed()) { ... }
             for (n in range) {
                 DropdownMenuItem(
                     text = { Text(n.toString()) },
@@ -247,9 +241,9 @@ private fun NumberDropdownField(
 private fun BeneficioPlaceholder(text: String) {
     Text(
         text = text,
-        color = Color(0xFFE6E1E5),
-        style = LocalTextStyle.current.copy(fontSize = 16.sp, lineHeight = 20.sp),
-        lineHeight = 20.sp
+        color = Color(0xFFA1A0A0),
+        style = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp),
+
     )
 }
 @Composable
@@ -268,12 +262,112 @@ fun BeneficioOutlinedTextField(
         placeholder = { BeneficioPlaceholder(placeholder) },
         singleLine = singleLine,
         readOnly = readOnly,
+
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+
+            cursorColor = Color.Black
+        ),
         modifier = modifier.beneficioInput(),
-        textStyle = beneficioTextStyle(),
-        colors = beneficioTextFieldColors(),
         keyboardOptions = keyboardOptions
     )
+
 }
+@Composable
+fun BeneficioPasswordField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String = "",
+    modifier: Modifier = Modifier
+) {
+    var passwordVisible by rememberSaveable { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { BeneficioPlaceholder(placeholder) },
+        singleLine = true,
+        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+        trailingIcon = {
+            val image = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+            val desc   = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(imageVector = image, contentDescription = desc)
+            }
+        },
+        shape = RoundedCornerShape(10.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            cursorColor = Color.Black
+        ),
+        modifier = modifier
+            .beneficioInput()
+            .height(53.dp)
+    )
+}
+@Composable
+fun PasswordChecklist(
+    password: String,
+    modifier: Modifier = Modifier
+) {
+    // Reglas
+    val hasMinLen  = remember(password) { password.length >= 8 }
+    val hasUpper    = remember(password) { password.any { it.isUpperCase() } }
+    val hasDigit    = remember(password) { password.any { it.isDigit() } }
+    val hasSpecial  = remember(password) {
+        // incluye ¿ y ?
+        val specials = Regex("""[!@#${'$'}%\^&*()_+\-=\[\]{}\\|:";'<>?,./¿¡]""")
+        specials.containsMatchIn(password)
+    }
+    val okColor   = Color(0xFF2E7D32) // verde
+    val idleColor = Color(0xFF9E9E9E) // gris
+
+    Column(
+        modifier = modifier
+            .padding(start = 20.dp, end = 20.dp) // mismo margen horizontal que tus inputs
+            .padding(top = 4.dp)
+    ) {
+        ChecklistRow(texto = "Al menos 8 caracteres", activo = hasMinLen, okColor = okColor, idleColor = idleColor)
+        ChecklistRow(texto = "Tiene una mayúscula", activo = hasUpper, okColor = okColor, idleColor = idleColor)
+        ChecklistRow(texto = "Tiene un número",     activo = hasDigit, okColor = okColor, idleColor = idleColor)
+        ChecklistRow(texto = "Tiene un carácter especial (¿ ? ! @ # ...)", activo = hasSpecial, okColor = okColor, idleColor = idleColor)
+    }
+}
+
+@Composable
+private fun ChecklistRow(
+    texto: String,
+    activo: Boolean,
+    okColor: Color,
+    idleColor: Color
+) {
+    val tint = if (activo) okColor else idleColor
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 4.dp)
+    ) {
+        Icon(
+            imageVector = if (activo) Icons.Filled.Visibility
+            else Icons.Filled.VisibilityOff,
+            contentDescription = null,
+            tint = tint
+        )
+        Text(
+            text = "  $texto",
+            color = tint,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(start = 4.dp)
+        )
+    }
+}
+
+
+
 @Composable
 fun CapturaNumeroTelefono(
     placeholder: String,
@@ -288,11 +382,13 @@ fun CapturaNumeroTelefono(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
     )
 }
+
 @Composable
 fun CapturaTexto(
     placeholder: String,
     maxLength: Int? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+
 ) {
     var texto by rememberSaveable { mutableStateOf("") }
     BeneficioOutlinedTextField(
@@ -302,39 +398,27 @@ fun CapturaTexto(
         modifier = modifier
     )
 }
-@Composable
-fun Titulo(texto: String,modifier: Modifier = Modifier) {
-    Text(
-        text= texto,
-        textAlign = TextAlign.Center,
-        fontWeight = FontWeight.Bold,
-        fontSize = 20.sp,
-        lineHeight = 20.sp,
-        style = MaterialTheme.typography.titleLarge.copy(color = Color.White),
-        modifier = Modifier
-            .padding(top = 50.dp)
-            .fillMaxWidth()
-            .width(412.dp)
-    )
-}
+
 @Composable
 fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
     Text(
         text = texto,
         style = MaterialTheme.typography.labelLarge.copy(
-            color = Color.White,
+            color = Color.Black,
             fontSize = 16.sp,
             lineHeight = 20.sp
         ),
         modifier = modifier.padding(start = 20.dp, top = 20.dp, end = 16.dp)
     )
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeleccionarGenero(
     options: List<String> = listOf("Femenino", "Masculino", "Otro"),
-    modifier: Modifier = Modifier,
-    onSelected: (String) -> Unit = {}
+    onSelected: (String) -> Unit = {},
+    modifier: Modifier = Modifier
+
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
@@ -352,10 +436,8 @@ fun SeleccionarGenero(
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
             modifier = Modifier
                 .beneficioInput()
-                .height(51.dp)
+                .height(53.dp)
                 .menuAnchor(),
-            textStyle = beneficioTextStyle(),
-            colors   = beneficioTextFieldColors()
         )
 
         ExposedDropdownMenu(
@@ -375,7 +457,6 @@ fun SeleccionarGenero(
         }
     }
 }
-
 
 
 @Preview(showBackground = true, showSystemUi = true)

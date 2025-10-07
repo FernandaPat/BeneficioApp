@@ -274,7 +274,7 @@ fun ArrowTopBar(
     val (modifierAnimado, colorAnimado) = crearAnimacionIconosBotones(
         interactionSource = interactionSource,
         colorNormal = Color.White,
-        colorActivado = Color(0xFFFF2291),
+        //colorActivado = Color(0xFFFF2291),
         escalaActivado = 1.3f
     )
 
