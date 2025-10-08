@@ -54,6 +54,15 @@ dependencies {
     implementation(libs.androidx.compose.animation.core.lint)
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
     implementation("androidx.compose.material:material-icons-extended")
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
+    implementation("com.google.accompanist:accompanist-insets:0.23.1")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.23.1")
+
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

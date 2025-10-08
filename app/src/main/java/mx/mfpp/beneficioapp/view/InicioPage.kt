@@ -1,17 +1,7 @@
 package mx.mfpp.beneficioapp.view
 
-import mx.mfpp.beneficioapp.R
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -19,104 +9,142 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat.enableEdgeToEdge
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
+import mx.mfpp.beneficioapp.model.Categoria
+import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
-// Data classes (pasar al Model después)
-data class Categoria(
-    val nombre: String,
-    val icono: Int? = null
-)
-
-data class Promocion(
-    val nombre: String,
-    val imagenUrl: String? = null,
-    val descuento: String? = null
-)
-
-// Listas de datos (pasar al ViewModel después)
-val categorias = listOf(
-    Categoria("Belleza"),
-    Categoria("Comida"),
-    Categoria("Educación"),
-    Categoria("Moda"),
-    Categoria("Servicios"),
-    Categoria("Salud"),
-    Categoria("Ocio")
-)
-
-val favoritos = listOf(
-    Promocion("Kinezis"),
-    Promocion("Six Flags"),
-    Promocion("Pinche elote"),
-    Promocion("H&M")
-)
-
-val nuevasPromociones = listOf(
-    Promocion("Burger King"),
-    Promocion("Cinemex"),
-    Promocion("Porrúa"),
-    Promocion("Museo Soumaya")
-)
-
-val promocionesExpiracion = listOf(
-    Promocion("Suburbia"),
-    Promocion("Oxxo"),
-    Promocion("3B")
-)
-
-val cercaDeTi = listOf(
-    Promocion("Chilaquiles TEC"),
-    Promocion("Helados Froddy"),
-    Promocion("Carls Jr")
-)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InicioPage(navController: NavController, modifier: Modifier = Modifier) {
+fun InicioPage(
+    navController: NavController,
+    viewModel: BeneficioJovenVM = viewModel(),
+    modifier: Modifier = Modifier
+) {
+    val categorias by viewModel.categorias.collectAsState()
+    val favoritos by viewModel.favoritos.collectAsState()
+    val nuevasPromociones by viewModel.nuevasPromociones.collectAsState()
+    val promocionesExpiracion by viewModel.promocionesExpiracion.collectAsState()
+    val promocionesCercanas by viewModel.promocionesCercanas.collectAsState()
+    val estadoCargando by viewModel.estadoCargando.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+
     Scaffold(
-        topBar = { HomeTopBar(navController) }
+        topBar = { HomeTopBar(navController) },
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(Color.White)
                 .verticalScroll(rememberScrollState())
         ) {
-            Categorias()
-            SeccionHorizontal(
-                titulo = "Tus Favoritos",
-                items = favoritos
+            when {
+                estadoCargando -> {
+                    EstadoCargando()
+                }
+                error != null -> {
+                    EstadoError(
+                        mensajeError = error!!,
+                        onReintentar = { viewModel.refrescarDatos() }
+                    )
+                }
+                else -> {
+                    Categorias(categorias = categorias)
+                    SeccionHorizontal(
+                        titulo = "Tus Favoritos",
+                        items = favoritos,
+                        onItemClick = { /* Navegar a detalle */ }
+                    )
+                    SeccionHorizontal(
+                        titulo = "Nuevas Promociones",
+                        items = nuevasPromociones,
+                        onItemClick = { /* Navegar a detalle */ }
+                    )
+                    SeccionHorizontal(
+                        titulo = "Expiran pronto",
+                        items = promocionesExpiracion,
+                        onItemClick = { /* Navegar a detalle */ }
+                    )
+                    SeccionHorizontal(
+                        titulo = "Cerca de ti",
+                        items = promocionesCercanas,
+                        onItemClick = { /* Navegar a detalle */ }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EstadoCargando() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Text(
+                text = "Cargando promociones...",
+                modifier = Modifier.padding(top = 16.dp),
+                fontSize = 16.sp
             )
-            SeccionHorizontal(
-                titulo = "Nuevas Promociones",
-                items = nuevasPromociones
+        }
+    }
+}
+
+@Composable
+fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Error",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red
             )
-            SeccionHorizontal(
-                titulo = "Expiran pronto",
-                items = promocionesExpiracion
+            Text(
+                text = mensajeError,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
-            SeccionHorizontal(
-                titulo = "Cerca de ti",
-                items = cercaDeTi
-            )
+            Button(
+                onClick = onReintentar,
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Reintentar")
+            }
         }
     }
 }
@@ -125,6 +153,7 @@ fun InicioPage(navController: NavController, modifier: Modifier = Modifier) {
 fun SeccionHorizontal(
     titulo: String,
     items: List<Promocion>,
+    onItemClick: (Promocion) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -136,7 +165,7 @@ fun SeccionHorizontal(
             text = titulo,
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
+                fontSize = 22.sp,
                 color = Color.Black
             ),
             modifier = Modifier.padding(bottom = 12.dp)
@@ -146,53 +175,76 @@ fun SeccionHorizontal(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(items) { item ->
-                CardItemHorizontal(promocion = item)
+                CardItemHorizontal(promocion = item, onItemClick = { onItemClick(item) })
             }
         }
     }
 }
 
 @Composable
-fun CardItemHorizontal(promocion: Promocion){
+fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
     Card(
-        onClick = { /* Acción al hacer clic */ },
+        onClick = onItemClick,
         modifier = Modifier
             .size(width = 176.dp, height = 108.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = promocion.nombre,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                    ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
+        Box(modifier = Modifier.fillMaxSize()) {
+            AsyncImage(
+                model = promocion.imagenUrl ?: "https://picsum.photos/200/300?random=${promocion.id}",
+                contentDescription = "Imagen de ${promocion.nombre}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
 
-                promocion.descuento?.let { descuento ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text(
-                        text = descuento,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp
-                        ),
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
+                        text = promocion.obtenerRatingTexto(),
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
                     )
+                    Text(
+                        text = promocion.obtenerTextoExpiracion(),
+                        color = Color.White,
+                        fontSize = 10.sp
+                    )
+                }
+
+                Column {
+                    Text(
+                        text = promocion.nombre,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    promocion.descuento?.let { descuento ->
+                        Text(
+                            text = descuento,
+                            color = Color.Yellow,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         }
@@ -200,7 +252,7 @@ fun CardItemHorizontal(promocion: Promocion){
 }
 
 @Composable
-fun Categorias() {
+fun Categorias(categorias: List<Categoria>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -219,7 +271,6 @@ fun Categorias() {
         val primeras4Categorias = categorias.take(4)
         val ultimas3Categorias = categorias.takeLast(3)
 
-        // Primera fila con 4 categorías
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -249,10 +300,8 @@ fun Categorias() {
             }
         }
 
-        // Segunda fila con 3 categorías
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
         ) {
             ultimas3Categorias.forEachIndexed { index, categoria ->
@@ -284,18 +333,16 @@ fun Categorias() {
 fun ItemCategoriaCirculo(categoria: Categoria) {
     Card(
         onClick = { /* Acción al hacer clic en la categoría */ },
-        modifier = Modifier
-            .size(70.dp),
+        modifier = Modifier.size(70.dp),
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            // Icono de las categorías (agregar después)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = categoria.icono,
+                fontSize = 24.sp
+            )
         }
     }
 }
@@ -303,19 +350,13 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
 @Composable
 fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     val barHeight = 120.dp
-    val interactionSourceCampana = remember { MutableInteractionSource() }
-    val (modifierCampana, colorCampana) = crearAnimacionIconosBotones(
-        interactionSource = interactionSourceCampana,
-        colorNormal = Color.LightGray,
-        colorActivado = Color(0xFFFF2291),
-        escalaActivado = 1.3f
-    )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(barHeight)
             .padding(bottom = 16.dp)
+            .background(Color.White)
     ) {
         Row(
             modifier = Modifier
@@ -325,9 +366,7 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = "Foto de perfil",
@@ -348,18 +387,15 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
 
             IconButton(
                 onClick = {
-                    navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
+                    // navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
                 },
-                interactionSource = interactionSourceCampana,
-                modifier = Modifier
-                    .size(40.dp)
-                    .then(modifierCampana)
+                modifier = Modifier.size(40.dp)
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.bell),
+                    imageVector = Icons.Default.AccountCircle,
                     contentDescription = "Notificaciones",
                     modifier = Modifier.size(40.dp),
-                    tint = colorCampana
+                    tint = Color.Gray
                 )
             }
         }
@@ -374,3 +410,4 @@ fun InicioPagePreview() {
         InicioPage(navController)
     }
 }
+
