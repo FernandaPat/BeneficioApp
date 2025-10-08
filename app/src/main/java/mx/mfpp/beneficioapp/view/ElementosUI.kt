@@ -155,17 +155,16 @@ fun ArrowTopBar(
     val (modifierAnimado, colorAnimado) = crearAnimacionIconosBotones(
         interactionSource = interactionSource,
         colorNormal = Color.White,
-        //colorActivado = Color(0xFFFF2291),
         escalaActivado = 1.3f
     )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xFF230448))
-            .statusBarsPadding()        // evita superponerse con la barra de estado/notch
+            .statusBarsPadding()
+            .background(Color.White)
             .height(barHeight)
-            .padding(bottom = 16.dp)    // tu padding inferior original
+            .padding(bottom = 5.dp)
     ) {
         // Flecha atrás
         IconButton(
@@ -181,7 +180,7 @@ fun ArrowTopBar(
                 modifier = Modifier
                     .size(30.dp)
                     .then(modifierAnimado),
-                tint = colorAnimado
+                tint = Color.Black
             )
         }
 
@@ -209,7 +208,7 @@ fun TextoMedioGrande(
             fontWeight = FontWeight.Bold,
             fontSize = 26.sp
         ),
-        color = Color.White
+        color = Color.Black
     )
 }
 

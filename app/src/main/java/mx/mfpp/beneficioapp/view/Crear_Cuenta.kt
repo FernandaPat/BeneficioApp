@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +54,12 @@ import mx.mfpp.beneficioapp.model.Direccion
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.text.style.TextDecoration
 
 
 @Composable
@@ -60,16 +68,19 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     var dia by rememberSaveable { mutableStateOf<Int?>(null) }
     var direccion by remember { mutableStateOf(Direccion()) }
     var password by rememberSaveable { mutableStateOf("") }
+    var tieneTarjeta by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var folio by rememberSaveable { mutableStateOf("") }
     Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
     ) { paddingValues ->
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .verticalScroll(scrollState)
                 .imePadding()
                 .padding(paddingValues)
-                .padding(top = 30.dp)
+                .padding(top = 3.dp)
         ) {
             Etiqueta("Nombre(s)",true)
             CapturaTexto("Escribe aquí", 30)
@@ -97,6 +108,28 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
             )
             PasswordChecklist(password)
 
+            Etiqueta("¿Cuentas con una tarjeta física?", obligatorio = true)
+            Tarjeta(
+                seleccion = tieneTarjeta,
+                onSelected = { si ->
+                    tieneTarjeta = si
+                    if (!si) folio = ""
+                }
+            )
+
+            if (tieneTarjeta == true) {
+                Etiqueta("Ingresa el número de folio", obligatorio = true)
+                BeneficioOutlinedTextField(
+                    value = folio,
+                    onValueChange = { input -> folio = input.filter { it.isDigit() }.take(16) },
+                    placeholder = "1234 5678 9012 3456",
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next
+                    )
+
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -105,6 +138,24 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
                 verticalArrangement = Arrangement.Center
             ) {
                 BotonMorado(navController, "Crear Cuenta", Pantalla.RUTA_INICIAR_SESION)
+
+                Spacer(Modifier.height(16.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("¿Ya tienes una cuenta? ", fontSize = 11.sp)
+
+                    Text(
+                        text = "Inicia sesión aquí",
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable {
+                            navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                        }
+                    )
+                }
             }
         }
     }
@@ -146,7 +197,7 @@ fun SeccionDireccion(
     BeneficioOutlinedTextField(
         value = calle,
         onValueChange = { input -> calle = input.take(60); notify() },
-        placeholder = "Ej. Av. Reforma",
+        placeholder = "Lázaro Cárdenas",
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
 
@@ -164,7 +215,7 @@ fun SeccionDireccion(
                 onValueChange = { input ->
                     numExt = input.filter { it.isLetterOrDigit() || it == '-' }.take(8); notify()
                 },
-                placeholder = { BeneficioPlaceholder("Ej. 123") },
+                placeholder = { BeneficioPlaceholder("123") },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
@@ -181,7 +232,7 @@ fun SeccionDireccion(
                 onValueChange = { input ->
                     numInt = input.filter { it.isLetterOrDigit() || it == '-' }.take(8); notify()
                 },
-                placeholder = { BeneficioPlaceholder("Ej. 12B") },
+                placeholder = { BeneficioPlaceholder("12B") },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier
@@ -198,7 +249,7 @@ fun SeccionDireccion(
     BeneficioOutlinedTextField(
         value = colonia,
         onValueChange = { input -> colonia = input.take(60); notify() },
-        placeholder = "Ej. Centro",
+        placeholder = "Las Arboledas",
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
 
@@ -207,7 +258,7 @@ fun SeccionDireccion(
     BeneficioOutlinedTextField(
         value = cp,
         onValueChange = { input -> cp = input.filter { it.isDigit() }.take(5); notify() },
-        placeholder = "Ej. 01000",
+        placeholder = "52900",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
     )
 
@@ -216,7 +267,7 @@ fun SeccionDireccion(
     BeneficioOutlinedTextField(
         value = municipio,
         onValueChange = { input -> municipio = input.take(40); notify() },
-        placeholder = "Ej. Atizapán de Zaragoza",
+        placeholder = "Ciudad López Mateos",
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
     Etiqueta(texto = "Estado", true)
@@ -226,8 +277,69 @@ fun SeccionDireccion(
             notify()
         }
     )
-
 }
+@Composable
+fun Tarjeta(
+    seleccion: Boolean?,
+    onSelected: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .padding(start = 20.dp, end = 20.dp, top = 8.dp)
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OpcionPill(text = "Sí", selected = seleccion == true) { onSelected(true) }
+        Spacer(Modifier.width(16.dp))
+        OpcionPill(text = "No", selected = seleccion == false) { onSelected(false) }
+    }
+}
+
+@Composable
+private fun OpcionPill(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(12.dp)
+    val bg    = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color(0xFFF5F5F5)
+    val bd    = if (selected) MaterialTheme.colorScheme.primary else Color(0xFFE0E0E0)
+
+    Row(
+        modifier = Modifier
+            .clip(shape)
+            .border(1.dp, bd, shape)
+            .background(bg)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .border(1.dp, bd, RoundedCornerShape(5.dp))
+                .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent),
+            contentAlignment = Alignment.Center
+        ) {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+        }
+        Text(
+            text = "  $text",
+            color = Color.Black,
+            fontSize = 14.sp
+        )
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -252,7 +364,7 @@ fun SeleccionarEstado(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                 modifier = Modifier
                     .beneficioInput()
-                    .height(53.dp)  // mantenemos altura uniforme
+                    .height(53.dp)
                     .menuAnchor(),
             )
 
@@ -273,11 +385,10 @@ fun SeleccionarEstado(
             }
         }
 
-        // Leyenda condicional bajo el campo (fuera del TextField para no romper la altura fija)
         if (selected == "Otro") {
             Text(
                 text = "Gracias por tu interés; sin embargo, ten en cuenta que los negocios aquí presentes son solo del municipio de Atizapán.",
-                color = Color(0xFFB00020), // rojo de aviso
+                color = Color(0xFFB00020),
                 fontSize = 12.sp,
                 modifier = Modifier
                     .padding(start = 20.dp, end = 20.dp, top = 4.dp)
@@ -488,21 +599,19 @@ fun PasswordChecklist(
     password: String,
     modifier: Modifier = Modifier
 ) {
-    // Reglas
     val hasMinLen  = remember(password) { password.length >= 8 }
     val hasUpper    = remember(password) { password.any { it.isUpperCase() } }
     val hasDigit    = remember(password) { password.any { it.isDigit() } }
     val hasSpecial  = remember(password) {
-        // incluye ¿ y ?
         val specials = Regex("""[!@#${'$'}%\^&*()_+\-=\[\]{}\\|:";'<>?,./¿¡]""")
         specials.containsMatchIn(password)
     }
-    val okColor   = Color(0xFF2E7D32) // verde
-    val idleColor = Color(0xFF9E9E9E) // gris
+    val okColor   = Color(0xFF2E7D32)
+    val idleColor = Color(0xFF9E9E9E)
 
     Column(
         modifier = modifier
-            .padding(start = 20.dp, end = 20.dp) // mismo margen horizontal que tus inputs
+            .padding(start = 20.dp, end = 20.dp)
             .padding(top = 4.dp)
     ) {
         ChecklistRow(texto = "Al menos 8 caracteres", activo = hasMinLen, okColor = okColor, idleColor = idleColor)
@@ -574,18 +683,6 @@ fun CapturaTexto(
     )
 }
 
-//@Composable
-//fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
-//    Text(
-//        text = texto,
-//        style = MaterialTheme.typography.labelLarge.copy(
-//            color = Color.Black,
-//            fontSize = 16.sp,
-//            lineHeight = 20.sp
-//        ),
-//        modifier = modifier.padding(start = 20.dp, top = 20.dp, end = 16.dp)
-//    )
-//}
 
 
 
