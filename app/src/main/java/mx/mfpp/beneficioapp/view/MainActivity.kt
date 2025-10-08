@@ -26,23 +26,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.toArgb // Importar esto para toArgb
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
-import java.time.format.TextStyle
 
 class MainActivity : ComponentActivity() {
-
-    // ViewModel
     private val viewModel: BeneficioJovenVM by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Configurar edge-to-edge y ocultar barra de navegación
         enableEdgeToEdge()
+
+        // Ocultar la barra de navegación
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Hacer la barra de navegación transparente - CORREGIDO
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
+
         setContent {
             BeneficioAppTheme {
                 AppPrincipal(viewModel)
@@ -52,10 +60,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun AppPrincipal(beneficioJovenVM: BeneficioJovenVM, modifier: Modifier = Modifier) {
+fun AppPrincipal(
+    beneficioJovenVM: BeneficioJovenVM,
+    modifier: Modifier = Modifier
+) {
     val navController = rememberNavController()
-
-    // CAMBIAR ESTO AL MODEL
 
     val hiddenBottomBarRoutes = listOf(
         Pantalla.RUTA_SOLICITUD_APP,
@@ -77,22 +86,28 @@ fun AppPrincipal(beneficioJovenVM: BeneficioJovenVM, modifier: Modifier = Modifi
             }
         },
     ) { innerPadding ->
-        AppNavHost(beneficioJovenVM,
+        AppNavHost(
+            beneficioJovenVM = beneficioJovenVM,
             navController = navController,
-            modifier = modifier.padding(innerPadding))
-
+            modifier = modifier.padding(innerPadding)
+        )
     }
 }
 
 @Composable
-fun AppNavHost(beneficioJovenVM: BeneficioJovenVM, navController: NavHostController, modifier: Modifier){
-    NavHost(navController = navController,
+fun AppNavHost(
+    beneficioJovenVM: BeneficioJovenVM,
+    navController: NavHostController,
+    modifier: Modifier
+) {
+    NavHost(
+        navController = navController,
         startDestination = Pantalla.RUTA_INICIO_APP,
         modifier = modifier.fillMaxSize()
     ) {
         // Grafo de navegación Nav bar
         composable(Pantalla.RUTA_INICIO_APP) {
-            InicioPage(navController)
+            InicioPage(navController, beneficioJovenVM)
         }
         composable(Pantalla.RUTA_MAPA_APP) {
             MapaPage(navController)
@@ -126,7 +141,7 @@ fun AppBottomBar(navController: NavHostController) {
         modifier = Modifier
             .fillMaxWidth()
             .height(87.dp),
-        containerColor = Color(0xFF230448)
+        containerColor = Color.White
     ) {
         val pilaNavegacion by navController.currentBackStackEntryAsState()
         val pantallaActual = pilaNavegacion?.destination
@@ -134,10 +149,10 @@ fun AppBottomBar(navController: NavHostController) {
         Pantalla.listaPantallas.forEach { pantalla ->
             val isSelected = pantallaActual?.route == pantalla.ruta
 
-            // Usamos la función específica para navegación
+            // Cambiar colores para que funcionen con fondo blanco
             val (modifierAnimado, colorAnimado) = crearAnimacionNavegacion(
                 estaSeleccionado = isSelected,
-                colorNormal = Color.White,
+                colorNormal = Color.Gray,
                 colorActivado = Color(0xFFFF2291),
                 escalaActivado = 1.3f
             )
@@ -152,9 +167,7 @@ fun AppBottomBar(navController: NavHostController) {
                     navController.navigate(pantalla.ruta) {
                         popUpTo(navController.graph.startDestinationId) {
                             saveState = true
-                            inclusive = true
                         }
-                        restoreState = true
                         launchSingleTop = true
                     }
                 },
@@ -176,27 +189,19 @@ fun AppBottomBar(navController: NavHostController) {
                         style = if (isSelected) {
                             androidx.compose.ui.text.TextStyle(brush = gradientBrush)
                         } else {
-                            androidx.compose.ui.text.TextStyle(color = Color.White)
+                            androidx.compose.ui.text.TextStyle(color = Color.Gray)
                         }
                     )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color.White,
-                    unselectedIconColor = Color.White,
-                    selectedTextColor = Color.White,
-                    unselectedTextColor = Color.White,
+                    selectedIconColor = Color(0xFFFF2291),
+                    unselectedIconColor = Color.Gray,
+                    selectedTextColor = Color(0xFFFF2291),
+                    unselectedTextColor = Color.Gray,
                     indicatorColor = Color.Transparent
                 )
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainActivityPreview() {
-    BeneficioAppTheme {
-        AppPrincipal(BeneficioJovenVM())
     }
 }
