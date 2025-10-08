@@ -26,7 +26,6 @@ sealed class Pantalla(
         const val RUTA_NOTIFICACIONES_APP = "NotificacionesPage"
         const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
     }
-
     object BeneficioJovenINICIO:
         Pantalla(RUTA_INICIO_APP, "Inicio", R.drawable.home)
     object BeneficioJovenMAPA:

@@ -22,7 +22,7 @@ import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.R
 
 @Composable
-fun LoginPage(navController: NavController) {
+fun JNPage(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -42,16 +42,16 @@ fun LoginPage(navController: NavController) {
                     .size(290.dp)
                     .padding(bottom = 32.dp)
             )
-            BotonMorado(navController, "Iniciar Sesión", "ruta_joven")
+            BotonMorado(navController, "Soy joven", "ruta_joven")
             Spacer(modifier = Modifier.height(20.dp))
-            BotonBlanco(navController, "Crear Cuenta", "ruta_negocio")
+            BotonBlanco(navController, "Soy negocio", "ruta_negocio")
         }
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun LoginPagePreview() {
+fun JNPagePreview() {
     val navController = rememberNavController()
-    LoginPage(navController)
+    JNPage(navController)
 }
