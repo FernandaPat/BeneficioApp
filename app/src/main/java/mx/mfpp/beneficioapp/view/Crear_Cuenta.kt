@@ -88,6 +88,8 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
             CapturaTexto("Escribe aquí", 30)
             Etiqueta("Apellido Paterno" , true)
             CapturaTexto("Escribe aquí", 30)
+            Etiqueta("CURP",true)
+            CapturaTexto("CURP", 18)
             Etiqueta(texto = "Fecha de Nacimiento", true)
             Fecha_nacimiento(
                 onFechaChange = { d, m, a -> }
