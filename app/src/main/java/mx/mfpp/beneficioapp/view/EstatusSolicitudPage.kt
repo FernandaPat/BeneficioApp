@@ -37,7 +37,7 @@ fun EstatusSolicitudPage(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BotonRosa(navController, "Cancelar solicitud", Pantalla.RUTA_MAPA_APP)
+                BotonMorado(navController, "Cancelar solicitud", Pantalla.RUTA_MAPA_APP)
             }
         }
     }

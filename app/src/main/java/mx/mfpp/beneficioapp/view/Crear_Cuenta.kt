@@ -100,7 +100,7 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                BotonRosa(navController, "Crear Cuenta", Pantalla.RUTA_INICIAR_SESION)
+                BotonMorado(navController, "Crear Cuenta", Pantalla.RUTA_INICIAR_SESION)
             }
         }
     }
