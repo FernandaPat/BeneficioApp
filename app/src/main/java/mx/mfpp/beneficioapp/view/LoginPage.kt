@@ -42,9 +42,9 @@ fun LoginPage(navController: NavController) {
                     .size(290.dp)
                     .padding(bottom = 32.dp)
             )
-            BotonMoradoLleno(navController, "Soy joven", "ruta_joven")
+            BotonMorado(navController, "Soy joven", "ruta_joven")
             Spacer(modifier = Modifier.height(20.dp))
-            BotonMoradoBorde(navController, "Soy negocio", "ruta_negocio")
+            BotonBlanco(navController, "Soy negocio", "ruta_negocio")
         }
     }
 }
