@@ -68,7 +68,11 @@ fun AppPrincipal(
 
     val hiddenBottomBarRoutes = listOf(
         Pantalla.RUTA_SOLICITUD_APP,
-        Pantalla.RUTA_ESTATUS_SOLICITUD_APP
+        Pantalla.RUTA_ESTATUS_SOLICITUD_APP,
+        Pantalla.RUTA_JN_APP,
+        Pantalla.RUTA_LOGIN_APP,
+        Pantalla.RUTA_INSES_APP,
+        Pantalla.RUTA_CREARC_APP
     )
 
     val currentRoute = navController
@@ -102,9 +106,21 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Pantalla.RUTA_INICIO_APP,
+        startDestination = Pantalla.RUTA_JN_APP,
         modifier = modifier.fillMaxSize()
     ) {
+        composable(Pantalla.RUTA_JN_APP) {
+            JNPage(navController)
+        }
+        composable(Pantalla.RUTA_LOGIN_APP) {
+            LoginPage(navController)
+        }
+        composable(Pantalla.RUTA_INSES_APP) {
+            Iniciar_Sesion(navController)
+        }
+        composable(Pantalla.RUTA_CREARC_APP) {
+            Crear_Cuenta(navController)
+        }
         // Grafo de navegación Nav bar
         composable(Pantalla.RUTA_INICIO_APP) {
             InicioPage(navController, beneficioJovenVM)

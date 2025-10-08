@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_CREARC_APP
+import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INSES_APP
 
 @Composable
 fun LoginPage(navController: NavController) {
@@ -42,9 +44,9 @@ fun LoginPage(navController: NavController) {
                     .size(290.dp)
                     .padding(bottom = 32.dp)
             )
-            BotonMorado(navController, "Iniciar Sesión", "ruta_joven")
+            BotonMorado(navController, "Iniciar Sesión", RUTA_INSES_APP)
             Spacer(modifier = Modifier.height(20.dp))
-            BotonBlanco(navController, "Crear Cuenta", "ruta_negocio")
+            BotonBlanco(navController, "Crear Cuenta", RUTA_CREARC_APP)
         }
     }
 }
