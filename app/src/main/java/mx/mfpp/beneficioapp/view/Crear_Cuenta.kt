@@ -48,13 +48,17 @@ import java.util.Calendar
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import mx.mfpp.beneficioapp.model.Direccion
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 
 
 @Composable
 fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     var dia by rememberSaveable { mutableStateOf<Int?>(null) }
-
+    var direccion by remember { mutableStateOf(Direccion()) }
     var password by rememberSaveable { mutableStateOf("") }
     Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
@@ -67,25 +71,25 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
                 .padding(paddingValues)
                 .padding(top = 30.dp)
         ) {
-            Etiqueta("Nombre(s)")
+            Etiqueta("Nombre(s)",true)
             CapturaTexto("Escribe aquí", 30)
-            Etiqueta("Apellido Materno")
+            Etiqueta("Apellido Materno", true)
             CapturaTexto("Escribe aquí", 30)
-            Etiqueta("Apellido Paterno")
+            Etiqueta("Apellido Paterno" , true)
             CapturaTexto("Escribe aquí", 30)
-            Etiqueta(texto = "Fecha de Nacimiento")
+            Etiqueta(texto = "Fecha de Nacimiento", true)
             Fecha_nacimiento(
                 onFechaChange = { d, m, a -> }
             )
-            Etiqueta("Dirección")
-            CapturaTexto("Escribe aquí", 100)
-            Etiqueta("Género")
+            SeccionDireccion { dir -> direccion = dir }
+
+            Etiqueta("Género",true)
             SeleccionarGenero(listOf("Femenino", "Masculino", "Otro"))
-            Etiqueta("Correo")
+            Etiqueta("Correo", true)
             CapturaTexto("correo@ejemplo.com", 50)
-            Etiqueta("Número de teléfono")
+            Etiqueta("Número de teléfono", true)
             CapturaNumeroTelefono("10 dígitos")
-            Etiqueta("Contraseña")
+            Etiqueta("Contraseña", true)
             BeneficioPasswordField(
                 value = password,
                 onValueChange = { input -> password = input.take(16)},
@@ -106,10 +110,181 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     }
 }
 
+
 fun Modifier.beneficioInput(): Modifier = this
     .padding(start = 20.dp, end = 20.dp, bottom = 8.dp, top = 13.dp)
     .width(380.dp)
     .height(53.dp)
+
+@Composable
+fun SeccionDireccion(
+    modifier: Modifier = Modifier,
+    onAddressChange: (Direccion) -> Unit = {}
+) {
+    var calle by rememberSaveable { mutableStateOf("") }
+    var numExt by rememberSaveable { mutableStateOf("") }
+    var numInt by rememberSaveable { mutableStateOf("") }
+    var colonia by rememberSaveable { mutableStateOf("") }
+    var cp by rememberSaveable { mutableStateOf("") }
+    var municipio by rememberSaveable { mutableStateOf("") }
+    var estado by rememberSaveable { mutableStateOf("") }
+
+    fun notify() = onAddressChange(
+        Direccion(
+            calle = calle,
+            numeroExterior = numExt,
+            numeroInterior = numInt,
+            colonia = colonia,
+            codigoPostal = cp,
+            municipio = municipio,
+            estado = estado
+        )
+    )
+
+    // Calle
+    Etiqueta("Calle",true)
+    BeneficioOutlinedTextField(
+        value = calle,
+        onValueChange = { input -> calle = input.take(60); notify() },
+        placeholder = "Ej. Av. Reforma",
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+    )
+
+    // Número exterior / interior
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Column(Modifier.weight(1f)) {
+            Etiqueta("Núm. exterior",true)
+            OutlinedTextField(
+                value = numExt,
+                onValueChange = { input ->
+                    numExt = input.filter { it.isLetterOrDigit() || it == '-' }.take(8); notify()
+                },
+                placeholder = { BeneficioPlaceholder("Ej. 123") },
+                singleLine = true,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(53.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Etiqueta("Núm. interior",false)
+            OutlinedTextField(
+                value = numInt,
+                onValueChange = { input ->
+                    numInt = input.filter { it.isLetterOrDigit() || it == '-' }.take(8); notify()
+                },
+                placeholder = { BeneficioPlaceholder("Ej. 12B") },
+                singleLine = true,
+                shape = RoundedCornerShape(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(53.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+            )
+        }
+    }
+
+    // Colonia
+    Etiqueta("Colonia",true)
+    BeneficioOutlinedTextField(
+        value = colonia,
+        onValueChange = { input -> colonia = input.take(60); notify() },
+        placeholder = "Ej. Centro",
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+    )
+
+    // Código Postal (5 dígitos)
+    Etiqueta("Código Postal",true)
+    BeneficioOutlinedTextField(
+        value = cp,
+        onValueChange = { input -> cp = input.filter { it.isDigit() }.take(5); notify() },
+        placeholder = "Ej. 01000",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
+    )
+
+    // Municipio
+    Etiqueta("Municipio / Alcaldía", true)
+    BeneficioOutlinedTextField(
+        value = municipio,
+        onValueChange = { input -> municipio = input.take(40); notify() },
+        placeholder = "Ej. Atizapán de Zaragoza",
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+    )
+    Etiqueta(texto = "Estado", true)
+    SeleccionarEstado(
+        onSelected = { sel ->
+            estado = sel
+            notify()
+        }
+    )
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SeleccionarEstado(
+    modifier: Modifier = Modifier,
+    onSelected: (String) -> Unit
+) {
+    val opciones = listOf("Estado de México", "Ciudad de México", "Otro")
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    var selected by rememberSaveable { mutableStateOf<String?>(null) }
+
+    Column(modifier = modifier) {
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+        ) {
+            OutlinedTextField(
+                value = selected.orEmpty(),
+                onValueChange = {},
+                readOnly = true,
+                placeholder = { BeneficioPlaceholder("Selecciona estado") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier
+                    .beneficioInput()
+                    .height(53.dp)  // mantenemos altura uniforme
+                    .menuAnchor(),
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                opciones.forEach { opcion ->
+                    DropdownMenuItem(
+                        text = { Text(opcion) },
+                        onClick = {
+                            selected = opcion
+                            onSelected(opcion)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+
+        // Leyenda condicional bajo el campo (fuera del TextField para no romper la altura fija)
+        if (selected == "Otro") {
+            Text(
+                text = "Gracias por tu interés; sin embargo, ten en cuenta que los negocios aquí presentes son solo del municipio de Atizapán.",
+                color = Color(0xFFB00020), // rojo de aviso
+                fontSize = 12.sp,
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp, top = 4.dp)
+            )
+        }
+    }
+}
 
 
 @Composable
@@ -244,7 +419,7 @@ private fun BeneficioPlaceholder(text: String) {
         color = Color(0xFFA1A0A0),
         style = LocalTextStyle.current.copy(fontSize = 14.sp, lineHeight = 20.sp),
 
-    )
+        )
 }
 @Composable
 fun BeneficioOutlinedTextField(
@@ -389,7 +564,7 @@ fun CapturaTexto(
     maxLength: Int? = null,
     modifier: Modifier = Modifier,
 
-) {
+    ) {
     var texto by rememberSaveable { mutableStateOf("") }
     BeneficioOutlinedTextField(
         value = texto,
@@ -399,10 +574,36 @@ fun CapturaTexto(
     )
 }
 
+//@Composable
+//fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
+//    Text(
+//        text = texto,
+//        style = MaterialTheme.typography.labelLarge.copy(
+//            color = Color.Black,
+//            fontSize = 16.sp,
+//            lineHeight = 20.sp
+//        ),
+//        modifier = modifier.padding(start = 20.dp, top = 20.dp, end = 16.dp)
+//    )
+//}
+
+
+
 @Composable
-fun Etiqueta(texto: String, modifier: Modifier = Modifier) {
+fun Etiqueta(
+    texto: String,
+    obligatorio: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val rojo = MaterialTheme.colorScheme.error
     Text(
-        text = texto,
+        text = buildAnnotatedString {
+            append(texto)
+            if (obligatorio) {
+                append(" ")
+                withStyle(SpanStyle(color = rojo)) { append("*") }
+            }
+        },
         style = MaterialTheme.typography.labelLarge.copy(
             color = Color.Black,
             fontSize = 16.sp,
