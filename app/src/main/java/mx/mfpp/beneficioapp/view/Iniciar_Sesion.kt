@@ -56,13 +56,13 @@ fun Iniciar_Sesion(navController: NavController, modifier: Modifier = Modifier) 
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_INICIAR_SESION)
+                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_INICIO_APP)
 
                 Spacer(Modifier.height(16.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("¿No tienes una cuenta? ", fontSize = 11.sp)
+                    Text("¿No tienes una cuenta? ", fontSize = 11.sp, color = Color.Black)
 
                     Text(
                         text = "Crear Cuenta",
@@ -70,7 +70,7 @@ fun Iniciar_Sesion(navController: NavController, modifier: Modifier = Modifier) 
                         textDecoration = TextDecoration.Underline,
                         fontSize = 11.sp,
                         modifier = Modifier.clickable {
-                            navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                            navController.navigate(Pantalla.RUTA_CREAR_CUENTA)
                         }
                     )
                 }

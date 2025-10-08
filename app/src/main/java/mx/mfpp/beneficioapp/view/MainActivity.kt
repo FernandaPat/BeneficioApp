@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
@@ -32,7 +31,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.graphics.toArgb // Importar esto para toArgb
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
@@ -71,8 +69,8 @@ fun AppPrincipal(
         Pantalla.RUTA_ESTATUS_SOLICITUD_APP,
         Pantalla.RUTA_JN_APP,
         Pantalla.RUTA_LOGIN_APP,
-        Pantalla.RUTA_INSES_APP,
-        Pantalla.RUTA_CREARC_APP
+        Pantalla.RUTA_INICIAR_SESION,
+        Pantalla.RUTA_CREAR_CUENTA
     )
 
     val currentRoute = navController
@@ -115,10 +113,10 @@ fun AppNavHost(
         composable(Pantalla.RUTA_LOGIN_APP) {
             LoginPage(navController)
         }
-        composable(Pantalla.RUTA_INSES_APP) {
+        composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }
-        composable(Pantalla.RUTA_CREARC_APP) {
+        composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
         // Grafo de navegación Nav bar

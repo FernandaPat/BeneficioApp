@@ -146,7 +146,7 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("¿Ya tienes una cuenta? ", fontSize = 11.sp)
+                    Text("¿Ya tienes una cuenta? ", fontSize = 11.sp, color = Color.Black)
 
                     Text(
                         text = "Inicia sesión aquí",

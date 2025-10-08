@@ -18,8 +18,7 @@ sealed class Pantalla(
 
         const val RUTA_JN_APP = "JNPage"
         const val RUTA_LOGIN_APP = "LoginPage"
-        const val RUTA_INSES_APP = "Iniciar_Sesion"
-        const val RUTA_CREARC_APP = "Crear_Cuenta"
+        const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
         const val RUTA_INICIO_APP = "InicioPage"
         const val RUTA_MAPA_APP = "MapaPage"
         const val RUTA_TARJETA_APP = "TarjetaPage"
@@ -28,7 +27,7 @@ sealed class Pantalla(
         const val RUTA_SOLICITUD_APP = "SolicitudPage"
         const val RUTA_ESTATUS_SOLICITUD_APP = "EstatusSolicitudPage"
         const val RUTA_NOTIFICACIONES_APP = "NotificacionesPage"
-        const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
+        const val RUTA_CREAR_CUENTA = "Crear_Cuenta"
     }
     object BeneficioJovenINICIO:
         Pantalla(RUTA_INICIO_APP, "Inicio", R.drawable.home)
