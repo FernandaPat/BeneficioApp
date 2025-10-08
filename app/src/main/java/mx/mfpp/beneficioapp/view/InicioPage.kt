@@ -1,7 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
 import mx.mfpp.beneficioapp.R
-import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -96,8 +95,7 @@ fun InicioPage(navController: NavController, modifier: Modifier = Modifier) {
         topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
         Column(
-            modifier = Modifier.
-                background(Color(0xFF230448))
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
@@ -139,7 +137,7 @@ fun SeccionHorizontal(
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.Black
             ),
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -162,7 +160,7 @@ fun CardItemHorizontal(promocion: Promocion){
             .size(width = 176.dp, height = 108.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF170033))
+        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
         Box(
             modifier = Modifier
@@ -213,7 +211,7 @@ fun Categorias() {
             style = MaterialTheme.typography.headlineMedium.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = Color.White
+                color = Color.Black
             ),
             modifier = Modifier.padding(bottom = 12.dp)
         )
@@ -245,7 +243,7 @@ fun Categorias() {
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .width(80.dp),
-                        color = Color.White
+                        color = Color.Black
                     )
                 }
             }
@@ -274,7 +272,7 @@ fun Categorias() {
                         modifier = Modifier
                             .padding(top = 6.dp)
                             .width(80.dp),
-                        color = Color.White
+                        color = Color.Black
                     )
                 }
             }
@@ -290,7 +288,7 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
             .size(70.dp),
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF170033))
+        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
     ) {
         Box(
             modifier = Modifier
@@ -308,7 +306,7 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     val interactionSourceCampana = remember { MutableInteractionSource() }
     val (modifierCampana, colorCampana) = crearAnimacionIconosBotones(
         interactionSource = interactionSourceCampana,
-        colorNormal = Color.White,
+        colorNormal = Color.LightGray,
         colorActivado = Color(0xFFFF2291),
         escalaActivado = 1.3f
     )
@@ -317,7 +315,6 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
         modifier = modifier
             .fillMaxWidth()
             .height(barHeight)
-            .background(Color(0xFF230448))
             .padding(bottom = 16.dp)
     ) {
         Row(
@@ -337,14 +334,14 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
                     modifier = Modifier
                         .size(93.dp)
                         .padding(end = 12.dp),
-                    tint = Color.White
+                    tint = Color.LightGray
                 )
                 Text(
                     text = "Nombre",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 25.sp,
-                        color = Color.White
+                        color = Color.Black
                     )
                 )
             }
