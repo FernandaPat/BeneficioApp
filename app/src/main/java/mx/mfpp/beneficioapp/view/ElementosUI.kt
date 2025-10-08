@@ -50,22 +50,22 @@ fun BotonMorado(
     texto: String,
     route: String
 ) {
-    val moradoFuerte = Color(0xFF9C27B0)
-    val moradoSuave = Color(0xFFE1BEE7)
+    val moradoFuerte = Color(0xFF9605f7)
+    val moradoSuave = Color(0xFFE9d4ff)
 
     Button(
         onClick = { navController.navigate(route) },
         colors = ButtonDefaults.buttonColors(containerColor = moradoSuave),
         shape = RoundedCornerShape(50.dp),
         modifier = Modifier
-            .width(300.dp)
+            .width(250.dp)
             .height(60.dp)
     ) {
         Text(
             text = texto,
             color = moradoFuerte,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold
         )
     }
 }
@@ -76,8 +76,8 @@ fun BotonBlanco(
     texto: String,
     route: String
 ) {
-    val moradoFuerte = Color(0xFF9C27B0)
-    val moradoSuave = Color(0xFFE1BEE7)
+    val moradoFuerte = Color(0xFF9605f7)
+    val moradoSuave = Color(0xFFE9d4ff)
 
     OutlinedButton(
         onClick = { navController.navigate(route) },
@@ -85,14 +85,14 @@ fun BotonBlanco(
         border = BorderStroke(2.dp, moradoSuave),
         shape = RoundedCornerShape(50.dp),
         modifier = Modifier
-            .width(300.dp)
+            .width(250.dp)
             .height(60.dp)
     ) {
         Text(
             text = texto,
             color = moradoFuerte,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold
         )
     }
 }
