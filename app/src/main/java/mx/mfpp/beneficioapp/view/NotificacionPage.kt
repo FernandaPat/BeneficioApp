@@ -93,11 +93,11 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Etiqueta de estado con tamaño fijo y texto centrado
+            // Etiqueta de estado con tamaño fijo para todas
             Box(
                 modifier = Modifier
-                    .width(80.dp) // Ancho fijo para todas las etiquetas
-                    .height(28.dp) // Alto fijo
+                    .width(100.dp) // Mismo ancho para todas las etiquetas
+                    .height(28.dp)
                     .background(
                         color = when (estado.lowercase()) {
                             "nueva" -> Color(0xFF7AF1A7)
@@ -106,11 +106,14 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
                         },
                         shape = MaterialTheme.shapes.small
                     ),
-                contentAlignment = Alignment.Center // Centra el texto dentro del Box
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = estado.uppercase(),
-                    fontSize = 10.sp,
+                    fontSize = when (estado.lowercase()) {
+                        "expira pronto" -> 9.sp // Tamaño ligeramente menor para "EXPIRA PRONTO"
+                        else -> 10.sp
+                    },
                     color = when (estado.lowercase()) {
                         "nueva" -> Color(0xFF008033)
                         "expira pronto" -> Color(0xFF8B4513)
@@ -118,9 +121,10 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
                     },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
+                    maxLines = 1,
                     modifier = Modifier
-                        .fillMaxWidth() 
-                        .padding(horizontal = 4.dp) // Pequeño padding horizontal
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                 )
             }
         }

@@ -1,7 +1,7 @@
 package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,10 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,22 +39,23 @@ import mx.mfpp.beneficioapp.R
 
 // Data class para las categorías
 data class Category(
-    val name: String
+    val name: String,
+    val iconRes: Int? = null
 )
 
 @Composable
-fun CategoriesPage(navController: NavController) {
+fun ExplorarPage(navController: NavController) {
 
     val categories = remember {
         mutableStateOf(
             listOf(
-                Category("Belleza"),
-                Category("Comida"),
-                Category("Educación"),
-                Category("Salud"),
-                Category("Entretenimiento"),
-                Category("Moda"),
-                Category("Servicios")
+                Category("Belleza", R.drawable.circlestar),
+                Category("Comida", R.drawable.circlestar),
+                Category("Educación", R.drawable.circlestar),
+                Category("Salud", R.drawable.circlestar),
+                Category("Entretenimiento", R.drawable.circlestar),
+                Category("Moda", R.drawable.circlestar),
+                Category("Servicios", R.drawable.circlestar)
             )
         )
     }
@@ -66,9 +64,7 @@ fun CategoriesPage(navController: NavController) {
     val searchText = remember { mutableStateOf("") }
 
     Scaffold(
-        topBar = {
 
-        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -76,30 +72,79 @@ fun CategoriesPage(navController: NavController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Espacio arriba de la barra de búsqueda
+            Spacer(modifier = Modifier.height(60.dp)) // Puedes ajustar este valor
+
+            // Barra de búsqueda
             SearchBar(
                 searchText = searchText.value,
                 onSearchTextChanged = { searchText.value = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp)
             )
 
+            // Título "Categorías"
             Text(
                 text = "Categorías",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 10.dp)
+                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp) // Aumenté el top aquí también
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row() {
-                Icon(
-                    painter = painterResource(id = R.drawable.bell),
-                    contentDescription = "Notificaciones",
-                    modifier = Modifier.size(24.dp),
-                )
+            // Lista de categorías como botones planos
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp)
+            ) {
+                items(categories.value) { category ->
+                    CategoryButton(
+                        category = category,
+                        onCategoryClicked = {
+                            // Aquí puedes manejar la navegación o búsqueda por categoría
+                            println("Categoría seleccionada: ${category.name}")
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
+        }
+    }
+}
+
+@Composable
+fun CategoryButton(category: Category, onCategoryClicked: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCategoryClicked() }
+            .background(Color.White)
+            .padding(vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icono de la categoría
+            Icon(
+                painter = painterResource(id = category.iconRes ?: R.drawable.circlestar),
+                contentDescription = "Categoría ${category.name}",
+                modifier = Modifier.size(20.dp),
+                tint = Color(0xFF9605F7)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Nombre de la categoría
+            Text(
+                text = category.name,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }
@@ -114,7 +159,7 @@ fun SearchBar(
         modifier = modifier
             .height(50.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFF5F5F5))
+            .background(Color(0xFFE0E4ED))
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -153,15 +198,9 @@ fun SearchBar(
     }
 }
 
-@Composable
-fun CategoriaExplorar() {
-
-}
-
-
 @Preview(showBackground = true)
 @Composable
 fun CategoriesPreview() {
     val navController = rememberNavController()
-    CategoriesPage(navController)
+    ExplorarPage(navController)
 }

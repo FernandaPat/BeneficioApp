@@ -3,7 +3,6 @@ package mx.mfpp.beneficioapp.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -139,7 +138,7 @@ fun AppNavHost(
             TarjetaPage(navController)
         }
         composable(Pantalla.RUTA_BUSCAR_APP) {
-            //Agregar
+            ExplorarPage(navController)
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             //Agregar
