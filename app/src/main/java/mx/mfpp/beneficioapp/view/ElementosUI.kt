@@ -107,7 +107,7 @@ fun TextoTitulo(texto: String) {
         style = MaterialTheme.typography.headlineLarge.copy(
             fontWeight = FontWeight.Bold,
             fontSize = 26.sp,
-            color = Color.White,
+            color = Color.Black,
             textAlign = TextAlign.Center
         )
     )
@@ -136,7 +136,7 @@ fun TextoMedioBold(texto: String) {
         style = MaterialTheme.typography.headlineLarge.copy(
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            color = Color.White,
+            color = Color.Black,
             textAlign = TextAlign.Justify,
             lineHeight = 25.sp
         )

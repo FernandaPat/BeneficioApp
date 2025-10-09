@@ -18,11 +18,10 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-
-    background = Color(0xFF230448),
-    surface = Color(0xFF230448),
-    onBackground = Color.White,
-    onSurface = Color.White,
+    background = Color.White,
+    surface = Color.White,
+    onBackground = Color.Black,
+    onSurface = Color.Black,
 )
 
 @Composable

@@ -15,22 +15,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun InicioPage(
     navController: NavController,
@@ -45,20 +46,18 @@ fun InicioPage(
     val estadoCargando by viewModel.estadoCargando.collectAsState()
     val error by viewModel.error.collectAsState()
 
-
     Scaffold(
-        topBar = { HomeTopBar(navController) },
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
+        topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
+
+        // Scrollable Column sin mostrar barra
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState(),
+                    enabled = true)
+
         ) {
             when {
                 estadoCargando -> {
@@ -387,12 +386,12 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
 
             IconButton(
                 onClick = {
-                    // navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
+                    navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
                 },
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountCircle,
+                    painter = painterResource(id = R.drawable.bell),
                     contentDescription = "Notificaciones",
                     modifier = Modifier.size(40.dp),
                     tint = Color.Gray
@@ -410,4 +409,3 @@ fun InicioPagePreview() {
         InicioPage(navController)
     }
 }
-
