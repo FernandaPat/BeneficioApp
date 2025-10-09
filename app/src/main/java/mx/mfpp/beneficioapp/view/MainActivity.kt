@@ -70,7 +70,8 @@ fun AppPrincipal(
         Pantalla.RUTA_JN_APP,
         Pantalla.RUTA_LOGIN_APP,
         Pantalla.RUTA_INICIAR_SESION,
-        Pantalla.RUTA_CREAR_CUENTA
+        Pantalla.RUTA_CREAR_CUENTA,
+        Pantalla.RUTA_INICIAR_SESION_NEGOCIO
     )
 
     val currentRoute = navController
@@ -107,6 +108,9 @@ fun AppNavHost(
         startDestination = Pantalla.RUTA_JN_APP,
         modifier = modifier.fillMaxSize()
     ) {
+        composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
+            Iniciar_Sesion_Negocio(navController)
+        }
         composable(Pantalla.RUTA_JN_APP) {
             JNPage(navController)
         }

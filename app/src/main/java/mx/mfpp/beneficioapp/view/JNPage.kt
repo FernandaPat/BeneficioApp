@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INICIAR_SESION_NEGOCIO
 import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_LOGIN_APP
 
 @Composable
@@ -45,7 +46,7 @@ fun JNPage(navController: NavController) {
             )
             BotonMorado(navController, "Soy joven", RUTA_LOGIN_APP)
             Spacer(modifier = Modifier.height(20.dp))
-            BotonBlanco(navController, "Soy negocio",RUTA_LOGIN_APP)
+            BotonBlanco(navController, "Soy negocio",RUTA_INICIAR_SESION_NEGOCIO)
         }
     }
 }
