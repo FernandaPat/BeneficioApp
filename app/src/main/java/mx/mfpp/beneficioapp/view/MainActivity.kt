@@ -26,6 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,13 +42,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configurar edge-to-edge y ocultar barra de navegación
-        enableEdgeToEdge()
-
-        // Ocultar la barra de navegación
+        // Permitir dibujar detrás de las barras del sistema
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Hacer la barra de navegación transparente - CORREGIDO
+        // Ocultar barras de navegación y de estado
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+
+        // Mantener modo inmersivo incluso si el usuario desliza las barras
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
 
         setContent {
