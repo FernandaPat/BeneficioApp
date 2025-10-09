@@ -1,36 +1,15 @@
 package mx.mfpp.beneficioapp.model
 
-import com.google.gson.annotations.SerializedName
-
 data class Promocion(
-    @SerializedName("id")
     val id: Int,
-
-    @SerializedName("title")
     val nombre: String,
-
-    @SerializedName("image")
     val imagenUrl: String?,
-
-    @SerializedName("discount")
     val descuento: String?,
-
-    @SerializedName("category")
     val categoria: String,
-
-    @SerializedName("expiresIn")
     val expiraEn: Int?,
-
-    @SerializedName("location")
     val ubicacion: String?,
-
-    @SerializedName("isFavorite")
     val esFavorito: Boolean,
-
-    @SerializedName("rating")
     val rating: Double?,
-
-    @SerializedName("description")
     val descripcion: String?
 ) {
     fun obtenerTextoExpiracion(): String {

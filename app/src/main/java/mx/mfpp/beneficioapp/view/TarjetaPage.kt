@@ -25,7 +25,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier.
-            background(Color(0xFF230448))
+            background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
@@ -35,7 +35,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
             CardImage()
             Spacer(modifier = Modifier.height(55.dp))
             TextoMedioGrande("1234 5678 9012 0001", modifier)
-            Spacer(modifier = Modifier.height(70.dp))
+            Spacer(modifier = Modifier.height(50.dp))
 
             Column(
                 modifier = Modifier

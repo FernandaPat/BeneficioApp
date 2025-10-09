@@ -8,10 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.model.ServicioRemoto
 
 class BeneficioJovenVM : ViewModel() {
-    private val servicioRemoto = ServicioRemoto
 
     // State Flows
     private val _categorias = MutableStateFlow<List<Categoria>>(emptyList())
@@ -45,28 +43,15 @@ class BeneficioJovenVM : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Cargar todos los datos en paralelo
-                val categoriasDeferred = launch {
-                    _categorias.value = servicioRemoto.obtenerCategorias()
-                }
-                val favoritosDeferred = launch {
-                    _favoritos.value = servicioRemoto.obtenerFavoritos()
-                }
-                val nuevasPromoDeferred = launch {
-                    _nuevasPromociones.value = servicioRemoto.obtenerNuevasPromociones()
-                }
-                val expiracionDeferred = launch {
-                    _promocionesExpiracion.value = servicioRemoto.obtenerPromocionesPorExpiracion()
-                }
-                val cercanasDeferred = launch {
-                    _promocionesCercanas.value = servicioRemoto.obtenerPromocionesCercanas()
-                }
-                
-                categoriasDeferred.join()
-                favoritosDeferred.join()
-                nuevasPromoDeferred.join()
-                expiracionDeferred.join()
-                cercanasDeferred.join()
+                // Simular carga de datos
+                kotlinx.coroutines.delay(1000)
+
+                // Cargar datos mock
+                _categorias.value = generarCategoriasMock()
+                _favoritos.value = generarFavoritosMock()
+                _nuevasPromociones.value = generarNuevasPromocionesMock()
+                _promocionesExpiracion.value = generarPromocionesExpiracionMock()
+                _promocionesCercanas.value = generarPromocionesCercanasMock()
 
             } catch (e: Exception) {
                 _error.value = "Error al cargar los datos: ${e.message}"
@@ -82,5 +67,170 @@ class BeneficioJovenVM : ViewModel() {
 
     fun limpiarError() {
         _error.value = null
+    }
+
+    // Datos Mock para la pantalla de inicio
+    private fun generarCategoriasMock(): List<Categoria> {
+        return listOf(
+            Categoria(1, "Belleza", "💄", "#FF6B9C"),
+            Categoria(2, "Comida", "🍕", "#4CAF50"),
+            Categoria(3, "Educación", "📚", "#2196F3"),
+            Categoria(4, "Entretenimiento", "🎬", "#9C27B0"),
+            Categoria(5, "Moda", "👗", "#FF9800"),
+            Categoria(6, "Salud", "🏥", "#F44336"),
+            Categoria(7, "Servicios", "🔧", "#607D8B")
+        )
+    }
+
+    private fun generarFavoritosMock(): List<Promocion> {
+        return listOf(
+            Promocion(
+                id = 1,
+                nombre = "Spa Relajante",
+                imagenUrl = "https://picsum.photos/200/300?random=1",
+                descuento = "30% OFF",
+                categoria = "Belleza",
+                expiraEn = 5,
+                ubicacion = "2.3 km",
+                esFavorito = true,
+                rating = 4.8,
+                descripcion = "Día de spa completo con masaje relajante"
+            ),
+            Promocion(
+                id = 2,
+                nombre = "Pizzería Italiana",
+                imagenUrl = "https://picsum.photos/200/300?random=2",
+                descuento = "2x1",
+                categoria = "Comida",
+                expiraEn = 3,
+                ubicacion = "1.5 km",
+                esFavorito = true,
+                rating = 4.5,
+                descripcion = "Pizzas artesanales con ingredientes frescos"
+            ),
+            Promocion(
+                id = 3,
+                nombre = "Cine Premium",
+                imagenUrl = "https://picsum.photos/200/300?random=3",
+                descuento = "25% OFF",
+                categoria = "Entretenimiento",
+                expiraEn = 7,
+                ubicacion = "3.2 km",
+                esFavorito = true,
+                rating = 4.3,
+                descripcion = "Entradas para estreno exclusivo"
+            )
+        )
+    }
+
+    private fun generarNuevasPromocionesMock(): List<Promocion> {
+        return listOf(
+            Promocion(
+                id = 4,
+                nombre = "Curso Online",
+                imagenUrl = "https://picsum.photos/200/300?random=4",
+                descuento = "50% OFF",
+                categoria = "Educación",
+                expiraEn = 30,
+                ubicacion = "Online",
+                esFavorito = false,
+                rating = 4.7,
+                descripcion = "Curso completo de desarrollo móvil"
+            ),
+            Promocion(
+                id = 5,
+                nombre = "Boutique Moda",
+                imagenUrl = "https://picsum.photos/200/300?random=5",
+                descuento = "40% OFF",
+                categoria = "Moda",
+                expiraEn = 15,
+                ubicacion = "1.8 km",
+                esFavorito = false,
+                rating = 4.6,
+                descripcion = "Ropa de temporada con descuento"
+            ),
+            Promocion(
+                id = 6,
+                nombre = "Restaurante Sushi",
+                imagenUrl = "https://picsum.photos/200/300?random=6",
+                descuento = "20% OFF",
+                categoria = "Comida",
+                expiraEn = 10,
+                ubicacion = "2.5 km",
+                esFavorito = false,
+                rating = 4.4,
+                descripcion = "Sushi fresco con descuento especial"
+            )
+        )
+    }
+
+    private fun generarPromocionesExpiracionMock(): List<Promocion> {
+        return listOf(
+            Promocion(
+                id = 7,
+                nombre = "Gimnasio Fit",
+                imagenUrl = "https://picsum.photos/200/300?random=7",
+                descuento = "40% OFF",
+                categoria = "Salud",
+                expiraEn = 1,
+                ubicacion = "0.8 km",
+                esFavorito = false,
+                rating = 4.6,
+                descripcion = "Membresía mensual con acceso completo"
+            ),
+            Promocion(
+                id = 8,
+                nombre = "Taller Mecánico",
+                imagenUrl = "https://picsum.photos/200/300?random=8",
+                descuento = "15% OFF",
+                categoria = "Servicios",
+                expiraEn = 2,
+                ubicacion = "1.2 km",
+                esFavorito = false,
+                rating = 4.2,
+                descripcion = "Servicio de mantenimiento vehicular"
+            )
+        )
+    }
+
+    private fun generarPromocionesCercanasMock(): List<Promocion> {
+        return listOf(
+            Promocion(
+                id = 9,
+                nombre = "Cafetería Central",
+                imagenUrl = "https://picsum.photos/200/300?random=9",
+                descuento = "Café Gratis",
+                categoria = "Comida",
+                expiraEn = 7,
+                ubicacion = "0.5 km",
+                esFavorito = false,
+                rating = 4.4,
+                descripcion = "Café gratis con cualquier compra"
+            ),
+            Promocion(
+                id = 10,
+                nombre = "Farmacia 24/7",
+                imagenUrl = "https://picsum.photos/200/300?random=10",
+                descuento = "10% OFF",
+                categoria = "Salud",
+                expiraEn = 14,
+                ubicacion = "0.3 km",
+                esFavorito = false,
+                rating = 4.1,
+                descripcion = "Descuento en productos de farmacia"
+            ),
+            Promocion(
+                id = 11,
+                nombre = "Lavandería Express",
+                imagenUrl = "https://picsum.photos/200/300?random=11",
+                descuento = "2x1",
+                categoria = "Servicios",
+                expiraEn = 21,
+                ubicacion = "0.7 km",
+                esFavorito = false,
+                rating = 4.3,
+                descripcion = "Servicio de lavandería express"
+            )
+        )
     }
 }

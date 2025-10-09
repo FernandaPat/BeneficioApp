@@ -92,7 +92,8 @@ fun BotonBlanco(
             text = texto,
             color = moradoFuerte,
             fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
         )
     }
 }

@@ -1,4 +1,4 @@
-package mx.mfpp.beneficioapp.model
+/* package mx.mfpp.beneficioapp.model
 
 import retrofit2.HttpException
 import retrofit2.Retrofit
@@ -65,3 +65,4 @@ object ServicioRemoto {
             .take(3)
     }
 }
+*/
