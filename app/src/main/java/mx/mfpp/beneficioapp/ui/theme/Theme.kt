@@ -21,8 +21,8 @@ private val LightColorScheme = lightColorScheme(
 
     background = Color.White,
     surface = Color.White,
-    onBackground = Color.White,
-    onSurface = Color.White,
+    onBackground = Color.Black,
+    onSurface = Color.Black,
 )
 
 @Composable

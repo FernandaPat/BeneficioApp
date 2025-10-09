@@ -29,10 +29,10 @@ import androidx.navigation.compose.rememberNavController
 
 
 @Composable
-fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Modifier) {
+fun Agregregar_Promociones(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
     Scaffold(
-        topBar = { ArrowTopBar(navController, "Iniciar Sesión") },
+        topBar = { ArrowTopBar(navController, "Agregar Promocion") },
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -43,11 +43,6 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
                 .padding(paddingValues)
                 .padding(top = 3.dp)
         ) {
-            Etiqueta("Correo o número de teléfono",true)
-            CapturaTexto("Escribe aquí", 10)
-
-            Etiqueta("Contraseña", true)
-            CapturaTexto("Escribe aquí", 16)
 
             Column(
                 modifier = Modifier
@@ -56,19 +51,33 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_PROMOCIONES)
+                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_INICIO_APP)
 
                 Spacer(Modifier.height(16.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("¿No tienes una cuenta? ", fontSize = 11.sp, color = Color.Black)
 
+                    Text(
+                        text = "Crear Cuenta",
+                        color = MaterialTheme.colorScheme.primary,
+                        textDecoration = TextDecoration.Underline,
+                        fontSize = 11.sp,
+                        modifier = Modifier.clickable {
+                            navController.navigate(Pantalla.RUTA_CREAR_CUENTA)
+                        }
+                    )
+                }
             }
         }
     }
 }
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun Iniciar_Sesion_NegocioPreview() {
+fun Agregar_PromocionesPreview() {
     MaterialTheme {
         val navController = rememberNavController()
-        Iniciar_Sesion_Negocio(navController)
+        Agregregar_Promociones(navController)
     }
 }

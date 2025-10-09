@@ -3,7 +3,6 @@ package mx.mfpp.beneficioapp.view
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -76,7 +75,10 @@ fun AppPrincipal(
         Pantalla.RUTA_LOGIN_APP,
         Pantalla.RUTA_INICIAR_SESION,
         Pantalla.RUTA_CREAR_CUENTA,
-        Pantalla.RUTA_INICIAR_SESION_NEGOCIO
+        Pantalla.RUTA_INICIAR_SESION_NEGOCIO,
+        Pantalla.RUTA_PROMOCIONES,
+        Pantalla.RUTA_AGREGAR_PROMOCIONES,
+        Pantalla.RUTA_EDITAR_PROMOCIONES
     )
 
     val currentRoute = navController
@@ -113,14 +115,27 @@ fun AppNavHost(
         startDestination = Pantalla.RUTA_JN_APP,
         modifier = modifier.fillMaxSize()
     ) {
+
         composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
             Iniciar_Sesion_Negocio(navController)
+        }
+        composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
+            Iniciar_Sesion_Negocio(navController)
+        }
+        composable(Pantalla.RUTA_PROMOCIONES) {
+            Promociones(navController)
         }
         composable(Pantalla.RUTA_JN_APP) {
             JNPage(navController)
         }
         composable(Pantalla.RUTA_LOGIN_APP) {
             LoginPage(navController)
+        }
+        composable(Pantalla.RUTA_AGREGAR_PROMOCIONES) {
+            Agregregar_Promociones(navController)
+        }
+        composable(Pantalla.RUTA_EDITAR_PROMOCIONES) {
+            Editar_Promociones(navController)
         }
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)

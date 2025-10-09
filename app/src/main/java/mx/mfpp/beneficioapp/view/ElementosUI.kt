@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -30,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -191,8 +195,94 @@ fun ArrowTopBar(
                 .align(Alignment.Center)
                 .padding(top = topOffset)
         )
+
     }
 }
+
+
+@Composable
+fun ArrowTopBarNegocio(
+    navController: NavController,
+    text: String,
+    modifier: Modifier = Modifier,
+    barHeight: Dp = 72.dp,
+    topOffset: Dp = 6.dp,
+    showAdd: Boolean = false,             // <- NUEVO: mostrar u ocultar el botón +
+    onAddClick: () -> Unit = {}           // <- NUEVO: callback del botón +
+) {
+    val interactionLeft = remember { MutableInteractionSource() }
+    val (modLeft, _) = crearAnimacionIconosBotones(
+        interactionSource = interactionLeft,
+        colorNormal = Color.White,
+        escalaActivado = 1.3f
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .background(Color.White)
+            .height(barHeight)
+            .padding(bottom = 5.dp)
+    ) {
+        // Flecha atrás (izquierda)
+        IconButton(
+            onClick = { navController.popBackStack() },
+            interactionSource = interactionLeft,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.arrow_back),
+                contentDescription = "Regresar",
+                modifier = Modifier.size(30.dp).then(modLeft),
+                tint = Color.Black
+            )
+        }
+
+        // Título
+        TextoMedioGrande(
+            texto = text,
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(top = topOffset)
+        )
+
+        // Botón "+" en círculo (derecha)
+        if (showAdd) {
+            val interactionRight = remember { MutableInteractionSource() }
+            val (modRight, _) = crearAnimacionIconosBotones(
+                interactionSource = interactionRight,
+                colorNormal = Color.White,
+                escalaActivado = 1.1f
+            )
+            IconButton(
+                onClick = onAddClick,
+                interactionSource = interactionRight,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 16.dp)
+                    .then(modRight)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(color = 0xFF9605f7)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Agregar",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun TextoMedioGrande(

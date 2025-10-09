@@ -32,6 +32,7 @@ data class Promocion(
 
     @SerializedName("description")
     val descripcion: String?
+
 ) {
     fun obtenerTextoExpiracion(): String {
         return when (expiraEn) {
