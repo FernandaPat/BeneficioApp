@@ -11,6 +11,7 @@ data class Promocion(
     val esFavorito: Boolean,
     val rating: Double?,
     val descripcion: String?
+
 ) {
     fun obtenerTextoExpiracion(): String {
         return when (expiraEn) {
