@@ -25,7 +25,7 @@ fun SolicitudPage(navController: NavController) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier.
-            background(Color(0xFF230448))
+            background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())

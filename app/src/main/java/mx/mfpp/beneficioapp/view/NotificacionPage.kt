@@ -1,7 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,34 +11,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import mx.mfpp.beneficioapp.R
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun NotificacionPage(navController: NavController) {
@@ -48,54 +38,40 @@ fun NotificacionPage(navController: NavController) {
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .background(Color(0xFF230448))
+                .background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text(
-                text = "Expira",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-
-            )
-
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
-            NotificationItem("Cupón 1", "01/01/0001", "Establecimiento")
+            // Lista de notificaciones según tu diseño
+            NotificationItem("Cupón 1", "Nueva", "Establecimiento")
+            NotificationItem("Cupón 1", "Nueva", "Establecimiento")
+            NotificationItem("Cupón 1", "Expira pronto", "Establecimiento")
+            NotificationItem("Cupón 1", "Nueva", "Establecimiento")
         }
     }
 }
 
-
 @Composable
-fun NotificationItem(cupon: String, fecha: String, establecimiento: String) {
+fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(106.dp)
-                .background(Color.White)
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             ImagenCupon()
 
             Spacer(modifier = Modifier.width(16.dp))
-            
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
@@ -103,7 +79,8 @@ fun NotificationItem(cupon: String, fecha: String, establecimiento: String) {
                 Text(
                     text = cupon,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    color = Color.Black
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -115,12 +92,33 @@ fun NotificationItem(cupon: String, fecha: String, establecimiento: String) {
                 )
             }
 
-            Text(
-                text = fecha,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Etiqueta de estado con colores diferentes según el estado
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = when (estado.lowercase()) {
+                            "nueva" -> Color(0xFF7AF1A7)
+                            "expira pronto" -> Color(0xFFFFA500) // Naranja para expira pronto
+                            else -> Color(0xFF7AF1A7) // Color por defecto
+                        },
+                        shape = MaterialTheme.shapes.small
+                    )
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Text(
+                    text = estado.uppercase(),
+                    fontSize = 10.sp,
+                    color = when (estado.lowercase()) {
+                        "nueva" -> Color(0xFF008033)
+                        "expira pronto" -> Color(0xFF8B4513) // Marrón oscuro para contraste
+                        else -> Color(0xFF008033)
+                    },
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -129,7 +127,8 @@ fun NotificationItem(cupon: String, fecha: String, establecimiento: String) {
 fun ImagenCupon() {
     Card(
         modifier = Modifier
-            .size(80.dp)
+            .size(80.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(
             modifier = Modifier
@@ -137,6 +136,7 @@ fun ImagenCupon() {
                 .background(Color.LightGray),
             contentAlignment = Alignment.Center
         ) {
+
             Text(
                 text = "Img",
                 color = Color.Gray,
@@ -149,7 +149,7 @@ fun ImagenCupon() {
 
 @Preview(showBackground = true)
 @Composable
-fun notificacionPreview() {
+fun NotificacionPreview() {
     val navController = rememberNavController()
     NotificacionPage(navController)
 }
