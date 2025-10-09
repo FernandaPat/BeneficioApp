@@ -58,7 +58,6 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
@@ -94,29 +93,34 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Etiqueta de estado con colores diferentes según el estado
+            // Etiqueta de estado con tamaño fijo y texto centrado
             Box(
                 modifier = Modifier
+                    .width(80.dp) // Ancho fijo para todas las etiquetas
+                    .height(28.dp) // Alto fijo
                     .background(
                         color = when (estado.lowercase()) {
                             "nueva" -> Color(0xFF7AF1A7)
-                            "expira pronto" -> Color(0xFFFFA500) // Naranja para expira pronto
-                            else -> Color(0xFF7AF1A7) // Color por defecto
+                            "expira pronto" -> Color(0xFFFFA500)
+                            else -> Color(0xFF7AF1A7)
                         },
                         shape = MaterialTheme.shapes.small
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ),
+                contentAlignment = Alignment.Center // Centra el texto dentro del Box
             ) {
                 Text(
                     text = estado.uppercase(),
                     fontSize = 10.sp,
                     color = when (estado.lowercase()) {
                         "nueva" -> Color(0xFF008033)
-                        "expira pronto" -> Color(0xFF8B4513) // Marrón oscuro para contraste
+                        "expira pronto" -> Color(0xFF8B4513)
                         else -> Color(0xFF008033)
                     },
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth() 
+                        .padding(horizontal = 4.dp) // Pequeño padding horizontal
                 )
             }
         }
@@ -136,7 +140,6 @@ fun ImagenCupon() {
                 .background(Color.LightGray),
             contentAlignment = Alignment.Center
         ) {
-
             Text(
                 text = "Img",
                 color = Color.Gray,
@@ -145,7 +148,6 @@ fun ImagenCupon() {
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

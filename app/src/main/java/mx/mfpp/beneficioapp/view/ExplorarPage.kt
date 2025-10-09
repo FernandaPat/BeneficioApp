@@ -31,32 +31,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import mx.mfpp.beneficioapp.R
 
 // Data class para las categorías
 data class Category(
-    val name: String,
-    val isSelected: Boolean = false
+    val name: String
 )
 
 @Composable
 fun CategoriesPage(navController: NavController) {
-    // Lista de categorías con estado
+
     val categories = remember {
         mutableStateOf(
             listOf(
-                Category("Belleza", true),
-                Category("Comida", true),
-                Category("Educación", true),
-                Category("Salud", true),
-                Category("Entretenimiento", true),
-                Category("Moda", true),
-                Category("Servicios", true)
+                Category("Belleza"),
+                Category("Comida"),
+                Category("Educación"),
+                Category("Salud"),
+                Category("Entretenimiento"),
+                Category("Moda"),
+                Category("Servicios")
             )
         )
     }
@@ -66,7 +67,7 @@ fun CategoriesPage(navController: NavController) {
 
     Scaffold(
         topBar = {
-            ArrowTopBar(navController, "Categorías")
+
         }
     ) { paddingValues ->
         Column(
@@ -75,8 +76,6 @@ fun CategoriesPage(navController: NavController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
-
             SearchBar(
                 searchText = searchText.value,
                 onSearchTextChanged = { searchText.value = it },
@@ -85,6 +84,22 @@ fun CategoriesPage(navController: NavController) {
                     .padding(16.dp)
             )
 
+            Text(
+                text = "Categorías",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, top = 10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row() {
+                Icon(
+                    painter = painterResource(id = R.drawable.bell),
+                    contentDescription = "Notificaciones",
+                    modifier = Modifier.size(24.dp),
+                )
+            }
         }
     }
 }
@@ -126,7 +141,7 @@ fun SearchBar(
                 decorationBox = { innerTextField ->
                     if (searchText.isEmpty()) {
                         Text(
-                            text = "Buscar categorías...",
+                            text = "Buscar",
                             color = Color.Gray,
                             fontSize = 16.sp
                         )
@@ -139,44 +154,8 @@ fun SearchBar(
 }
 
 @Composable
-fun CategoryItem(
-    category: Category,
-    onCategoryClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(70.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (category.isSelected) Color(0xFF7AF1A7) else Color.White
-        ),
-        onClick = onCategoryClick
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = category.name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = if (category.isSelected) Color(0xFF008033) else Color.Black
-            )
+fun CategoriaExplorar() {
 
-            if (category.isSelected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Seleccionado",
-                    tint = Color(0xFF008033),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-    }
 }
 
 
