@@ -526,7 +526,7 @@ private fun NumberDropdownField(
 }
 
 @Composable
-private fun BeneficioPlaceholder(text: String) {
+fun BeneficioPlaceholder(text: String) {
     Text(
         text = text,
         color = Color(0xFFA1A0A0),
