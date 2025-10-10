@@ -69,7 +69,7 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
                 verticalArrangement = Arrangement.Center
             ) {
 
-                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_PROMOCIONES)
+                BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_INICIONEGOCIO_APP)
 
                 Spacer(Modifier.height(16.dp))
 

@@ -78,7 +78,8 @@ fun AppPrincipal(
         Pantalla.RUTA_INICIAR_SESION_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES,
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
-        Pantalla.RUTA_EDITAR_PROMOCIONES
+        Pantalla.RUTA_EDITAR_PROMOCIONES,
+        Pantalla.RUTA_INICIONEGOCIO_APP
     )
 
     val currentRoute = navController
@@ -130,6 +131,9 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_PERFIL_APP) {
             PerfilPage(navController)
+        }
+        composable(Pantalla.RUTA_INICIONEGOCIO_APP) {
+            InicioNegocioPage(navController)
         }
         composable(Pantalla.RUTA_LOGIN_APP) {
             LoginPage(navController)
