@@ -128,6 +128,9 @@ fun AppNavHost(
         composable(Pantalla.RUTA_JN_APP) {
             JNPage(navController)
         }
+        composable(Pantalla.RUTA_PERFIL_APP) {
+            PerfilPage(navController)
+        }
         composable(Pantalla.RUTA_LOGIN_APP) {
             LoginPage(navController)
         }

@@ -366,14 +366,21 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Foto de perfil",
-                    modifier = Modifier
-                        .size(93.dp)
-                        .padding(end = 12.dp),
-                    tint = Color.LightGray
-                )
+                IconButton(
+                    onClick = {
+                        navController.navigate(Pantalla.RUTA_PERFIL_APP)
+                    },
+                    modifier = Modifier.size(90.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier
+                            .size(93.dp)
+                            .padding(end = 12.dp),
+                        tint = Color.LightGray
+                    )
+                }
                 Text(
                     text = "Nombre",
                     style = MaterialTheme.typography.headlineSmall.copy(

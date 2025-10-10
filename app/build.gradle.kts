@@ -63,6 +63,8 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.23.1")
 
     implementation("androidx.compose.material3:material3:1.3.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
 
 
 
