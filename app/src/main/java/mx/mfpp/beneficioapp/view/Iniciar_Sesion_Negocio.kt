@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -48,6 +49,17 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
 
             Etiqueta("Contraseña", true)
             CapturaTexto("Escribe aquí", 16)
+            Text(
+                text = "Recuperar contraseña",
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline,
+                fontSize = 11.sp,
+                modifier = Modifier
+                    .padding(start = 30.dp)
+                    .clickable {
+                    navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                }
+            )
 
             Column(
                 modifier = Modifier
@@ -56,6 +68,7 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+
                 BotonMorado(navController, "Iniciar Sesión", Pantalla.RUTA_PROMOCIONES)
 
                 Spacer(Modifier.height(16.dp))

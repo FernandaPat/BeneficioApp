@@ -48,6 +48,17 @@ fun Iniciar_Sesion(navController: NavController, modifier: Modifier = Modifier) 
 
             Etiqueta("Contraseña", true)
             CapturaTexto("Escribe aquí", 16)
+            Text(
+                text = "Recuperar contraseña",
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline,
+                fontSize = 11.sp,
+                modifier = Modifier
+                    .padding(start = 30.dp)
+                    .clickable {
+                        navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                    }
+            )
 
             Column(
                 modifier = Modifier
