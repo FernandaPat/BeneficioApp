@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
 
         // Ocultar barras de navegación y de estado
         val controller = WindowInsetsControllerCompat(window, window.decorView)
-        controller.hide(WindowInsetsCompat.Type.systemBars())
+        controller.hide(WindowInsetsCompat.Type.navigationBars())
 
         // Mantener modo inmersivo incluso si el usuario desliza las barras
         controller.systemBarsBehavior =
