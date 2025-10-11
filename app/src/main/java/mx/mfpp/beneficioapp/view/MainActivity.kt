@@ -183,20 +183,23 @@ fun AppNavHost(
 
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
             val viewModel: BeneficioJovenVM = viewModel()
-            val showScanner by viewModel.showScanner.collectAsState() // <- Agrega esta línea
+            val showScanner by viewModel.showScanner.collectAsState()
 
-            if (showScanner) { // <- Usa el State aquí
+            if (showScanner) {
                 ScannerQrScreen(
                     onQrScanned = { qrContent ->
                         viewModel.addQrScanResult(qrContent)
                     },
                     onBack = {
                         viewModel.hideScanner()
-                        navController.popBackStack()
-                    }
+                    },
+                    navController = navController // <- PASA el navController aquí
                 )
             } else {
-                HistorialScannerScreen(navController = navController)
+                HistorialScannerScreen(
+                    navController = navController,
+                    viewModel = viewModel
+                )
             }
         }
 

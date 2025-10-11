@@ -320,15 +320,17 @@ fun Categorias(categorias: List<Categoria>) {
 fun ItemCategoriaCirculo(categoria: Categoria) {
     Card(
         onClick = { /* Acción al hacer clic en la categoría */ },
-        modifier = Modifier.size(70.dp),
+        modifier = Modifier.size(70.dp), // MANTENIDO en 70.dp
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.LightGray)
+        colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = categoria.icono,
-                fontSize = 24.sp
+            Icon(
+                painter = painterResource(id = categoria.iconoResId),
+                contentDescription = categoria.nombre,
+                modifier = Modifier.size(42.dp), // AUMENTADO de 32.dp a 42.dp
+                tint = Color.Unspecified
             )
         }
     }

@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -32,7 +33,9 @@ import java.util.concurrent.Executors
 @Composable
 fun ScannerQrScreen(
     onQrScanned: (String) -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    navController: NavController 
+
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -51,7 +54,9 @@ fun ScannerQrScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        navController.popBackStack() // <- USAR navController aquí
+                    }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
                 },

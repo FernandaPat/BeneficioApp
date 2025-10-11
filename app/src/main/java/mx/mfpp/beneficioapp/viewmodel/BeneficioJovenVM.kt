@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.model.QrScanResult
@@ -46,6 +47,10 @@ class BeneficioJovenVM : ViewModel() {
 
     fun showScanner() {
         _showScanner.value = true
+    }
+
+    fun resetScannerState() {
+        _showScanner.value = false
     }
 
     fun addQrScanResult(content: String) {
@@ -104,13 +109,13 @@ class BeneficioJovenVM : ViewModel() {
     // Datos Mock para la pantalla de inicio
     private fun generarCategoriasMock(): List<Categoria> {
         return listOf(
-            Categoria(1, "Belleza", "💄", "#FF6B9C"),
-            Categoria(2, "Comida", "🍕", "#4CAF50"),
-            Categoria(3, "Educación", "📚", "#2196F3"),
-            Categoria(4, "Entretenimiento", "🎬", "#9C27B0"),
-            Categoria(5, "Moda", "👗", "#FF9800"),
-            Categoria(6, "Salud", "🏥", "#F44336"),
-            Categoria(7, "Servicios", "🔧", "#607D8B")
+            Categoria(1, "Belleza", R.drawable.belleza,"#FF6B9C"), // Reemplaza con tu imagen
+            Categoria(2, "Comida", R.drawable.comida, "#4CAF50"),   // Reemplaza con tu imagen
+            Categoria(3, "Educación", R.drawable.educacion, "#2196F3"), // Reemplaza con tu imagen
+            Categoria(4, "Entretenimiento", R.drawable.entretenimiento, "#9C27B0"), // Reemplaza con tu imagen
+            Categoria(5, "Moda", R.drawable.moda, "#FF9800"),       // Reemplaza con tu imagen
+            Categoria(6, "Salud", R.drawable.salud, "#F44336"),     // Reemplaza con tu imagen
+            Categoria(7, "Servicios", R.drawable.servicios, "#607D8B") // Reemplaza con tu imagen
         )
     }
 

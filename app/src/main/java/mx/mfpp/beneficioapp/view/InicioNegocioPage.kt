@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,16 +20,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
 @Composable
 fun InicioNegocioPage(navController: NavController) {
     val moradoBoton = Color(0xFFE2C8FF)
     val moradoTexto = Color(0xFF9605F7)
+    val viewModel: BeneficioJovenVM = viewModel() // <- MOVER viewModel aquí
 
     Scaffold(
         containerColor = Color.White
@@ -84,7 +88,11 @@ fun InicioNegocioPage(navController: NavController) {
                 // Botones principales
                 Button(
                     onClick = {
-                        navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO)
+                        // Resetear el estado del scanner antes de navegar
+                        viewModel.resetScannerState() // <- AHORA SÍ funciona
+                        navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO) {
+                            launchSingleTop = true
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()

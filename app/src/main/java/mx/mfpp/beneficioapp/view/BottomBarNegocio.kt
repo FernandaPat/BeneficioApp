@@ -1,25 +1,33 @@
 package mx.mfpp.beneficioapp.view
 
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.compose.foundation.layout.height
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
 @Composable
 fun BottomNavigationNegocio(navController: NavController) {
-    val currentBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentDestination = currentBackStackEntry.value?.destination?.route
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStackEntry?.destination?.route
 
     NavigationBar(
         modifier = Modifier
@@ -30,15 +38,9 @@ fun BottomNavigationNegocio(navController: NavController) {
         Pantalla.listaPantallasNegocio.forEach { pantalla ->
             val isSelected = currentDestination == pantalla.ruta
 
-            val (modifierAnimado, colorAnimado) = crearAnimacionNavegacion(
-                estaSeleccionado = isSelected,
-                colorNormal = Color.Gray,
-                colorActivado = Color(0xFF9605F7),
-                escalaActivado = 1.3f
-            )
-
-            val gradientBrush = Brush.linearGradient(
-                colors = listOf(Color(0xFF9605F7), Color(0xFFB150FF))
+            val escala by animateFloatAsState(
+                targetValue = if (isSelected) 1.3f else 1f,
+                label = "escalaAnimacion"
             )
 
             NavigationBarItem(
@@ -46,10 +48,11 @@ fun BottomNavigationNegocio(navController: NavController) {
                 onClick = {
                     if (!isSelected) {
                         navController.navigate(pantalla.ruta) {
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(Pantalla.RUTA_INICIO_NEGOCIO) {
                                 saveState = true
                             }
                             launchSingleTop = true
+                            restoreState = true
                         }
                     }
                 },
@@ -59,28 +62,18 @@ fun BottomNavigationNegocio(navController: NavController) {
                         contentDescription = pantalla.etiqueta,
                         modifier = Modifier
                             .size(26.dp)
-                            .then(modifierAnimado),
-                        tint = colorAnimado
+                            .scale(escala), // Solo el icono tiene la animación de escala
+                        tint = if (isSelected) Color(0xFF9605F7) else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = pantalla.etiqueta,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp, // Reducir solo un poco el texto
                         fontWeight = FontWeight.Medium,
-                        style = if (isSelected) {
-                            androidx.compose.ui.text.TextStyle(
-                                brush = gradientBrush,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        } else {
-                            androidx.compose.ui.text.TextStyle(
-                                color = Color.Gray,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        color = if (isSelected) Color(0xFF9605F7) else Color.Gray,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 alwaysShowLabel = true,

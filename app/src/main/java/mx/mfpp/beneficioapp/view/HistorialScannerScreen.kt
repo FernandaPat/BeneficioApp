@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
@@ -21,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialScannerScreen(
     navController: NavController,
@@ -31,16 +34,36 @@ fun HistorialScannerScreen(
 
     Scaffold(
         topBar = {
-            ArrowTopBarNegocio(
-                navController = navController,
-                text = "Scanner QR",
-                showAdd = false
+            TopAppBar(
+                title = {
+                    Text(
+                        "Scanner QR",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        // Navegar de manera segura al inicio de negocio
+                        navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
+                            popUpTo(Pantalla.RUTA_INICIO_NEGOCIO) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                )
             )
         },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    // Mostrar el scanner
                     viewModel.showScanner()
                 },
                 containerColor = Color(0xFF9605F7),
