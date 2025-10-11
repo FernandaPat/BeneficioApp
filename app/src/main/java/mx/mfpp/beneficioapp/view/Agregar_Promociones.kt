@@ -42,6 +42,16 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+/**
+ * Pantalla principal para agregar nuevas promociones dentro del sistema.
+ *
+ * Permite al usuario seleccionar una imagen, ingresar título, descripción,
+ * descuento, categoría, y rango de fechas de validez. Los campos son validados
+ * visualmente, y la información se guarda al presionar el botón principal.
+ *
+ * @param navController Controlador de navegación de la aplicación.
+ * @param modifier Modificador opcional para ajustar la apariencia del contenedor principal.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Agregregar_Promociones(
@@ -178,6 +188,17 @@ fun Agregregar_Promociones(
 
 @RequiresApi(Build.VERSION_CODES.O)
 private val fmtDDMMYYYY: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+/**
+ * Selector de fecha inicial para la promoción.
+ *
+ * Muestra un campo de texto no editable con un diálogo de calendario
+ * para elegir la fecha "Disponible desde".
+ *
+ * @param value Fecha actual seleccionada en formato dd/MM/yyyy.
+ * @param onChange Callback que actualiza la fecha seleccionada.
+ * @param label Etiqueta mostrada sobre el campo.
+ * @param modifier Modificador opcional para el estilo.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -228,6 +249,18 @@ fun FechaDesdePicker(
         }
     }
 }
+/**
+ * Selector de fecha final de la promoción con validación de rango.
+ *
+ * No permite seleccionar una fecha anterior a la fecha de inicio.
+ * Calcula automáticamente los días restantes hasta la expiración.
+ *
+ * @param value Fecha seleccionada en formato dd/MM/yyyy.
+ * @param onChange Callback que devuelve la fecha seleccionada y días restantes.
+ * @param label Etiqueta del campo (por defecto "Hasta").
+ * @param minDesde Fecha mínima seleccionable.
+ * @param modifier Modificador visual opcional.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -301,7 +334,17 @@ fun FechaHastaPicker(
         }
     }
 }
-
+/**
+ * Selector compuesto de rango de fechas.
+ *
+ * Combina los campos "Desde" y "Hasta" e incluye validaciones visuales
+ * para evitar rangos inconsistentes.
+ *
+ * @param desde Fecha inicial seleccionada.
+ * @param hasta Fecha final seleccionada.
+ * @param onDesdeChange Callback para actualizar la fecha inicial.
+ * @param onHastaChange Callback para actualizar la fecha final y los días restantes.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RangoFechasPicker(
@@ -369,7 +412,17 @@ fun RangoFechasPicker(
 
     }
 }
-
+/**
+ * Componente desplegable para seleccionar la categoría de la promoción.
+ *
+ * Muestra una lista de categorías predefinidas y actualiza el valor seleccionado.
+ *
+ * @param categoria Categoría actual seleccionada.
+ * @param onCategoriaChange Callback para actualizar la categoría.
+ * @param categorias Lista de categorías disponibles.
+ * @param obligatorio Indica si el campo es obligatorio.
+ * @param modifier Modificador opcional.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -418,7 +471,11 @@ fun SeleccionarCategoria(
         }
     }
 }
-
+/**
+ * Vista previa de la pantalla Agregar Promociones en modo de diseño.
+ *
+ * Permite visualizar la interfaz sin necesidad de ejecutar la app completa.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

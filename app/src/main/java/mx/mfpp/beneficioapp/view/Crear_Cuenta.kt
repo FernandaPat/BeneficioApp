@@ -62,6 +62,16 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.text.style.TextDecoration
 
 
+/**
+ * Pantalla para el registro de una nueva cuenta en la aplicación Beneficio Joven.
+ *
+ * Incluye campos para capturar información personal, dirección, género, correo, teléfono,
+ * contraseña y datos de la tarjeta física, en caso de tenerla. Además, valida la contraseña
+ * y permite navegar hacia la pantalla de inicio de sesión.
+ *
+ * @param navController Controlador de navegación para dirigir entre pantallas.
+ * @param modifier Modificador opcional para ajustar el diseño de la vista.
+ */
 @Composable
 fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
@@ -163,12 +173,23 @@ fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
     }
 }
 
-
+/**
+ * Extensión de [Modifier] para aplicar un estilo de entrada uniforme
+ * en los campos de texto del sistema Beneficio Joven.
+ */
 fun Modifier.beneficioInput(): Modifier = this
     .padding(start = 20.dp, end = 20.dp, bottom = 8.dp, top = 13.dp)
     .width(380.dp)
     .height(53.dp)
-
+/**
+ * Sección para capturar los datos completos de dirección del usuario.
+ *
+ * Incluye campos para calle, número exterior/interior, colonia, código postal,
+ * municipio y estado. Cada cambio en los campos actualiza un objeto [Direccion].
+ *
+ * @param modifier Modificador opcional para el diseño del contenedor.
+ * @param onAddressChange Callback que devuelve la dirección actualizada.
+ */
 @Composable
 fun SeccionDireccion(
     modifier: Modifier = Modifier,
@@ -280,6 +301,13 @@ fun SeccionDireccion(
         }
     )
 }
+/**
+ * Selector binario visual para indicar si el usuario cuenta con tarjeta física.
+ *
+ * @param seleccion Valor actual de selección (true, false o null).
+ * @param onSelected Callback al seleccionar una opción.
+ * @param modifier Modificador opcional.
+ */
 @Composable
 fun Tarjeta(
     seleccion: Boolean?,
@@ -297,7 +325,15 @@ fun Tarjeta(
         OpcionPill(text = "No", selected = seleccion == false) { onSelected(false) }
     }
 }
-
+/**
+ * Botón de selección en forma de "pill" (opción redondeada).
+ *
+ * Se utiliza en componentes de selección binaria o múltiple.
+ *
+ * @param text Texto que se muestra dentro del botón.
+ * @param selected Indica si la opción está activa.
+ * @param onClick Acción al hacer clic sobre la opción.
+ */
 @Composable
 private fun OpcionPill(
     text: String,
@@ -342,7 +378,15 @@ private fun OpcionPill(
     }
 }
 
-
+/**
+ * Menú desplegable para seleccionar el estado de residencia.
+ *
+ * Si se selecciona "Otro", muestra una advertencia indicando
+ * que los beneficios aplican únicamente para Atizapán.
+ *
+ * @param onSelected Callback que devuelve el estado elegido.
+ * @param modifier Modificador opcional.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeleccionarEstado(
@@ -399,7 +443,13 @@ fun SeleccionarEstado(
     }
 }
 
-
+/**
+ * Selector de fecha de nacimiento compuesto por tres menús desplegables:
+ * día, mes y año. Actualiza los valores conforme se seleccionan.
+ *
+ * @param yearRange Rango de años disponibles (por defecto 1900 hasta año actual).
+ * @param onFechaChange Callback con día, mes y año seleccionados.
+ */
 @Composable
 fun Fecha_nacimiento(
     modifier: Modifier = Modifier,
@@ -415,7 +465,14 @@ fun Fecha_nacimiento(
 
 }
 
-
+/**
+ * Subcomponente para renderizar los menús desplegables de fecha de nacimiento.
+ *
+ * Calcula dinámicamente el número de días según el mes y año seleccionados.
+ *
+ * @param yearRange Rango de años válidos.
+ * @param onDateSelected Callback que devuelve día, mes y año actualizados.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FechaNacimientoDropdowns(
@@ -482,7 +539,14 @@ private fun FechaNacimientoDropdowns(
         )
     }
 }
-
+/**
+ * Campo genérico para selección de números (día, mes o año) mediante un menú desplegable.
+ *
+ * @param placeholder Texto indicativo cuando no hay valor seleccionado.
+ * @param range Rango de números seleccionables.
+ * @param selected Valor actual seleccionado.
+ * @param onSelected Callback cuando se elige un nuevo número.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NumberDropdownField(
@@ -524,7 +588,11 @@ private fun NumberDropdownField(
         }
     }
 }
-
+/**
+ * Texto gris utilizado como placeholder en los campos personalizados.
+ *
+ * @param text Texto que se mostrará como ejemplo.
+ */
 @Composable
 fun BeneficioPlaceholder(text: String) {
     Text(
@@ -534,6 +602,16 @@ fun BeneficioPlaceholder(text: String) {
 
         )
 }
+
+/**
+ * Campo de texto con borde y formato adaptado al estilo de la aplicación.
+ *
+ * @param value Valor actual del campo.
+ * @param onValueChange Callback que actualiza el valor.
+ * @param placeholder Texto guía que se muestra dentro del campo.
+ * @param keyboardOptions Configuración del teclado (tipo, acción IME, etc.).
+ * @param readOnly Si es true, el campo no puede editarse.
+ */
 @Composable
 fun BeneficioOutlinedTextField(
     value: String,
@@ -561,6 +639,13 @@ fun BeneficioOutlinedTextField(
     )
 
 }
+/**
+ * Campo de contraseña con opción de mostrar u ocultar el texto.
+ *
+ * @param value Contraseña actual escrita.
+ * @param onValueChange Callback que actualiza el valor.
+ * @param placeholder Texto guía (por ejemplo “Mín. 8 caracteres”).
+ */
 @Composable
 fun BeneficioPasswordField(
     value: String,
@@ -596,6 +681,13 @@ fun BeneficioPasswordField(
             .height(53.dp)
     )
 }
+/**
+ * Lista visual de requisitos de contraseña.
+ *
+ * Verifica longitud, mayúsculas, números y caracteres especiales.
+ *
+ * @param password Contraseña actual a validar.
+ */
 @Composable
 fun PasswordChecklist(
     password: String,
@@ -623,6 +715,16 @@ fun PasswordChecklist(
     }
 }
 
+/**
+ * Elemento individual de la lista de verificación de contraseña.
+ *
+ * Muestra un ícono e indica visualmente si la condición se cumple.
+ *
+ * @param texto Texto descriptivo del requisito.
+ * @param activo Indica si la regla se cumple.
+ * @param okColor Color cuando la regla está activa.
+ * @param idleColor Color cuando no se cumple.
+ */
 @Composable
 private fun ChecklistRow(
     texto: String,
@@ -652,8 +754,11 @@ private fun ChecklistRow(
     }
 }
 
-
-
+/**
+ * Campo de entrada para capturar un número telefónico de 10 dígitos.
+ *
+ * @param placeholder Texto guía del campo.
+ */
 @Composable
 fun CapturaNumeroTelefono(
     placeholder: String,
@@ -668,7 +773,12 @@ fun CapturaNumeroTelefono(
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
     )
 }
-
+/**
+ * Campo de texto genérico para capturar texto libre.
+ *
+ * @param placeholder Texto guía mostrado en el campo.
+ * @param maxLength Longitud máxima permitida.
+ */
 @Composable
 fun CapturaTexto(
     placeholder: String,
@@ -685,9 +795,14 @@ fun CapturaTexto(
     )
 }
 
-
-
-
+/**
+ * Etiqueta superior que acompaña cada campo de texto.
+ *
+ * Si el campo es obligatorio, muestra un asterisco rojo.
+ *
+ * @param texto Texto principal de la etiqueta.
+ * @param obligatorio Indica si el campo es requerido.
+ */
 @Composable
 fun Etiqueta(
     texto: String,
@@ -711,7 +826,12 @@ fun Etiqueta(
         modifier = modifier.padding(start = 20.dp, top = 20.dp, end = 16.dp)
     )
 }
-
+/**
+ * Menú desplegable para seleccionar el género del usuario.
+ *
+ * @param options Lista de opciones disponibles (por defecto: Femenino, Masculino, Otro).
+ * @param onSelected Callback con la opción elegida.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeleccionarGenero(
@@ -758,7 +878,11 @@ fun SeleccionarGenero(
     }
 }
 
-
+/**
+ * Vista previa del formulario de creación de cuenta.
+ *
+ * Permite visualizar el diseño completo dentro del editor de Compose.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CrearCuentaPreview() {
