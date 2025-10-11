@@ -1,0 +1,200 @@
+package mx.mfpp.beneficioapp.view
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+
+@Composable
+fun HistorialScannerScreen(
+    navController: NavController,
+    viewModel: BeneficioJovenVM = viewModel()
+) {
+    val qrScanResults by viewModel.qrScanResults.collectAsState()
+    val totalScans = viewModel.getTotalScans()
+
+    Scaffold(
+        topBar = {
+            ArrowTopBarNegocio(
+                navController = navController,
+                text = "Scanner QR",
+                showAdd = false
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    // Mostrar el scanner
+                    viewModel.showScanner()
+                },
+                containerColor = Color(0xFF9605F7),
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.QrCodeScanner,
+                    contentDescription = "Escanear QR",
+                    tint = Color.White
+                )
+            }
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color.White)
+        ) {
+            // Tarjeta de información
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Scanner QR",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "Escanea códigos QR de clientes para registrar sus beneficios",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Total de escaneos:",
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "$totalScans",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color(0xFF9605F7)
+                        )
+                    }
+                }
+            }
+
+            // Lista de escaneos
+            if (qrScanResults.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.QrCodeScanner,
+                            contentDescription = "Sin escaneos",
+                            tint = Color.LightGray,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Text(
+                            text = "No hay escaneos registrados",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Presiona el botón + para comenzar a escanear",
+                            color = Color.Gray,
+                            fontSize = 14.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    items(qrScanResults) { scanResult ->
+                        ScanResultCard(
+                            scanResult = scanResult,
+                            onDelete = { viewModel.deleteQrScanResult(it) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScanResultCard(
+    scanResult: mx.mfpp.beneficioapp.model.QrScanResult,
+    onDelete: (mx.mfpp.beneficioapp.model.QrScanResult) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = scanResult.content,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "Escaneado: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(java.util.Date(scanResult.timestamp))}",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
+
+            IconButton(
+                onClick = { onDelete(scanResult) }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.Gray
+                )
+            }
+        }
+    }
+}

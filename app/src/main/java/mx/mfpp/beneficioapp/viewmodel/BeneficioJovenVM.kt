@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.QrScanResult
 
 class BeneficioJovenVM : ViewModel() {
 
@@ -32,6 +33,37 @@ class BeneficioJovenVM : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _qrScanResults = MutableStateFlow<List<QrScanResult>>(emptyList())
+    val qrScanResults: StateFlow<List<QrScanResult>> = _qrScanResults.asStateFlow()
+
+    private val _showScanner = MutableStateFlow(false)
+    val showScanner: StateFlow<Boolean> = _showScanner.asStateFlow()
+
+    fun hideScanner() {
+        _showScanner.value = false
+    }
+
+    fun showScanner() {
+        _showScanner.value = true
+    }
+
+    fun addQrScanResult(content: String) {
+        val newList = _qrScanResults.value.toMutableList()
+        newList.add(QrScanResult(content))
+        _qrScanResults.value = newList
+        hideScanner() // Ocultar scanner después de escanear
+    }
+
+    fun deleteQrScanResult(result: QrScanResult) {
+        val newList = _qrScanResults.value.toMutableList()
+        newList.remove(result)
+        _qrScanResults.value = newList
+    }
+
+    fun getTotalScans(): Int {
+        return _qrScanResults.value.size
+    }
 
     init {
         cargarDatosIniciales()

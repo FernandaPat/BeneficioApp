@@ -47,6 +47,8 @@ sealed class Pantalla(
         const val RUTA_PROMOCIONES_NEGOCIO = "promociones_negocio"
         const val RUTA_SCANER_NEGOCIO = "scaner_negocio"
         const val RUTA_PERFIL_NEGOCIO = "perfil_negocio"
+
+        const val RUTA_HISTORIAL_SCANNER = "historial_scanner"
     }
 
     // Pantallas para jóvenes

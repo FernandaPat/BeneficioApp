@@ -16,6 +16,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -27,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -73,7 +75,8 @@ fun AppPrincipal(
         Pantalla.RUTA_INICIAR_SESION_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES,
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
-        Pantalla.RUTA_EDITAR_PROMOCIONES
+        Pantalla.RUTA_EDITAR_PROMOCIONES,
+        Pantalla.RUTA_SCANER_NEGOCIO
     )
 
     val currentRoute = navController
@@ -177,9 +180,26 @@ fun AppNavHost(
         composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
             Promociones(navController)
         }
+
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
-            ScannerPage(navController)
+            val viewModel: BeneficioJovenVM = viewModel()
+            val showScanner by viewModel.showScanner.collectAsState() // <- Agrega esta línea
+
+            if (showScanner) { // <- Usa el State aquí
+                ScannerQrScreen(
+                    onQrScanned = { qrContent ->
+                        viewModel.addQrScanResult(qrContent)
+                    },
+                    onBack = {
+                        viewModel.hideScanner()
+                        navController.popBackStack()
+                    }
+                )
+            } else {
+                HistorialScannerScreen(navController = navController)
+            }
         }
+
         composable(Pantalla.RUTA_PERFIL_NEGOCIO) {
             PerfilPage(navController)
         }
