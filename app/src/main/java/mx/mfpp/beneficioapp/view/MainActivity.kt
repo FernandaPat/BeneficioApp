@@ -41,14 +41,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Permitir dibujar detrás de las barras del sistema
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Ocultar barras de navegación y de estado
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.navigationBars())
-
-        // Mantener modo inmersivo incluso si el usuario desliza las barras
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         window.navigationBarColor = android.graphics.Color.TRANSPARENT
@@ -78,8 +73,7 @@ fun AppPrincipal(
         Pantalla.RUTA_INICIAR_SESION_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES,
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
-        Pantalla.RUTA_EDITAR_PROMOCIONES,
-        Pantalla.RUTA_INICIONEGOCIO_APP
+        Pantalla.RUTA_EDITAR_PROMOCIONES
     )
 
     val currentRoute = navController
@@ -90,10 +84,22 @@ fun AppPrincipal(
 
     val showBottomBar = currentRoute !in hiddenBottomBarRoutes
 
+    val isNegocioRoute = currentRoute in listOf(
+        Pantalla.RUTA_INICIO_NEGOCIO,
+        Pantalla.RUTA_PROMOCIONES_NEGOCIO,
+        Pantalla.RUTA_SCANER_NEGOCIO,
+        Pantalla.RUTA_PERFIL_NEGOCIO,
+        Pantalla.RUTA_INICIONEGOCIO_APP
+    )
+
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                AppBottomBar(navController)
+                if (isNegocioRoute) {
+                    BottomNavigationNegocio(navController)
+                } else {
+                    AppBottomBar(navController)
+                }
             }
         },
     ) { innerPadding ->
@@ -116,10 +122,6 @@ fun AppNavHost(
         startDestination = Pantalla.RUTA_JN_APP,
         modifier = modifier.fillMaxSize()
     ) {
-
-        composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
-            Iniciar_Sesion_Negocio(navController)
-        }
         composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
             Iniciar_Sesion_Negocio(navController)
         }
@@ -150,7 +152,8 @@ fun AppNavHost(
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
-        // Grafo de navegación Nav bar
+
+        // Grafo de navegación Nav bar - JÓVENES
         composable(Pantalla.RUTA_INICIO_APP) {
             InicioPage(navController, beneficioJovenVM)
         }
@@ -165,6 +168,20 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             //Agregar
+        }
+
+        // Grafo de navegación Nav bar - NEGOCIO
+        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
+            InicioNegocioPage(navController)
+        }
+        composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
+            Promociones(navController)
+        }
+        composable(Pantalla.RUTA_SCANER_NEGOCIO) {
+            ScannerPage(navController)
+        }
+        composable(Pantalla.RUTA_PERFIL_NEGOCIO) {
+            PerfilPage(navController)
         }
 
         // Paginas fuera de la barra de navegacion
@@ -194,16 +211,15 @@ fun AppBottomBar(navController: NavHostController) {
         Pantalla.listaPantallas.forEach { pantalla ->
             val isSelected = pantallaActual?.route == pantalla.ruta
 
-            // Cambiar colores para que funcionen con fondo blanco
             val (modifierAnimado, colorAnimado) = crearAnimacionNavegacion(
                 estaSeleccionado = isSelected,
                 colorNormal = Color.Gray,
-                colorActivado = Color(0xFFFF2291),
+                colorActivado = Color(0xFF9605F7),
                 escalaActivado = 1.3f
             )
 
             val gradientBrush = Brush.linearGradient(
-                colors = listOf(Color(0xFFFF2291), Color(0xFFFF7867))
+                colors = listOf(Color(0xFF9605F7), Color(0xFFB150FF))
             )
 
             NavigationBarItem(
@@ -221,7 +237,7 @@ fun AppBottomBar(navController: NavHostController) {
                         painter = painterResource(id = pantalla.iconoResId),
                         contentDescription = pantalla.etiqueta,
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(26.dp)
                             .then(modifierAnimado),
                         tint = colorAnimado
                     )
@@ -229,20 +245,28 @@ fun AppBottomBar(navController: NavHostController) {
                 label = {
                     Text(
                         pantalla.etiqueta,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
                         style = if (isSelected) {
-                            androidx.compose.ui.text.TextStyle(brush = gradientBrush)
+                            androidx.compose.ui.text.TextStyle(
+                                brush = gradientBrush,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         } else {
-                            androidx.compose.ui.text.TextStyle(color = Color.Gray)
+                            androidx.compose.ui.text.TextStyle(
+                                color = Color.Gray,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     )
                 },
                 alwaysShowLabel = true,
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFFFF2291),
+                    selectedIconColor = Color(0xFF9605F7),
                     unselectedIconColor = Color.Gray,
-                    selectedTextColor = Color(0xFFFF2291),
+                    selectedTextColor = Color(0xFF9605F7),
                     unselectedTextColor = Color.Gray,
                     indicatorColor = Color.Transparent
                 )

@@ -1,6 +1,7 @@
 package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,7 +31,6 @@ fun InicioNegocioPage(navController: NavController) {
     val moradoTexto = Color(0xFF9605F7)
 
     Scaffold(
-        bottomBar = { BottomNavigationNegocio(navController) },
         containerColor = Color.White
     ) { innerPadding ->
         LazyColumn(
@@ -68,7 +68,9 @@ fun InicioNegocioPage(navController: NavController) {
                         )
                     }
 
-                    IconButton(onClick = { /* Notificaciones */ }) {
+                    IconButton(onClick = {
+                        navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
+                    }) {
                         Icon(
                             painter = painterResource(id = R.drawable.bell),
                             contentDescription = "Notificaciones",
@@ -81,7 +83,9 @@ fun InicioNegocioPage(navController: NavController) {
 
                 // Botones principales
                 Button(
-                    onClick = { /* Escanear QR */ },
+                    onClick = {
+                        navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 25.dp)
@@ -105,7 +109,9 @@ fun InicioNegocioPage(navController: NavController) {
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Button(
-                    onClick = { /* Agregar promoción */ },
+                    onClick = {
+                        navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 25.dp)
@@ -144,15 +150,18 @@ fun InicioNegocioPage(navController: NavController) {
             }
 
             // Lista de promociones
-            items(listOf(1, 2, 3)) { _ ->
+            items(listOf(1, 2, 3)) { index ->
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 25.dp, vertical = 10.dp)
+                        .clickable {
+                            navController.navigate(Pantalla.RUTA_EDITAR_PROMOCIONES)
+                        }
                 ) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data("https://picsum.photos/seed/1/300") // tu URL
+                            .data("https://picsum.photos/seed/${index + 1}/300")
                             .crossfade(true)
                             .build(),
                         contentDescription = "Promoción",
@@ -165,12 +174,12 @@ fun InicioNegocioPage(navController: NavController) {
 
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Promoción 1",
+                        text = "Promoción ${index + 1}",
                         fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
                     Text(
-                        text = "Descripción",
+                        text = "Descripción de la promoción ${index + 1}",
                         color = Color.Gray,
                         style = MaterialTheme.typography.bodySmall
                     )
