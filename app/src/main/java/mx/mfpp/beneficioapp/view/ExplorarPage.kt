@@ -22,8 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,78 +33,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.R
-
-// Data class para las categorías
-data class Category(
-    val name: String,
-    val iconRes: Int? = null
-)
+import mx.mfpp.beneficioapp.model.Categoria
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
 @Composable
-fun ExplorarPage(navController: NavController) {
+fun ExplorarPage(
+    navController: NavController,
+    viewModel: BeneficioJovenVM = viewModel()
+) {
+    val categorias by viewModel.categorias.collectAsState()
+    val searchText by viewModel.textoBusqueda.collectAsState()
 
-    val categories = remember {
-        mutableStateOf(
-            listOf(
-                Category("Belleza", R.drawable.circlestar),
-                Category("Comida", R.drawable.circlestar),
-                Category("Educación", R.drawable.circlestar),
-                Category("Salud", R.drawable.circlestar),
-                Category("Entretenimiento", R.drawable.circlestar),
-                Category("Moda", R.drawable.circlestar),
-                Category("Servicios", R.drawable.circlestar)
-            )
-        )
-    }
-
-    // Estado para la búsqueda
-    val searchText = remember { mutableStateOf("") }
-
-    Scaffold(
-
-    ) { paddingValues ->
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Espacio arriba de la barra de búsqueda
-            Spacer(modifier = Modifier.height(60.dp)) // Puedes ajustar este valor
+            Spacer(modifier = Modifier.height(60.dp))
 
-            // Barra de búsqueda
             SearchBar(
-                searchText = searchText.value,
-                onSearchTextChanged = { searchText.value = it },
+                searchText = searchText,
+                onSearchTextChanged = { viewModel.actualizarTextoBusqueda(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             )
 
-            // Título "Categorías"
             Text(
                 text = "Categorías",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp) // Aumenté el top aquí también
+                modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
             )
 
-            // Lista de categorías como botones planos
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             ) {
-                items(categories.value) { category ->
+                items(categorias) { categoria ->
                     CategoryButton(
-                        category = category,
+                        categoria = categoria,
                         onCategoryClicked = {
-                            // Aquí puedes manejar la navegación o búsqueda por categoría
-                            println("Categoría seleccionada: ${category.name}")
+                            viewModel.seleccionarCategoria(categoria.nombre)
+                            navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                         }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -115,7 +94,10 @@ fun ExplorarPage(navController: NavController) {
 }
 
 @Composable
-fun CategoryButton(category: Category, onCategoryClicked: () -> Unit) {
+fun CategoryButton(
+    categoria: Categoria,
+    onCategoryClicked: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,23 +106,18 @@ fun CategoryButton(category: Category, onCategoryClicked: () -> Unit) {
             .padding(vertical = 12.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icono de la categoría
             Icon(
-                painter = painterResource(id = category.iconRes ?: R.drawable.circlestar),
-                contentDescription = "Categoría ${category.name}",
-                modifier = Modifier.size(20.dp),
+                painter = painterResource(id = R.drawable.circlestar),
+                contentDescription = "Categoría ${categoria.nombre}",
+                modifier = Modifier.size(24.dp),
                 tint = Color(0xFF9605F7)
             )
-
             Spacer(modifier = Modifier.width(16.dp))
-
-            // Nombre de la categoría
             Text(
-                text = category.name,
+                text = categoria.nombre,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.weight(1f)
@@ -173,9 +150,7 @@ fun SearchBar(
                 tint = Color.Gray,
                 modifier = Modifier.size(20.dp)
             )
-
             Spacer(modifier = Modifier.width(12.dp))
-
             BasicTextField(
                 value = searchText,
                 onValueChange = onSearchTextChanged,
@@ -186,7 +161,7 @@ fun SearchBar(
                 decorationBox = { innerTextField ->
                     if (searchText.isEmpty()) {
                         Text(
-                            text = "Buscar",
+                            text = "Buscar establecimientos...",
                             color = Color.Gray,
                             fontSize = 16.sp
                         )

@@ -13,23 +13,42 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.model.Categoria
+import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
 @Composable
 fun ResultadosPage(
     navController: NavController,
-    categoriaSeleccionada: String = "Belleza",
+    categoriaSeleccionada: String? = null,
+    viewModel: BeneficioJovenVM = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val establecimientos by viewModel.establecimientos.collectAsState()
+    val categorias by viewModel.categorias.collectAsState()
+    val searchText by viewModel.textoBusqueda.collectAsState()
+
+    LaunchedEffect(categoriaSeleccionada) {
+        if (categoriaSeleccionada != null) {
+            viewModel.seleccionarCategoria(categoriaSeleccionada)
+        }
+    }
+
     Scaffold(
         topBar = {
             HomeTopBar(navController)
@@ -41,16 +60,20 @@ fun ResultadosPage(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Sección de Categorías
             CategoriasResultados(
+                categorias = categorias,
                 categoriaSeleccionada = categoriaSeleccionada,
-                onCategoriaSeleccionada = { /* Manejar selección de categoría */ }
+                onCategoriaSeleccionada = { categoria ->
+                    viewModel.seleccionarCategoria(categoria)
+                }
             )
 
-            // Sección de Resultados (sin línea divisoria)
             ResultadosSeccion(
-                categoria = categoriaSeleccionada,
-                onEstablecimientoClick = { /* Navegar a detalle del establecimiento */ }
+                establecimientos = establecimientos,
+                categoria = categoriaSeleccionada ?: "todos los resultados",
+                searchText = searchText,
+                onEstablecimientoClick = { /* navegar a detalle */ },
+                onToggleFavorito = { /* toggle favorito */ }
             )
         }
     }
@@ -58,21 +81,11 @@ fun ResultadosPage(
 
 @Composable
 fun CategoriasResultados(
-    categoriaSeleccionada: String,
+    categorias: List<Categoria>,
+    categoriaSeleccionada: String?,
     onCategoriaSeleccionada: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Lista de categorías hardcodeada
-    val categorias = listOf(
-        "Belleza" to "💄",
-        "Comida" to "🍕",
-        "Educación" to "📚",
-        "Entretenimiento" to "🎬",
-        "Moda" to "👗",
-        "Salud" to "🏥",
-        "Servicios" to "🔧"
-    )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -96,29 +109,28 @@ fun CategoriasResultados(
                 .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.Start,
         ) {
-            primeras4Categorias.forEachIndexed { index, (nombre, icono) ->
+            primeras4Categorias.forEachIndexed { index, categoria ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .padding(end = if (index < 3) 12.dp else 0.dp)
                 ) {
                     ItemCategoriaCirculoResultados(
-                        nombre = nombre,
-                        icono = icono,
-                        isSelected = nombre == categoriaSeleccionada,
-                        onCategoriaClick = { onCategoriaSeleccionada(nombre) }
+                        categoria = categoria,
+                        isSelected = categoria.nombre == categoriaSeleccionada,
+                        onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
                     )
                     Text(
-                        text = nombre,
+                        text = categoria.nombre,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center,
                         ),
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .width(80.dp),
-                        color = if (nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
+                        color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
                     )
                 }
             }
@@ -130,29 +142,28 @@ fun CategoriasResultados(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Start,
         ) {
-            ultimas3Categorias.forEachIndexed { index, (nombre, icono) ->
+            ultimas3Categorias.forEachIndexed { index, categoria ->
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .padding(end = if (index < 2) 12.dp else 0.dp)
                 ) {
                     ItemCategoriaCirculoResultados(
-                        nombre = nombre,
-                        icono = icono,
-                        isSelected = nombre == categoriaSeleccionada,
-                        onCategoriaClick = { onCategoriaSeleccionada(nombre) }
+                        categoria = categoria,
+                        isSelected = categoria.nombre == categoriaSeleccionada,
+                        onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
                     )
                     Text(
-                        text = nombre,
+                        text = categoria.nombre,
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
+                            fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
                             fontSize = 14.sp,
                             textAlign = TextAlign.Center
                         ),
                         modifier = Modifier
                             .padding(top = 8.dp)
                             .width(80.dp),
-                        color = if (nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
+                        color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
                     )
                 }
             }
@@ -162,8 +173,7 @@ fun CategoriasResultados(
 
 @Composable
 fun ItemCategoriaCirculoResultados(
-    nombre: String,
-    icono: String,
+    categoria: Categoria,
     isSelected: Boolean,
     onCategoriaClick: () -> Unit
 ) {
@@ -179,10 +189,11 @@ fun ItemCategoriaCirculoResultados(
         )
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                text = icono,
-                fontSize = 24.sp,
-                color = if (isSelected) Color.White else Color.Black
+            Icon(
+                painter = painterResource(id = categoria.iconoResId),
+                contentDescription = categoria.nombre,
+                modifier = Modifier.size(32.dp),
+                tint = if (isSelected) Color.White else Color.Unspecified
             )
         }
     }
@@ -190,26 +201,24 @@ fun ItemCategoriaCirculoResultados(
 
 @Composable
 fun ResultadosSeccion(
+    establecimientos: List<Establecimiento>,
     categoria: String,
+    searchText: String,
     onEstablecimientoClick: (String) -> Unit,
+    onToggleFavorito: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Datos hardcodeados para los establecimientos
-    val establecimientos = listOf(
-        EstablecimientoData("Establecimiento 1", "10 min", "1.6 km"),
-        EstablecimientoData("Establecimiento 2", "10 min", "1.6 km"),
-        EstablecimientoData("Establecimiento 3", "15 min", "2.1 km"),
-        EstablecimientoData("Establecimiento 4", "8 min", "1.2 km"),
-        EstablecimientoData("Establecimiento 5", "12 min", "1.8 km")
-    )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
         Text(
-            text = "${establecimientos.size} resultados para \"$categoria\"",
+            text = if (searchText.isNotEmpty()) {
+                "${establecimientos.size} resultados para \"$searchText\""
+            } else {
+                "${establecimientos.size} resultados en $categoria"
+            },
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
@@ -218,49 +227,61 @@ fun ResultadosSeccion(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        establecimientos.forEach { establecimiento ->
-            ItemEstablecimiento(
-                establecimiento = establecimiento,
-                onEstablecimientoClick = { onEstablecimientoClick(establecimiento.nombre) },
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
+        if (establecimientos.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (searchText.isNotEmpty()) {
+                        "No se encontraron resultados para \"$searchText\""
+                    } else {
+                        "No hay establecimientos en esta categoría"
+                    },
+                    color = Color.Gray,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            establecimientos.forEach { establecimiento ->
+                ItemEstablecimiento(
+                    establecimiento = establecimiento,
+                    onEstablecimientoClick = { onEstablecimientoClick(establecimiento.id) },
+                    onToggleFavorito = { onToggleFavorito(establecimiento.id) },
+                    modifier = Modifier.padding(bottom = 24.dp)
+                )
+            }
         }
     }
 }
 
 @Composable
 fun ItemEstablecimiento(
-    establecimiento: EstablecimientoData,
+    establecimiento: Establecimiento,
     onEstablecimientoClick: () -> Unit,
+    onToggleFavorito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var esFavorito by remember { mutableStateOf(false) }
+    var esFavorito by remember { mutableStateOf(establecimiento.isFavorito) }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clickable { onEstablecimientoClick() }
     ) {
-        // Placeholder para la imagen que se descargará de internet
-        Box(
+        AsyncImage(
+            model = establecimiento.imagenUrl ?: "https://picsum.photos/200/300?random=${establecimiento.id}",
+            contentDescription = "Imagen de ${establecimiento.nombre}",
             modifier = Modifier
                 .fillMaxWidth()
                 .height(200.dp)
-                .background(Color.LightGray, RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            // Texto indicando que aquí irá la imagen
-            Text(
-                text = "Imagen de ${establecimiento.nombre}",
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color.DarkGray,
-                    fontSize = 14.sp
-                ),
-                textAlign = TextAlign.Center
-            )
-        }
+                .clip(RoundedCornerShape(12.dp)),
+            contentScale = ContentScale.Crop
+        )
 
-        // Información del establecimiento con corazón a la derecha
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -268,10 +289,7 @@ fun ItemEstablecimiento(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Top
         ) {
-            // Información del establecimiento
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = establecimiento.nombre,
                     style = MaterialTheme.typography.bodyLarge.copy(
@@ -284,7 +302,7 @@ fun ItemEstablecimiento(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${establecimiento.tiempo} – ${establecimiento.distancia}",
+                    text = "${establecimiento.tiempo} – ${establecimiento.distancia} • ${establecimiento.rating} ⭐",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = Color.Gray,
                         fontSize = 14.sp
@@ -292,12 +310,12 @@ fun ItemEstablecimiento(
                 )
             }
 
-            // Corazón de favoritos a la derecha
             IconButton(
-                onClick = { esFavorito = !esFavorito },
-                modifier = Modifier
-                    .size(36.dp)
-                    .padding(start = 8.dp)
+                onClick = {
+                    esFavorito = !esFavorito
+                    onToggleFavorito()
+                },
+                modifier = Modifier.size(36.dp)
             ) {
                 Icon(
                     imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -310,18 +328,9 @@ fun ItemEstablecimiento(
     }
 }
 
-// Data class para los establecimientos (sin imagen local)
-data class EstablecimientoData(
-    val nombre: String,
-    val tiempo: String,
-    val distancia: String
-)
-
 @Preview(showBackground = true)
 @Composable
 fun ResultadosPagePreview() {
-    MaterialTheme {
-        val navController = rememberNavController()
-        ResultadosPage(navController)
-    }
+    val navController = rememberNavController()
+    ResultadosPage(navController)
 }
