@@ -1,3 +1,4 @@
+/*
 package mx.mfpp.beneficioapp.model
 
 import retrofit2.http.GET
@@ -10,4 +11,4 @@ interface PromocionAPI {
     @GET("b/68e5c8e043b1c97be95e3bb6/latest")
     suspend fun obtenerDatos(): DatosAPI
 }
-
+*/

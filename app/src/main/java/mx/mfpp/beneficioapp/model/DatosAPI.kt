@@ -1,3 +1,4 @@
+/*
 package mx.mfpp.beneficioapp.model
 
 import com.google.gson.annotations.SerializedName
@@ -11,3 +12,4 @@ data class DatosRecord(
     val promociones: List<Promocion>? = emptyList()
 )
 
+*/
