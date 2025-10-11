@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.compose.animation.core.lint)
+
     implementation(platform("androidx.compose:compose-bom:2024.10.00"))
     implementation("androidx.compose.material:material-icons-extended")
 
@@ -65,8 +66,16 @@ dependencies {
     implementation("androidx.compose.material3:material3:1.3.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
 
+    // ML Kit Barcode Scanning
+    implementation("com.google.mlkit:barcode-scanning:17.2.0")
 
+    // CameraX
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
 
+    // Permisos
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
