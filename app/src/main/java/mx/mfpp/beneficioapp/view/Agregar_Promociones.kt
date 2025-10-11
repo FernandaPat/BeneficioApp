@@ -179,7 +179,7 @@ fun Agregregar_Promociones(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                BotonMorado(navController, "Agregar", Pantalla.RUTA_INICIO_APP)
+                BotonMorado(navController, "Agregar", Pantalla.RUTA_INICIO_NEGOCIO)
             }
         }
     }

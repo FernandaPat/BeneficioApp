@@ -41,6 +41,9 @@ sealed class Pantalla(
         const val RUTA_AGREGAR_PROMOCIONES = "Agregar_Promociones"
         const val RUTA_PROMOCIONES = "Promociones"
         const val RUTA_EDITAR_PROMOCIONES = "Editar_Promociones"
+        const val RUTA_RESULTADOS_APP = "resultados_app"
+
+        const val RUTA_RESULTADOS_CON_CATEGORIA = "resultados_app/{categoria}"
 
         // Rutas para negocio
         const val RUTA_INICIO_NEGOCIO = "inicio_negocio"

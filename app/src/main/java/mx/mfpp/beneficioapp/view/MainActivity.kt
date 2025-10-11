@@ -173,6 +173,24 @@ fun AppNavHost(
             //Agregar
         }
 
+        // En AppNavHost - AGREGAR estas rutas
+        composable(Pantalla.RUTA_BUSCAR_APP) {
+            ExplorarPage(navController)
+        }
+
+        composable(Pantalla.RUTA_RESULTADOS_CON_CATEGORIA) { backStackEntry ->
+            val categoria = backStackEntry.arguments?.getString("categoria")
+            ResultadosPage(
+                navController = navController,
+                categoriaSeleccionada = categoria
+            )
+        }
+
+        // También agregar una ruta simple para resultados sin categoría
+        composable(Pantalla.RUTA_RESULTADOS_APP) {
+            ResultadosPage(navController)
+        }
+
         // Grafo de navegación Nav bar - NEGOCIO
         composable(Pantalla.RUTA_INICIO_NEGOCIO) {
             InicioNegocioPage(navController)
@@ -183,20 +201,23 @@ fun AppNavHost(
 
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
             val viewModel: BeneficioJovenVM = viewModel()
-            val showScanner by viewModel.showScanner.collectAsState() // <- Agrega esta línea
+            val showScanner by viewModel.showScanner.collectAsState()
 
-            if (showScanner) { // <- Usa el State aquí
+            if (showScanner) {
                 ScannerQrScreen(
                     onQrScanned = { qrContent ->
                         viewModel.addQrScanResult(qrContent)
                     },
                     onBack = {
                         viewModel.hideScanner()
-                        navController.popBackStack()
-                    }
+                    },
+                    navController = navController // <- PASA el navController aquí
                 )
             } else {
-                HistorialScannerScreen(navController = navController)
+                HistorialScannerScreen(
+                    navController = navController,
+                    viewModel = viewModel
+                )
             }
         }
 

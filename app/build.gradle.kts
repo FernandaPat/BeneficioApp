@@ -77,6 +77,12 @@ dependencies {
     // Permisos
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
+    implementation("com.google.android.gms:play-services-maps:18.1.0")
+    implementation("com.google.maps.android:maps-compose:2.11.4")
+
+    // Permisos
+    implementation("com.google.accompanist:accompanist-permissions:0.31.0-alpha")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
