@@ -1,7 +1,7 @@
-package mx.mfpp.beneficioapp.viewmodel
-
-import androidx.lifecycle.ViewModel
-
-class CrearCuentaVM : ViewModel() {
-
-}
+//package mx.mfpp.beneficioapp.viewmodel
+//
+//import androidx.lifecycle.ViewModel
+//
+//class CrearCuentaVM : ViewModel() {
+//
+//}
