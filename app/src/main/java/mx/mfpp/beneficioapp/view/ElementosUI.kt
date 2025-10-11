@@ -69,7 +69,8 @@ fun BotonMorado(
             text = texto,
             color = moradoFuerte,
             fontSize = 20.sp,
-            fontWeight = FontWeight.ExtraBold
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -108,7 +109,7 @@ fun TextoTitulo(texto: String) {
         text = texto,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 120.dp),
+            .padding(top = 80.dp),
         style = MaterialTheme.typography.headlineLarge.copy(
             fontWeight = FontWeight.Bold,
             fontSize = 26.sp,
@@ -337,8 +338,8 @@ fun crearAnimacionIconosBotones(
 @Composable
 fun crearAnimacionNavegacion(
     estaSeleccionado: Boolean,
-    colorNormal: Color = Color.White,
-    colorActivado: Color = Color(0xFFFF2291),
+    colorNormal: Color = Color.Gray,
+    colorActivado: Color = Color(0xFF9605F7), // Morado principal
     escalaActivado: Float = 1.3f,
     duracion: Int = 200
 ): Pair<Modifier, Color> {
@@ -357,4 +358,3 @@ fun crearAnimacionNavegacion(
 
     return Pair(modifierAnimado, colorAnimado)
 }
-

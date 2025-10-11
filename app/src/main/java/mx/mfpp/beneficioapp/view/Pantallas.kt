@@ -1,6 +1,7 @@
 package mx.mfpp.beneficioapp.view
 
 import mx.mfpp.beneficioapp.R
+
 sealed class Pantalla(
     val ruta: String,
     val etiqueta: String,
@@ -13,6 +14,13 @@ sealed class Pantalla(
             BeneficioJovenTARJETA,
             BeneficioJovenBUSCAR,
             BeneficioJovenACTIVIDAD
+        )
+
+        val listaPantallasNegocio = listOf(
+            NegocioINICIO,
+            NegocioPROMOCIONES,
+            NegocioSCANER,
+            NegocioPERFIL
         )
 
         const val RUTA_JN_APP = "JNPage"
@@ -33,16 +41,24 @@ sealed class Pantalla(
         const val RUTA_AGREGAR_PROMOCIONES = "Agregar_Promociones"
         const val RUTA_PROMOCIONES = "Promociones"
         const val RUTA_EDITAR_PROMOCIONES = "Editar_Promociones"
-    }
-    object BeneficioJovenINICIO:
-        Pantalla(RUTA_INICIO_APP, "Inicio", R.drawable.home)
-    object BeneficioJovenMAPA:
-        Pantalla(RUTA_MAPA_APP, "Mapa", R.drawable.map)
-    object BeneficioJovenTARJETA:
-        Pantalla(RUTA_TARJETA_APP, "Tarjeta", R.drawable.credit_card)
-    object BeneficioJovenBUSCAR:
-        Pantalla(RUTA_BUSCAR_APP, "Buscar", R.drawable.search)
-    object BeneficioJovenACTIVIDAD:
-        Pantalla(RUTA_ACTIVIDAD_APP, "Actividad", R.drawable.activity)
 
+        // Rutas para negocio
+        const val RUTA_INICIO_NEGOCIO = "inicio_negocio"
+        const val RUTA_PROMOCIONES_NEGOCIO = "promociones_negocio"
+        const val RUTA_SCANER_NEGOCIO = "scaner_negocio"
+        const val RUTA_PERFIL_NEGOCIO = "perfil_negocio"
+    }
+
+    // Pantallas para jóvenes
+    object BeneficioJovenINICIO: Pantalla(RUTA_INICIO_APP, "Inicio", R.drawable.home)
+    object BeneficioJovenMAPA: Pantalla(RUTA_MAPA_APP, "Mapa", R.drawable.map)
+    object BeneficioJovenTARJETA: Pantalla(RUTA_TARJETA_APP, "Tarjeta", R.drawable.credit_card)
+    object BeneficioJovenBUSCAR: Pantalla(RUTA_BUSCAR_APP, "Buscar", R.drawable.search)
+    object BeneficioJovenACTIVIDAD: Pantalla(RUTA_ACTIVIDAD_APP, "Actividad", R.drawable.activity)
+
+    // Pantallas para negocio
+    object NegocioINICIO: Pantalla(RUTA_INICIO_NEGOCIO, "Inicio", R.drawable.home)
+    object NegocioPROMOCIONES: Pantalla(RUTA_PROMOCIONES_NEGOCIO, "Promociones", R.drawable.gift)
+    object NegocioSCANER: Pantalla(RUTA_SCANER_NEGOCIO, "Scanner", R.drawable.camerab)
+    object NegocioPERFIL: Pantalla(RUTA_PERFIL_NEGOCIO, "Perfil", R.drawable.user)
 }

@@ -182,6 +182,8 @@ fun SeccionHorizontal(
 
 @Composable
 fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
+    val colorMorado = Color(0xFF6A5ACD) // Color morado estándar - ajusta este valor según tu app
+
     Card(
         onClick = onItemClick,
         modifier = Modifier
@@ -191,6 +193,7 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
+            // Imagen placeholder (manteniendo el tamaño original)
             AsyncImage(
                 model = promocion.imagenUrl ?: "https://picsum.photos/200/300?random=${promocion.id}",
                 contentDescription = "Imagen de ${promocion.nombre}",
@@ -198,54 +201,39 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
                 contentScale = ContentScale.Crop
             )
 
-            Box(
+            // Tiempo de expiración arriba a la derecha (como estaba antes)
+            Text(
+                text = promocion.obtenerTextoExpiracion(),
+                color = Color.White,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp, end = 8.dp)
             )
 
-            Column(
+            // Fondo morado solo en la parte inferior para el texto
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = promocion.obtenerRatingTexto(),
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = promocion.obtenerTextoExpiracion(),
-                        color = Color.White,
-                        fontSize = 10.sp
-                    )
-                }
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .height(36.dp)
+                    .background(colorMorado.copy(alpha = 0.8f))
+            )
 
-                Column {
-                    Text(
-                        text = promocion.nombre,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    promocion.descuento?.let { descuento ->
-                        Text(
-                            text = descuento,
-                            color = Color.Yellow,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
+            // Nombre del lugar abajo - texto más pequeño
+            Text(
+                text = promocion.nombre,
+                color = Color.White,
+                fontWeight = FontWeight.Medium, // Cambiado a Medium para que sea un poco menos grueso
+                fontSize = 12.sp, // Reducido de 14.sp a 12.sp
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
+                    .fillMaxWidth()
+            )
         }
     }
 }
@@ -348,20 +336,18 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
 
 @Composable
 fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
-    val barHeight = 120.dp
-
+    // Vamos a hacerla similar a la de negocio pero manteniendo la estructura original
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(barHeight)
-            .padding(bottom = 16.dp)
+            .height(100.dp) // Reducido de 120.dp para que sea similar a negocio
             .background(Color.White)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .align(Alignment.BottomStart)
-                .padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                .align(Alignment.Center)
+                .padding(horizontal = 25.dp), // Mismo padding horizontal que negocio
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -370,22 +356,20 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
                     onClick = {
                         navController.navigate(Pantalla.RUTA_PERFIL_APP)
                     },
-                    modifier = Modifier.size(90.dp)
+                    modifier = Modifier.size(60.dp) // Reducido de 90.dp a 60.dp (igual que negocio)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Foto de perfil",
-                        modifier = Modifier
-                            .size(93.dp)
-                            .padding(end = 12.dp),
+                        modifier = Modifier.size(60.dp), // Reducido de 93.dp a 60.dp
                         tint = Color.LightGray
                     )
                 }
+                Spacer(modifier = Modifier.width(10.dp)) // Mismo espaciado que negocio
                 Text(
                     text = "Nombre",
-                    style = MaterialTheme.typography.headlineSmall.copy(
+                    style = MaterialTheme.typography.titleMedium.copy( // Mismo estilo que negocio
                         fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp,
                         color = Color.Black
                     )
                 )
@@ -394,14 +378,12 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
             IconButton(
                 onClick = {
                     navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
-                },
-                modifier = Modifier.size(40.dp)
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.bell),
                     contentDescription = "Notificaciones",
-                    modifier = Modifier.size(40.dp),
-                    tint = Color.Gray
+                    tint = Color.Gray // Mismo color que negocio
                 )
             }
         }

@@ -22,8 +22,7 @@ import androidx.navigation.NavController
 fun EstatusSolicitudPage(navController: NavController) {
     Scaffold { paddingValues ->
         Column(
-            modifier = Modifier.
-            background(Color(0xFF230448))
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
@@ -37,7 +36,7 @@ fun EstatusSolicitudPage(navController: NavController) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                BotonMorado(navController, "Cancelar solicitud", Pantalla.RUTA_MAPA_APP)
+                BotonMorado(navController, "Cancelar solicitud", Pantalla.RUTA_TARJETA_APP)
             }
         }
     }

@@ -67,7 +67,7 @@ fun PerfilPage(navController: NavController) {
                     .height(180.dp)
             ) {
                 IconButton(
-                    onClick = { navController.navigate(Pantalla.RUTA_INICIO_APP) },
+                    onClick = { navController.popBackStack() },
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = 16.dp)
