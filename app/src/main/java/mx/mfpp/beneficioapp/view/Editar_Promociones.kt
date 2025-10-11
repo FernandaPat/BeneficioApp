@@ -32,7 +32,22 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 
-
+/**
+ * Pantalla para editar la información de una promoción existente.
+ *
+ * Permite al usuario modificar los datos básicos de la promoción:
+ * - Imagen promocional
+ * - Título
+ * - Descripción
+ * - Descuento
+ * - Categoría
+ * - Rango de fechas de validez
+ *
+ * Incluye la opción de reemplazar la imagen, y un botón final para guardar los cambios.
+ *
+ * @param navController Controlador de navegación de la aplicación.
+ * @param modifier Modificador opcional para ajustar el diseño visual.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Editar_Promociones(
@@ -166,7 +181,12 @@ fun Editar_Promociones(
     }
 }
 
-
+/**
+ * Vista previa del diseño de la pantalla de edición de promociones.
+ *
+ * Se utiliza para inspeccionar la interfaz en el editor de Jetpack Compose
+ * sin necesidad de ejecutar la aplicación completa.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

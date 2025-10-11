@@ -28,7 +28,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-
+/**
+ * Pantalla de inicio de sesión para negocios afiliados al programa Beneficio Joven.
+ *
+ * Permite que los establecimientos registrados accedan con su correo o número de teléfono,
+ * junto con su contraseña. Incluye la opción de recuperación de contraseña y acceso directo
+ * al panel de promociones del negocio tras iniciar sesión.
+ *
+ * @param navController Controlador de navegación que gestiona las transiciones entre pantallas.
+ * @param modifier Modificador opcional para ajustar el diseño visual o comportamiento del contenedor.
+ */
 @Composable
 fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
@@ -77,6 +86,12 @@ fun Iniciar_Sesion_Negocio(navController: NavController, modifier: Modifier = Mo
         }
     }
 }
+/**
+ * Vista previa del diseño de la pantalla de inicio de sesión de negocios.
+ *
+ * Permite visualizar la interfaz en el editor de Jetpack Compose sin necesidad
+ * de ejecutar la aplicación completa.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Iniciar_Sesion_NegocioPreview() {

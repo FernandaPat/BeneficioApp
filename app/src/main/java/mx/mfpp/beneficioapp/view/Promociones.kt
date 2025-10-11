@@ -25,6 +25,16 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Promocion
 
+/**
+ * Pantalla principal para la gestión de promociones de los negocios afiliados.
+ *
+ * Muestra un listado de promociones con imagen, descripción y opciones para
+ * editar o eliminar cada una. Incluye un botón flotante para agregar nuevas
+ * promociones y un cuadro de confirmación al eliminar.
+ *
+ * @param navController Controlador de navegación para manejar el flujo entre pantallas.
+ * @param modifier Modificador opcional para ajustar el diseño del contenedor principal.
+ */
 @Composable
 fun Promociones(
     navController: NavController,
@@ -88,9 +98,16 @@ fun Promociones(
         )
     }
 }
-
-/* ---------- Item de la lista (imagen + textos + botones a la derecha) ---------- */
-
+/**
+ * Elemento individual del listado de promociones.
+ *
+ * Contiene la imagen, el título, la descripción y los botones de acción
+ * para editar o eliminar una promoción.
+ *
+ * @param promo Objeto de tipo [Promocion] que contiene los datos a mostrar.
+ * @param onEdit Callback que se ejecuta al presionar el botón de edición.
+ * @param onDelete Callback que se ejecuta al presionar el botón de eliminación.
+ */
 @Composable
 private fun PromoListItem(
     promo: Promocion,
@@ -104,7 +121,6 @@ private fun PromoListItem(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Imagen izquierda (64dp, esquinas redondeadas)
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -121,8 +137,6 @@ private fun PromoListItem(
                 )
             }
         }
-
-        // Título + descripción
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -143,8 +157,6 @@ private fun PromoListItem(
                 )
             )
         }
-
-        // Botones (editar / eliminar)
         IconButton(onClick = { onEdit(promo.id) }) {
             Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Editar", tint = Color.Black)
         }
@@ -153,9 +165,17 @@ private fun PromoListItem(
         }
     }
 }
-
-/* ---------- Diálogo personalizado “¿Seguro que deseas eliminar?” ---------- */
-
+/**
+ * Diálogo de confirmación para eliminar una promoción.
+ *
+ * Se muestra cuando el usuario selecciona la opción de eliminar.
+ * Contiene botones para confirmar o cancelar la acción.
+ *
+ * @param visible Indica si el diálogo está visible.
+ * @param mensaje Texto del mensaje de confirmación.
+ * @param onConfirm Acción a ejecutar al confirmar la eliminación.
+ * @param onDismiss Acción a ejecutar al cerrar el diálogo sin confirmar.
+ */
 @Composable
 fun ConfirmacionEliminarDialog(
     visible: Boolean,
@@ -164,8 +184,6 @@ fun ConfirmacionEliminarDialog(
     onDismiss: () -> Unit
 ) {
     if (!visible) return
-
-    // Cambia este color si quieres usar tu rosa #FF00A1
 
     val accent = Color(0xFF9605f7)
 
@@ -181,7 +199,6 @@ fun ConfirmacionEliminarDialog(
                     .widthIn(min = 280.dp, max = 360.dp)
                     .padding(bottom = 16.dp)
             ) {
-                // Franja superior
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -210,7 +227,6 @@ fun ConfirmacionEliminarDialog(
                         .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
-                    // Botón "No" (Outlined pill)
                     OutlinedButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(999.dp),
@@ -222,8 +238,6 @@ fun ConfirmacionEliminarDialog(
                     ) {
                         Text("No")
                     }
-
-                    // Botón "Sí" (pill con fondo suave)
                     Button(
                         onClick = onConfirm,
                         shape = RoundedCornerShape(999.dp),
@@ -240,9 +254,12 @@ fun ConfirmacionEliminarDialog(
         }
     }
 }
-
-/* ---------- Preview ---------- */
-
+/**
+ * Vista previa de la pantalla de promociones.
+ *
+ * Permite visualizar el listado y el estilo de los elementos
+ * directamente en el editor de Jetpack Compose.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun PromocionesPreview() {

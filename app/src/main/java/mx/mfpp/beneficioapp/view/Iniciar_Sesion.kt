@@ -27,7 +27,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
-
+/**
+ * Pantalla de inicio de sesión para los usuarios del sistema Beneficio Joven.
+ *
+ * Permite ingresar con correo electrónico o número de teléfono, además de la contraseña.
+ * Incluye opciones para recuperar la contraseña y navegar hacia la creación de cuenta
+ * si el usuario no tiene una registrada.
+ *
+ * @param navController Controlador de navegación que gestiona los flujos de pantalla.
+ * @param modifier Modificador opcional para ajustar el diseño o aplicar estilos adicionales.
+ */
 @Composable
 fun Iniciar_Sesion(navController: NavController, modifier: Modifier = Modifier) {
     val scrollState = rememberScrollState()
@@ -89,6 +98,11 @@ fun Iniciar_Sesion(navController: NavController, modifier: Modifier = Modifier) 
         }
     }
 }
+/**
+ * Vista previa del diseño de la pantalla de inicio de sesión.
+ *
+ * Permite visualizar la interfaz de usuario directamente en el editor de Jetpack Compose.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Iniciar_SesionPreview() {
