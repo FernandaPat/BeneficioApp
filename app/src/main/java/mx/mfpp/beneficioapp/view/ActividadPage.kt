@@ -22,12 +22,29 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Promocion
-
+/**
+ * Pantalla principal que muestra la actividad reciente de cupones canjeados por el usuario.
+ *
+ * Esta pantalla utiliza un diseño [Scaffold] con una barra superior que muestra el título
+ * y un cuerpo que contiene una lista de cupones canjeados organizados en un [LazyColumn].
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ * @param modifier Modificador de diseño para personalizar la apariencia del componente
+ *
+ * @see Promocion Modelo de datos que representa un cupón o promoción
+ * @see Scaffold Componente de Material Design que proporciona una estructura básica de pantalla
+ */
 @Composable
 fun ActividadPage(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    /**
+     * Lista de ejemplo de cupones canjeados.
+     *
+     * En una implementación real, estos datos vendrían de una fuente de datos como una base de datos
+     * o una API. Por ahora se utiliza una lista estática para propósitos de demostración.
+     */
     val cupones = remember {
         listOf(
             Promocion(
@@ -81,6 +98,8 @@ fun ActividadPage(
                 .padding(paddingValues)
         ) {
             Spacer(modifier = Modifier.padding(10.dp))
+
+            // Encabezado de la sección
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +115,9 @@ fun ActividadPage(
                         color = Color.Black
                     )
                 )
-                Box( // 🔸 contenedor para centrar mejor la palabra “Fecha”
+
+                // Contenedor para el texto "Fecha" alineado a la derecha
+                Box(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 20.dp),
@@ -114,14 +135,28 @@ fun ActividadPage(
                 }
             }
 
+            /**
+             * Lista perezosa de cupones canjeados.
+             *
+             * Utiliza [LazyColumn] para renderizar eficientemente solo los elementos visibles,
+             * mejorando el rendimiento con listas largas.
+             */
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
+                /**
+                 * Renderiza cada elemento de la lista de cupones.
+                 *
+                 * @param cupones Lista de promociones a mostrar
+                 * @param key Clave única para cada item basada en el ID para optimizar recomposiciones
+                 */
                 itemsIndexed(cupones, key = { _, item -> item.id }) { index, cupon ->
                     ActividadListItem(cupon)
+
+                    // Agrega un divisor entre elementos, excepto después del último
                     if (index < cupones.lastIndex) {
                         Divider(
                             color = Color(0xFFF3F3F3),
@@ -135,6 +170,17 @@ fun ActividadPage(
     }
 }
 
+/**
+ * Componente que representa un item individual en la lista de actividad reciente.
+ *
+ * Muestra la información de un cupón canjeado incluyendo imagen, nombre, establecimiento
+ * y fecha de canje.
+ *
+ * @param cupon Datos de la promoción a mostrar
+ * @param modifier Modificador de diseño para personalizar la apariencia del componente
+ *
+ * @sample ActividadRecientePreview
+ */
 @Composable
 private fun ActividadListItem(
     cupon: Promocion,
@@ -147,7 +193,13 @@ private fun ActividadListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+        // Contenido principal del cupón (imagen y texto)
         Row(verticalAlignment = Alignment.CenterVertically) {
+            /**
+             * Contenedor para la imagen del cupón.
+             *
+             * Utiliza un fondo gris claro y esquinas redondeadas para la imagen.
+             */
             Box(
                 modifier = Modifier
                     .size(65.dp)
@@ -155,6 +207,11 @@ private fun ActividadListItem(
                     .background(Color(0xFFF7F7F7)),
                 contentAlignment = Alignment.Center
             ) {
+                /**
+                 * Imagen asincrónica del cupón cargada desde una URL.
+                 *
+                 * Utiliza la biblioteca Coil para cargar y mostrar imágenes de manera eficiente.
+                 */
                 AsyncImage(
                     model = cupon.imagenUrl,
                     contentDescription = cupon.nombre,
@@ -162,6 +219,8 @@ private fun ActividadListItem(
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
+            // Información textual del cupón
             Column(
                 modifier = Modifier
                     .padding(start = 12.dp)
@@ -184,8 +243,14 @@ private fun ActividadListItem(
             }
         }
 
+        /**
+         * Fecha de canje del cupón.
+         *
+         * @todo En una implementación real, esta fecha debería venir del modelo de datos [Promocion]
+         * y formatearse adecuadamente según la localización del usuario.
+         */
         Text(
-            text = "01/01/0001",
+            text = "01/01/0001", // Fecha placeholder - debería ser reemplazada con datos reales
             style = MaterialTheme.typography.bodyLarge.copy(
                 color = Color.Black,
                 fontSize = 16.sp,
@@ -196,6 +261,14 @@ private fun ActividadListItem(
     }
 }
 
+/**
+ * Función de preview para visualizar el diseño en Android Studio.
+ *
+ * Esta función permite ver la pantalla de actividad reciente en el panel de diseño
+ * sin necesidad de ejecutar la aplicación.
+ *
+ * @see Preview Anotación que marca esta función como un preview en Android Studio
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ActividadRecientePreview() {
