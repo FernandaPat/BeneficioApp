@@ -193,6 +193,9 @@ fun AppNavHost(
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
+        composable(Pantalla.RUTA_NEGOCIODETALLE_APP) {
+            NegocioDetallePage(navController)
+        }
 
         // Grafo de navegación Nav bar - JÓVENES
         composable(Pantalla.RUTA_INICIO_APP) {
