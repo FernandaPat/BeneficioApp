@@ -40,6 +40,15 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
+/**
+ * Pantalla de exploración y búsqueda de establecimientos por categorías.
+ *
+ * Permite a los usuarios buscar establecimientos mediante texto o navegar
+ * por categorías específicas para filtrar resultados.
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ * @param viewModel ViewModel que gestiona el estado y datos de búsqueda
+ */
 @Composable
 fun ExplorarPage(
     navController: NavController,
@@ -93,6 +102,14 @@ fun ExplorarPage(
     }
 }
 
+/**
+ * Componente que representa un botón de categoría en la lista de exploración.
+ *
+ * Muestra el nombre de la categoría con un icono y permite navegar a los resultados filtrados.
+ *
+ * @param categoria Datos de la categoría a mostrar
+ * @param onCategoryClicked Callback invocado cuando se hace clic en la categoría
+ */
 @Composable
 fun CategoryButton(
     categoria: Categoria,
@@ -126,6 +143,15 @@ fun CategoryButton(
     }
 }
 
+/**
+ * Barra de búsqueda personalizada con campo de texto y icono de búsqueda.
+ *
+ * Permite a los usuarios ingresar texto para buscar establecimientos.
+ *
+ * @param searchText Texto actual de búsqueda
+ * @param onSearchTextChanged Callback invocado cuando cambia el texto de búsqueda
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun SearchBar(
     searchText: String,
@@ -173,6 +199,9 @@ fun SearchBar(
     }
 }
 
+/**
+ * Previsualización de la pantalla de exploración.
+ */
 @Preview(showBackground = true)
 @Composable
 fun CategoriesPreview() {

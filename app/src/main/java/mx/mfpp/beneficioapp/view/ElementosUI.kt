@@ -47,7 +47,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.R
 
-
+/**
+ * Botón morado con estilo primario para acciones principales.
+ *
+ * Utiliza colores de la marca con fondo suave y texto en morado fuerte.
+ *
+ * @param navController Controlador de navegación para manejar la navegación
+ * @param texto Texto a mostrar en el botón
+ * @param route Ruta de destino cuando se presiona el botón
+ */
 @Composable
 fun BotonMorado(
     navController: NavController,
@@ -75,6 +83,15 @@ fun BotonMorado(
     }
 }
 
+/**
+ * Botón blanco con borde morado para acciones secundarias.
+ *
+ * Proporciona una alternativa visual menos prominente al botón morado.
+ *
+ * @param navController Controlador de navegación para manejar la navegación
+ * @param texto Texto a mostrar en el botón
+ * @param route Ruta de destino cuando se presiona el botón
+ */
 @Composable
 fun BotonBlanco(
     navController: NavController,
@@ -103,6 +120,13 @@ fun BotonBlanco(
     }
 }
 
+/**
+ * Componente de texto para títulos principales centrados.
+ *
+ * Estilo consistente para títulos de pantalla con tipografía grande y negrita.
+ *
+ * @param texto Texto del título a mostrar
+ */
 @Composable
 fun TextoTitulo(texto: String) {
     Text(
@@ -119,6 +143,11 @@ fun TextoTitulo(texto: String) {
     )
 }
 
+/**
+ * Componente que muestra la imagen de la tarjeta digital del usuario.
+ *
+ * Representa visualmente la tarjeta de beneficio joven del usuario.
+ */
 @Composable
 fun CardImage() {
     Image(
@@ -132,6 +161,13 @@ fun CardImage() {
     )
 }
 
+/**
+ * Componente de texto para subtítulos con estilo negrita y justificado.
+ *
+ * Utilizado para descripciones y textos informativos de tamaño medio.
+ *
+ * @param texto Texto a mostrar
+ */
 @Composable
 fun TextoMedioBold(texto: String) {
     Text(
@@ -149,6 +185,17 @@ fun TextoMedioBold(texto: String) {
     )
 }
 
+/**
+ * Barra superior personalizada con flecha de retroceso y título.
+ *
+ * Proporciona navegación consistente con animaciones en el icono de retroceso.
+ *
+ * @param navController Controlador de navegación para manejar el retroceso
+ * @param text Título a mostrar en la barra
+ * @param modifier Modificador de Composable para personalizar el layout
+ * @param barHeight Altura visual de la barra
+ * @param topOffset Desplazamiento vertical del título
+ */
 @Composable
 fun ArrowTopBar(
     navController: NavController,
@@ -201,7 +248,19 @@ fun ArrowTopBar(
     }
 }
 
-
+/**
+ * Barra superior personalizada para pantallas de negocio con opción de agregar.
+ *
+ * Extiende la barra básica con un botón de agregar en el lado derecho.
+ *
+ * @param navController Controlador de navegación para manejar el retroceso
+ * @param text Título a mostrar en la barra
+ * @param modifier Modificador de Composable para personalizar el layout
+ * @param barHeight Altura visual de la barra
+ * @param topOffset Desplazamiento vertical del título
+ * @param showAdd Indica si mostrar el botón de agregar
+ * @param onAddClick Callback invocado cuando se presiona el botón de agregar
+ */
 @Composable
 fun ArrowTopBarNegocio(
     navController: NavController,
@@ -285,7 +344,14 @@ fun ArrowTopBarNegocio(
     }
 }
 
-
+/**
+ * Componente de texto para títulos grandes centrados.
+ *
+ * Variante del texto medio grande con estilo específico para títulos.
+ *
+ * @param texto Texto a mostrar
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun TextoMedioGrande(
     texto: String,
@@ -304,7 +370,19 @@ fun TextoMedioGrande(
     )
 }
 
-// Aminacion botones
+/**
+ * Crea animaciones para iconos de botones con efectos de escala y color.
+ *
+ * Proporciona feedback visual cuando los botones son presionados.
+ *
+ * @param interactionSource Fuente de interacción para detectar estados de presión
+ * @param estaSeleccionado Indica si el botón está en estado seleccionado
+ * @param colorNormal Color normal del icono
+ * @param colorActivado Color del icono cuando está activado/presionado
+ * @param escalaActivado Factor de escala cuando está activado
+ * @param duracion Duración de la animación en milisegundos
+ * @return Par de modificador animado y color calculado
+ */
 @Composable
 fun crearAnimacionIconosBotones(
     interactionSource: MutableInteractionSource, // Ahora es obligatorio
@@ -333,13 +411,23 @@ fun crearAnimacionIconosBotones(
     return Pair(modifierAnimado, colorAnimado)
 }
 
-
-
+/**
+ * Crea animaciones para elementos de navegación con efectos de escala y color.
+ *
+ * Utilizado específicamente para items de la barra de navegación inferior.
+ *
+ * @param estaSeleccionado Indica si el elemento está seleccionado
+ * @param colorNormal Color normal del elemento
+ * @param colorActivado Color del elemento cuando está seleccionado
+ * @param escalaActivado Factor de escala cuando está seleccionado
+ * @param duracion Duración de la animación en milisegundos
+ * @return Par de modificador animado y color calculado
+ */
 @Composable
 fun crearAnimacionNavegacion(
     estaSeleccionado: Boolean,
     colorNormal: Color = Color.Gray,
-    colorActivado: Color = Color(0xFF9605F7), // Morado principal
+    colorActivado: Color = Color(0xFF9605F7),
     escalaActivado: Float = 1.3f,
     duracion: Int = 200
 ): Pair<Modifier, Color> {

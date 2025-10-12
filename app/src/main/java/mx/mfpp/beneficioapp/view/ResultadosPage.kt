@@ -1,6 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,11 +26,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
+/**
+ * Pantalla que muestra resultados de búsqueda de establecimientos.
+ *
+ * Permite filtrar establecimientos por categoría y texto de búsqueda,
+ * mostrando los resultados en una lista interactiva.
+ *
+ * @param navController Controlador de navegación para manejar cambios de pantalla
+ * @param categoriaSeleccionada Categoría pre-seleccionada para filtrar (opcional)
+ * @param viewModel ViewModel que gestiona el estado de la pantalla
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun ResultadosPage(
     navController: NavController,
@@ -79,6 +88,14 @@ fun ResultadosPage(
     }
 }
 
+/**
+ * Componente que muestra la lista de categorías para filtrar resultados.
+ *
+ * @param categorias Lista de categorías disponibles
+ * @param categoriaSeleccionada Categoría actualmente seleccionada
+ * @param onCategoriaSeleccionada Callback invocado cuando se selecciona una categoría
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun CategoriasResultados(
     categorias: List<Categoria>,
@@ -171,6 +188,13 @@ fun CategoriasResultados(
     }
 }
 
+/**
+ * Item individual de categoría en forma circular.
+ *
+ * @param categoria Datos de la categoría a mostrar
+ * @param isSelected Indica si la categoría está seleccionada
+ * @param onCategoriaClick Callback invocado cuando se hace clic en la categoría
+ */
 @Composable
 fun ItemCategoriaCirculoResultados(
     categoria: Categoria,
@@ -199,6 +223,16 @@ fun ItemCategoriaCirculoResultados(
     }
 }
 
+/**
+ * Sección que muestra los resultados de establecimientos filtrados.
+ *
+ * @param establecimientos Lista de establecimientos a mostrar
+ * @param categoria Categoría actual de filtrado
+ * @param searchText Texto de búsqueda actual
+ * @param onEstablecimientoClick Callback invocado cuando se hace clic en un establecimiento
+ * @param onToggleFavorito Callback invocado cuando se togglea el estado de favorito
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun ResultadosSeccion(
     establecimientos: List<Establecimiento>,
@@ -258,6 +292,14 @@ fun ResultadosSeccion(
     }
 }
 
+/**
+ * Item individual de establecimiento en la lista de resultados.
+ *
+ * @param establecimiento Datos del establecimiento a mostrar
+ * @param onEstablecimientoClick Callback invocado cuando se hace clic en el establecimiento
+ * @param onToggleFavorito Callback invocado cuando se togglea el estado de favorito
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun ItemEstablecimiento(
     establecimiento: Establecimiento,
@@ -328,6 +370,9 @@ fun ItemEstablecimiento(
     }
 }
 
+/**
+ * Previsualización de la pantalla de resultados.
+ */
 @Preview(showBackground = true)
 @Composable
 fun ResultadosPagePreview() {

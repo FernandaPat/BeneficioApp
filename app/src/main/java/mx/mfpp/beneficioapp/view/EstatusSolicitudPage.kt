@@ -1,6 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +13,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Pantalla que muestra el estado actual de una solicitud de tarjeta física.
+ *
+ * Permite a los usuarios ver el estado de su solicitud y cancelarla si es necesario.
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ */
 @Composable
 fun EstatusSolicitudPage(navController: NavController) {
     Scaffold { paddingValues ->

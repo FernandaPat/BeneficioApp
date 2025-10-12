@@ -31,7 +31,16 @@ import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
-
+/**
+ * Pantalla de inicio principal para usuarios jóvenes.
+ *
+ * Muestra categorías, promociones favoritas, nuevas promociones y promociones cercanas
+ * en un diseño scrollable organizado por secciones.
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ * @param viewModel ViewModel que gestiona el estado y datos de la pantalla
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun InicioPage(
     navController: NavController,
@@ -97,6 +106,11 @@ fun InicioPage(
     }
 }
 
+/**
+ * Componente que muestra un estado de carga.
+ *
+ * Se muestra mientras se cargan los datos de la aplicación.
+ */
 @Composable
 fun EstadoCargando() {
     Box(
@@ -116,6 +130,14 @@ fun EstadoCargando() {
     }
 }
 
+/**
+ * Componente que muestra un estado de error.
+ *
+ * Se muestra cuando ocurre un error al cargar los datos.
+ *
+ * @param mensajeError Mensaje descriptivo del error ocurrido
+ * @param onReintentar Callback invocado cuando el usuario presiona el botón de reintentar
+ */
 @Composable
 fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
     Box(
@@ -148,6 +170,16 @@ fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
     }
 }
 
+/**
+ * Componente que muestra una sección horizontal de items.
+ *
+ * Presenta una lista de promociones en un scroll horizontal con un título.
+ *
+ * @param titulo Título descriptivo de la sección
+ * @param items Lista de promociones a mostrar en la sección
+ * @param onItemClick Callback invocado cuando se hace clic en un item
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun SeccionHorizontal(
     titulo: String,
@@ -180,6 +212,14 @@ fun SeccionHorizontal(
     }
 }
 
+/**
+ * Componente que representa un item individual en una sección horizontal.
+ *
+ * Muestra una promoción con imagen, tiempo de expiración y nombre.
+ *
+ * @param promocion Datos de la promoción a mostrar
+ * @param onItemClick Callback invocado cuando se hace clic en el card
+ */
 @Composable
 fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
     val colorMorado = Color(0xFF6A5ACD) // Color morado estándar - ajusta este valor según tu app
@@ -238,6 +278,13 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
     }
 }
 
+/**
+ * Componente que muestra la sección de categorías.
+ *
+ * Presenta las categorías disponibles en una cuadrícula de 2 filas (4+3 items).
+ *
+ * @param categorias Lista de categorías a mostrar
+ */
 @Composable
 fun Categorias(categorias: List<Categoria>) {
     Column(
@@ -316,6 +363,13 @@ fun Categorias(categorias: List<Categoria>) {
     }
 }
 
+/**
+ * Componente que representa un item individual de categoría en forma circular.
+ *
+ * Muestra el icono de la categoría en un card circular.
+ *
+ * @param categoria Datos de la categoría a mostrar
+ */
 @Composable
 fun ItemCategoriaCirculo(categoria: Categoria) {
     Card(
@@ -336,6 +390,14 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
     }
 }
 
+/**
+ * Barra superior personalizada para la pantalla de inicio.
+ *
+ * Muestra el perfil del usuario y acceso a notificaciones.
+ *
+ * @param navController Controlador de navegación para manejar la navegación
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     // Vamos a hacerla similar a la de negocio pero manteniendo la estructura original
@@ -392,6 +454,9 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Previsualización de la pantalla de inicio.
+ */
 @Preview(showBackground = true)
 @Composable
 fun InicioPagePreview() {

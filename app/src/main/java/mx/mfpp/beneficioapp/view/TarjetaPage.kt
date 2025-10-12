@@ -20,12 +20,21 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
+/**
+ * Pantalla que muestra la tarjeta digital del usuario.
+ *
+ * Permite al usuario ver su tarjeta digital y acceder a opciones relacionadas
+ * como solicitar tarjeta física y ver estatus de solicitudes.
+ *
+ * @param navController Controlador de navegación para manejar cambios de pantalla
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
     Scaffold { paddingValues ->
         Column(
-            modifier = Modifier.
-            background(Color.White)
+            modifier = Modifier
+                .background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
@@ -51,8 +60,9 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
     }
 }
 
-
-
+/**
+ * Previsualización de la pantalla de tarjeta digital.
+ */
 @Preview(showBackground = true)
 @Composable
 fun TarjetaPagePreview() {

@@ -37,12 +37,26 @@ import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
+/**
+ * Actividad principal de la aplicación Beneficio Joven.
+ *
+ * Configura la interfaz principal, maneja la navegación y controla
+ * la visibilidad de las barras del sistema.
+ */
 class MainActivity : ComponentActivity() {
     private val viewModel: BeneficioJovenVM by viewModels()
 
+    /**
+     * Método llamado cuando se crea la actividad.
+     *
+     * Configura la interfaz full-screen y inicializa el contenido de Compose.
+     *
+     * @param savedInstanceState Estado guardado de la instancia anterior
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Configurar interfaz full-screen
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.navigationBars())
@@ -58,6 +72,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Componente principal que orquesta toda la aplicación.
+ *
+ * Maneja la navegación, la barra inferior y el estado global de la app.
+ *
+ * @param beneficioJovenVM ViewModel principal que gestiona el estado de la aplicación
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun AppPrincipal(
     beneficioJovenVM: BeneficioJovenVM,
@@ -65,6 +87,9 @@ fun AppPrincipal(
 ) {
     val navController = rememberNavController()
 
+    /**
+     * Rutas donde la barra inferior debe estar oculta.
+     */
     val hiddenBottomBarRoutes = listOf(
         Pantalla.RUTA_SOLICITUD_APP,
         Pantalla.RUTA_ESTATUS_SOLICITUD_APP,
@@ -87,6 +112,9 @@ fun AppPrincipal(
 
     val showBottomBar = currentRoute !in hiddenBottomBarRoutes
 
+    /**
+     * Determina si la ruta actual pertenece al flujo de negocio.
+     */
     val isNegocioRoute = currentRoute in listOf(
         Pantalla.RUTA_INICIO_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES_NEGOCIO,
@@ -114,6 +142,15 @@ fun AppPrincipal(
     }
 }
 
+/**
+ * Host de navegación principal que define todas las rutas de la aplicación.
+ *
+ * Contiene el grafo de navegación completo con todas las pantallas disponibles.
+ *
+ * @param beneficioJovenVM ViewModel compartido entre pantallas
+ * @param navController Controlador de navegación principal
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 @Composable
 fun AppNavHost(
     beneficioJovenVM: BeneficioJovenVM,
@@ -125,6 +162,7 @@ fun AppNavHost(
         startDestination = Pantalla.RUTA_JN_APP,
         modifier = modifier.fillMaxSize()
     ) {
+        // Rutas de autenticación y negocio
         composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
             Iniciar_Sesion_Negocio(navController)
         }
@@ -173,7 +211,7 @@ fun AppNavHost(
             //Agregar
         }
 
-        // En AppNavHost - AGREGAR estas rutas
+        // Rutas de búsqueda y resultados
         composable(Pantalla.RUTA_BUSCAR_APP) {
             ExplorarPage(navController)
         }
@@ -186,7 +224,7 @@ fun AppNavHost(
             )
         }
 
-        // También agregar una ruta simple para resultados sin categoría
+        // Ruta simple para resultados sin categoría
         composable(Pantalla.RUTA_RESULTADOS_APP) {
             ResultadosPage(navController)
         }
@@ -211,7 +249,7 @@ fun AppNavHost(
                     onBack = {
                         viewModel.hideScanner()
                     },
-                    navController = navController // <- PASA el navController aquí
+                    navController = navController
                 )
             } else {
                 HistorialScannerScreen(
@@ -238,6 +276,14 @@ fun AppNavHost(
     }
 }
 
+/**
+ * Barra de navegación inferior para usuarios jóvenes.
+ *
+ * Muestra las principales secciones de la aplicación con iconos animados
+ * y efectos de selección.
+ *
+ * @param navController Controlador de navegación para manejar los cambios de pantalla
+ */
 @Composable
 fun AppBottomBar(navController: NavHostController) {
     BottomAppBar(

@@ -20,19 +20,27 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
+/**
+ * Pantalla para solicitar una tarjeta física del beneficio joven.
+ *
+ * Permite al usuario iniciar el proceso de solicitud de tarjeta física
+ * y seleccionar fechas para recogerla.
+ *
+ * @param navController Controlador de navegación para manejar cambios de pantalla
+ */
 @Composable
 fun SolicitudPage(navController: NavController) {
     Scaffold { paddingValues ->
         Column(
-            modifier = Modifier.
-            background(Color.White)
+            modifier = Modifier
+                .background(Color.White)
                 .fillMaxSize()
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
             TextoTitulo("Solicitar Tarjeta Física")
             Spacer(modifier = Modifier.height(55.dp))
-            
+
             TextoMedioBold("Selecciona una de las siguientes fechas para acudir a recibir tu tarjeta física:")
             Column(modifier = Modifier
                 .fillMaxWidth()
@@ -46,9 +54,12 @@ fun SolicitudPage(navController: NavController) {
     }
 }
 
+/**
+ * Previsualización de la pantalla de solicitud de tarjeta física.
+ */
 @Preview(showBackground = true)
 @Composable
 fun SolicitudPagePrev() {
     val navController = rememberNavController()
-   SolicitudPage(navController)
+    SolicitudPage(navController)
 }

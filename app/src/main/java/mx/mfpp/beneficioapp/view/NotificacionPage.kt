@@ -31,6 +31,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 
+/**
+ * Pantalla que muestra la lista de notificaciones del usuario.
+ *
+ * Presenta notificaciones sobre cupones, promociones y actividades relevantes
+ * con diferentes estados (nueva, expira pronto, etc.).
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ */
 @Composable
 fun NotificacionPage(navController: NavController) {
     Scaffold(
@@ -43,7 +51,7 @@ fun NotificacionPage(navController: NavController) {
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Lista de notificaciones según tu diseño
+            // Lista de notificaciones
             NotificationItem("Cupón 1", "Nueva", "Establecimiento")
             NotificationItem("Cupón 1", "Nueva", "Establecimiento")
             NotificationItem("Cupón 1", "Expira pronto", "Establecimiento")
@@ -52,6 +60,15 @@ fun NotificacionPage(navController: NavController) {
     }
 }
 
+/**
+ * Componente que representa un item individual de notificación.
+ *
+ * Muestra información sobre un cupón o promoción con su estado correspondiente.
+ *
+ * @param cupon Nombre o descripción del cupón
+ * @param estado Estado actual de la notificación (Nueva, Expira pronto, etc.)
+ * @param establecimiento Nombre del establecimiento relacionado
+ */
 @Composable
 fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
     Card(
@@ -93,10 +110,10 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Etiqueta de estado con tamaño fijo para todas
+
             Box(
                 modifier = Modifier
-                    .width(100.dp) // Mismo ancho para todas las etiquetas
+                    .width(100.dp)
                     .height(28.dp)
                     .background(
                         color = when (estado.lowercase()) {
@@ -111,7 +128,7 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
                 Text(
                     text = estado.uppercase(),
                     fontSize = when (estado.lowercase()) {
-                        "expira pronto" -> 9.sp // Tamaño ligeramente menor para "EXPIRA PRONTO"
+                        "expira pronto" -> 9.sp
                         else -> 10.sp
                     },
                     color = when (estado.lowercase()) {
@@ -131,6 +148,11 @@ fun NotificationItem(cupon: String, estado: String, establecimiento: String) {
     }
 }
 
+/**
+ * Componente que muestra una imagen placeholder para los cupones.
+ *
+ * En una implementación real, esta mostraría la imagen real del cupón.
+ */
 @Composable
 fun ImagenCupon() {
     Card(
@@ -153,6 +175,9 @@ fun ImagenCupon() {
     }
 }
 
+/**
+ * Previsualización de la pantalla de notificaciones.
+ */
 @Preview(showBackground = true)
 @Composable
 fun NotificacionPreview() {

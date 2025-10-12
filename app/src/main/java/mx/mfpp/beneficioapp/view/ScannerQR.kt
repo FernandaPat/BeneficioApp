@@ -1,6 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-
 import android.content.Context
 import android.util.Log
 import androidx.camera.core.*
@@ -29,13 +28,22 @@ import com.google.mlkit.vision.common.InputImage
 import mx.mfpp.beneficioapp.R
 import java.util.concurrent.Executors
 
+/**
+ * Pantalla de escaneo de códigos QR.
+ *
+ * Utiliza la cámara del dispositivo y ML Kit para escanear códigos QR
+ * y procesar su contenido.
+ *
+ * @param onQrScanned Callback invocado cuando se escanea un código QR exitosamente
+ * @param onBack Callback para volver a la pantalla anterior
+ * @param navController Controlador de navegación para manejar la navegación
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScannerQrScreen(
     onQrScanned: (String) -> Unit,
     onBack: () -> Unit,
-    navController: NavController 
-
+    navController: NavController
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -55,7 +63,7 @@ fun ScannerQrScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        navController.popBackStack() // <- USAR navController aquí
+                        navController.popBackStack()
                     }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
@@ -102,6 +110,15 @@ fun ScannerQrScreen(
     }
 }
 
+/**
+ * Configura la cámara y el analizador de códigos QR.
+ *
+ * @param context Contexto de la aplicación
+ * @param lifecycleOwner Propietario del ciclo de vida para la cámara
+ * @param previewView Vista para mostrar la previsualización de la cámara
+ * @param onQrScanned Callback invocado cuando se detecta un código QR
+ * @param onScanComplete Callback invocado cuando se completa el escaneo
+ */
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 private fun setupCamera(
     context: Context,

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
@@ -23,6 +22,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 
+/**
+ * Pantalla que muestra el historial de escaneos QR realizados por el negocio.
+ *
+ * Permite ver todos los códigos QR escaneados, eliminar registros individuales
+ * y acceder al escáner para realizar nuevos escaneos.
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ * @param viewModel ViewModel que gestiona el estado y datos de los escaneos QR
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistorialScannerScreen(
@@ -177,6 +185,14 @@ fun HistorialScannerScreen(
     }
 }
 
+/**
+ * Componente que representa una tarjeta individual de resultado de escaneo QR.
+ *
+ * Muestra el contenido del código QR, la fecha/hora del escaneo y permite eliminarlo.
+ *
+ * @param scanResult Datos del escaneo QR a mostrar
+ * @param onDelete Callback invocado cuando se solicita eliminar el escaneo
+ */
 @Composable
 fun ScanResultCard(
     scanResult: mx.mfpp.beneficioapp.model.QrScanResult,
