@@ -23,6 +23,20 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INICIAR_SESION_NEGOCIO
 import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_LOGIN_APP
 
+/**
+ * Pantalla de selección de tipo de usuario que permite elegir entre "Soy joven" y "Soy negocio".
+ *
+ * Esta pantalla sirve como punto de entrada principal de la aplicación, presentando una interfaz
+ * limpia con el logo de la aplicación y dos botones que redirigen a diferentes flujos de la app.
+ *
+ * Utiliza un diseño centrado con [Box] y [Column] para organizar los elementos visuales
+ * de manera vertical y alineada al centro de la pantalla.
+ *
+ * @param navController Controlador de navegación utilizado para manejar la navegación entre pantallas
+ *
+ * @see BotonMorado Componente de botón con estilo morado para la opción principal
+ * @see BotonBlanco Componente de botón con estilo blanco para la opción secundaria
+ */
 @Composable
 fun JNPage(navController: NavController) {
     Box(
@@ -51,6 +65,14 @@ fun JNPage(navController: NavController) {
     }
 }
 
+/**
+ * Función de preview para visualizar el diseño de la pantalla JNPage en Android Studio.
+ *
+ * Permite ver la interfaz de usuario sin necesidad de ejecutar la aplicación completa,
+ * mostrando el logo y los botones en un contexto aislado con fondo visible.
+ *
+ * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
+ */
 @Preview(showBackground = true)
 @Composable
 fun JNPagePreview() {

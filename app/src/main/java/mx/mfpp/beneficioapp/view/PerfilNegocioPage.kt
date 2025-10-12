@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,8 +35,24 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
-import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INICIO_APP
 
+/**
+ * Pantalla de perfil del negocio que permite gestionar la información y configuración de la cuenta.
+ *
+ * Esta pantalla incluye funcionalidades para:
+ * - Cambiar la imagen de perfil del negocio
+ * - Gestionar ajustes de cuenta (contraseña, datos personales)
+ * - Cerrar sesión con confirmación
+ * - Acceder a información adicional y ayuda
+ *
+ * Utiliza un diseño con encabezado morado, imagen de perfil circular editable y secciones
+ * organizadas en tarjetas para las diferentes opciones de configuración.
+ *
+ * @param navController Controlador de navegación utilizado para manejar la navegación entre pantallas
+ *
+ * @see SeccionNOpciones Componente reutilizable para mostrar listas de opciones en secciones
+ * @see OpcionData Clase de datos que representa una opción en las secciones
+ */
 @Composable
 fun PerfilNegocioPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
@@ -257,6 +272,17 @@ fun PerfilNegocioPage(navController: NavController) {
     }
 }
 
+/**
+ * Componente reutilizable que muestra una sección con título y lista de opciones.
+ *
+ * Cada sección se presenta como una tarjeta elevada con opciones que pueden incluir
+ * iconos, texto y acciones al hacer clic. Las opciones están separadas por divisores.
+ *
+ * @param titulo Texto que identifica la sección de opciones
+ * @param opciones Lista de [OpcionData] que representan las opciones disponibles en la sección
+ *
+ * @see OpcionData Estructura de datos que define una opción individual
+ */
 @Composable
 fun SeccionNOpciones(titulo: String, opciones: List<OpcionData>) {
     val borde = Color(0xFFE5E5E5)
@@ -314,6 +340,14 @@ fun SeccionNOpciones(titulo: String, opciones: List<OpcionData>) {
     }
 }
 
+/**
+ * Función de preview para visualizar el diseño de la pantalla de perfil de negocio en Android Studio.
+ *
+ * Permite ver la interfaz completa con el encabezado morado, imagen de perfil y secciones
+ * de opciones en un contexto aislado durante el desarrollo.
+ *
+ * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
+ */
 @Preview(showBackground = true)
 @Composable
 fun PerfilNegocioPagePreview() {

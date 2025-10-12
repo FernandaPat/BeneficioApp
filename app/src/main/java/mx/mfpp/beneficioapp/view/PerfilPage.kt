@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,8 +35,24 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
-import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INICIO_APP
 
+/**
+ * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
+ *
+ * Esta pantalla incluye funcionalidades para:
+ * - Cambiar la imagen de perfil del usuario
+ * - Gestionar ajustes de cuenta (contraseña, datos personales)
+ * - Cerrar sesión con diálogo de confirmación
+ * - Acceder a información adicional y ayuda
+ *
+ * Utiliza un diseño con encabezado morado, imagen de perfil circular editable y secciones
+ * organizadas en tarjetas para las diferentes opciones de configuración.
+ *
+ * @param navController Controlador de navegación utilizado para manejar la navegación entre pantallas
+ *
+ * @see SeccionOpciones Componente reutilizable para mostrar listas de opciones en secciones
+ * @see OpcionData Clase de datos que representa una opción en las secciones
+ */
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
@@ -257,12 +272,29 @@ fun PerfilPage(navController: NavController) {
     }
 }
 
+/**
+ * Clase de datos que representa una opción individual en las secciones de configuración.
+ *
+ * @property icono Resource ID del icono que representa la opción
+ * @property texto Texto descriptivo de la opción
+ * @property onClick Función callback opcional que se ejecuta al hacer clic en la opción
+ */
 data class OpcionData(
     val icono: Int,
     val texto: String,
     val onClick: (() -> Unit)? = null
 )
 
+/**
+ * Componente reutilizable que muestra una sección con título y lista de opciones.
+ *
+ * Cada sección se presenta como una tarjeta elevada con opciones que incluyen
+ * iconos, texto y flechas indicadoras. Las opciones están separadas por divisores
+ * y son clickeables si tienen una acción asociada.
+ *
+ * @param titulo Texto que identifica la sección de opciones
+ * @param opciones Lista de [OpcionData] que representan las opciones disponibles en la sección
+ */
 @Composable
 fun SeccionOpciones(titulo: String, opciones: List<OpcionData>) {
     val borde = Color(0xFFE5E5E5)
@@ -320,6 +352,14 @@ fun SeccionOpciones(titulo: String, opciones: List<OpcionData>) {
     }
 }
 
+/**
+ * Función de preview para visualizar el diseño de la pantalla de perfil de usuario en Android Studio.
+ *
+ * Permite ver la interfaz completa con el encabezado morado, imagen de perfil y secciones
+ * de opciones en un contexto aislado durante el desarrollo.
+ *
+ * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
+ */
 @Preview(showBackground = true)
 @Composable
 fun PerfilPagePreview() {

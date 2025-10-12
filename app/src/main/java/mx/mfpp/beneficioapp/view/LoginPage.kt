@@ -23,6 +23,19 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_CREAR_CUENTA
 import mx.mfpp.beneficioapp.view.Pantalla.Companion.RUTA_INICIAR_SESION
 
+/**
+ * Pantalla de inicio de sesión que presenta las opciones de autenticación para usuarios.
+ *
+ * Esta pantalla muestra el logo de la aplicación seguido de dos botones que permiten al usuario
+ * elegir entre iniciar sesión con una cuenta existente o crear una nueva cuenta.
+ *
+ * El diseño utiliza un layout centrado con fondo blanco para una presentación limpia y minimalista.
+ *
+ * @param navController Controlador de navegación utilizado para redirigir al usuario según la opción seleccionada
+ *
+ * @see BotonMorado Componente de botón con estilo morado para la acción principal
+ * @see BotonBlanco Componente de botón con estilo blanco para la acción secundaria
+ */
 @Composable
 fun LoginPage(navController: NavController) {
     Box(
@@ -51,6 +64,14 @@ fun LoginPage(navController: NavController) {
     }
 }
 
+/**
+ * Función de preview para visualizar el diseño de la pantalla de login en Android Studio.
+ *
+ * Permite ver la interfaz de usuario con el logo y botones en un contexto aislado
+ * durante el proceso de desarrollo y diseño.
+ *
+ * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
+ */
 @Preview(showBackground = true)
 @Composable
 fun LoginPagePreview() {
