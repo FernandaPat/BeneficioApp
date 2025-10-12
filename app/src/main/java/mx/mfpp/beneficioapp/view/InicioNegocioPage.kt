@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -56,12 +58,19 @@ fun InicioNegocioPage(navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(Color.LightGray)
-                        )
+                        IconButton(
+                            onClick = {
+                                navController.navigate(Pantalla.RUTA_PERFIL_NEGOCIO)
+                            },
+                            modifier = Modifier.size(60.dp) // Reducido de 90.dp a 60.dp (igual que negocio)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = "Foto de perfil",
+                                modifier = Modifier.size(60.dp), // Reducido de 93.dp a 60.dp
+                                tint = Color.LightGray
+                            )
+                        }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "NombreNegocio",

@@ -208,7 +208,7 @@ fun AppNavHost(
             ExplorarPage(navController)
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
-            //Agregar
+            ActividadPage(navController)
         }
 
         // Rutas de búsqueda y resultados
@@ -260,7 +260,7 @@ fun AppNavHost(
         }
 
         composable(Pantalla.RUTA_PERFIL_NEGOCIO) {
-            PerfilPage(navController)
+            PerfilNegocioPage(navController)
         }
 
         // Paginas fuera de la barra de navegacion
