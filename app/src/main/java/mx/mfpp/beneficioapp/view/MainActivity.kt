@@ -182,7 +182,7 @@ fun AppNavHost(
             LoginPage(navController)
         }
         composable(Pantalla.RUTA_AGREGAR_PROMOCIONES) {
-            Agregregar_Promociones(navController)
+            AgregarPromocion(navController)
         }
         composable(Pantalla.RUTA_EDITAR_PROMOCIONES) {
             Editar_Promociones(navController)

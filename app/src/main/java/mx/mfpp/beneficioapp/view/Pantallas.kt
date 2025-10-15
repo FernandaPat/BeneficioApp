@@ -58,7 +58,7 @@ sealed class Pantalla(
         const val RUTA_NOTIFICACIONES_APP = "NotificacionesPage"
         const val RUTA_CREAR_CUENTA = "Crear_Cuenta"
         const val RUTA_INICIAR_SESION_NEGOCIO = "Iniciar_Sesion_Negocio"
-        const val RUTA_AGREGAR_PROMOCIONES = "Agregar_Promociones"
+        const val RUTA_AGREGAR_PROMOCIONES = "AgregarPromocion"
         const val RUTA_PROMOCIONES = "Promociones"
         const val RUTA_EDITAR_PROMOCIONES = "Editar_Promociones"
         const val RUTA_RESULTADOS_APP = "resultados_app"
