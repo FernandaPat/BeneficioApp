@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,8 +60,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import mx.mfpp.beneficioapp.viewmodel.CrearCuentaViewModel
 import androidx.compose.ui.text.style.TextDecoration
-
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.network.RetrofitClient
 
 /**
  * Pantalla para el registro de una nueva cuenta en la aplicación Beneficio Joven.
@@ -73,106 +81,181 @@ import androidx.compose.ui.text.style.TextDecoration
  * @param modifier Modificador opcional para ajustar el diseño de la vista.
  */
 @Composable
-fun Crear_Cuenta(navController: NavController, modifier: Modifier = Modifier) {
-    val scrollState = rememberScrollState()
-    var dia by rememberSaveable { mutableStateOf<Int?>(null) }
-    var direccion by remember { mutableStateOf(Direccion()) }
-    var password by rememberSaveable { mutableStateOf("") }
-    var tieneTarjeta by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    var folio by rememberSaveable { mutableStateOf("") }
+fun Crear_Cuenta(
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    viewModel: CrearCuentaViewModel = viewModel()
+) {
+    val usuario = viewModel.usuario.value
+    val scroll = rememberScrollState()
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+
     Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
-    ) { paddingValues ->
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background
+    ) { padding ->
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .background(Color.White)
-                .verticalScroll(scrollState)
+                .verticalScroll(scroll)
+                .padding(padding)
                 .imePadding()
-                .padding(paddingValues)
-                .padding(top = 3.dp)
         ) {
-            Etiqueta("Nombre(s)",true)
-            CapturaTexto("Escribe aquí", 30)
-            Etiqueta("Apellido Materno", true)
-            CapturaTexto("Escribe aquí", 30)
-            Etiqueta("Apellido Paterno" , true)
-            CapturaTexto("Escribe aquí", 30)
-            Etiqueta("CURP",true)
-            CapturaTexto("CURP", 18)
-            Etiqueta(texto = "Fecha de Nacimiento", true)
-            Fecha_nacimiento(
-                onFechaChange = { d, m, a -> }
-            )
-            SeccionDireccion { dir -> direccion = dir }
+            // === CAMPOS PERSONALES ===
+            Etiqueta("Nombre(s)", true)
+            CapturaTexto("Escribe aquí", value = usuario.nombre, onValueChange = viewModel::onNombreChange,30)
 
-            Etiqueta("Género",true)
-            SeleccionarGenero(listOf("Femenino", "Masculino", "Otro"))
+            Etiqueta("Apellido Paterno", true)
+            CapturaTexto("Escribe aquí", value = usuario.apellidoPaterno, onValueChange = viewModel::onApellidoPaternoChange,30)
+
+            Etiqueta("Apellido Materno", true)
+            CapturaTexto("Escribe aquí", value = usuario.apellidoMaterno, onValueChange = viewModel::onApellidoMaternoChange,30)
+
+            Etiqueta("CURP", true)
+            CapturaTexto("CURP", value = usuario.curp, onValueChange = viewModel::onCurpChange,18)
+
+            Etiqueta("Fecha de Nacimiento", true)
+            Fecha_nacimiento(onFechaChange = viewModel::onFechaChange)
+
+            Etiqueta("Género", true)
+            SeleccionarGenero(onSelected = viewModel::onGeneroChange)
+
+            // === DIRECCIÓN ===
+            SeccionDireccion(onAddressChange = viewModel::onDireccionChange)
+
+            // === CONTACTO ===
             Etiqueta("Correo", true)
-            CapturaTexto("correo@ejemplo.com", 50)
-            Etiqueta("Número de teléfono", true)
-            CapturaNumeroTelefono("10 dígitos")
+            CapturaTexto("correo@ejemplo.com", value = usuario.correo, onValueChange = viewModel::onCorreoChange,20)
+
+            Etiqueta("Teléfono", true)
+            CapturaNumeroTelefono("10 dígitos", value = usuario.celular, onValueChange = viewModel::onTelefonoChange,10)
+
+            // === CONTRASEÑA ===
             Etiqueta("Contraseña", true)
             BeneficioPasswordField(
-                value = password,
-                onValueChange = { input -> password = input.take(16)},
+                value = usuario.password,
+                onValueChange = viewModel::onContrasenaChange,
                 placeholder = "Mín. 8 caracteres"
             )
-            PasswordChecklist(password)
+            PasswordChecklist(usuario.password)
 
-            Etiqueta("¿Cuentas con una tarjeta física?", obligatorio = true)
+            // === TARJETA ===
+            Etiqueta("¿Cuentas con una tarjeta física?", true)
             Tarjeta(
-                seleccion = tieneTarjeta,
-                onSelected = { si ->
-                    tieneTarjeta = si
-                    if (!si) folio = ""
-                }
+                seleccion = usuario.tieneTarjeta,
+                onSelected = viewModel::onTieneTarjetaChange
             )
 
-            if (tieneTarjeta == true) {
-                Etiqueta("Ingresa el número de folio", obligatorio = true)
+            if (usuario.tieneTarjeta == true) {
+                Etiqueta("Número de folio", true)
                 BeneficioOutlinedTextField(
-                    value = folio,
-                    onValueChange = { input -> folio = input.filter { it.isDigit() }.take(16) },
+                    value = usuario.folio_antiguo ?: "",
+                    onValueChange = { nuevoValor ->
+                        if (nuevoValor.length <= 16) {
+                            viewModel.onFolioChange(nuevoValor)
+                        }
+                    },
                     placeholder = "1234 5678 9012 3456",
+                    maxLength = 18,
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next
                     )
-
                 )
             }
-            Column(
+            // === CONSENTIMIENTO ===
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 80.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .padding(start = 20.dp, top = 20.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                BotonMorado(navController, "Crear Cuenta", Pantalla.RUTA_INICIAR_SESION)
-
-                Spacer(Modifier.height(16.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("¿Ya tienes una cuenta? ", fontSize = 11.sp, color = Color.Black)
-
-                    Text(
-                        text = "Inicia sesión aquí",
-                        color = MaterialTheme.colorScheme.primary,
-                        textDecoration = TextDecoration.Underline,
-                        fontSize = 11.sp,
-                        modifier = Modifier.clickable {
-                            navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                Checkbox(
+                    checked = usuario.consentimientoAceptado,
+                    onCheckedChange = viewModel::onConsentimientoChange
+                )
+                Text(
+                    buildAnnotatedString {
+                        append("Acepto los términos y condiciones")
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                            append(" *")
                         }
-                    )
-                }
+                    },
+                    fontSize = 13.sp,
+                    color = Color.Black
+                )
             }
+
+            Spacer(Modifier.height(5.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                BotonMorado(
+                    texto = "Crear Cuenta",
+                    habilitado = viewModel.esFormularioValido(),
+                    onClick = {
+                        Log.d("CrearCuenta", "Botón 'Crear Cuenta' presionado ")
+                        if (viewModel.esFormularioValido()) {
+                            viewModel.registrarUsuario(
+                                apiService = RetrofitClient.apiService
+                            ) { exito, mensajeError ->
+                                coroutineScope.launch {
+                                    if (exito) {
+                                        Log.d("CrearCuenta", "Cuenta creada exitosamente")
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = "Cuenta creada exitosamente ",
+                                                withDismissAction = false,
+                                                duration = androidx.compose.material3.SnackbarDuration.Short
+                                            )
+                                        }
+                                        coroutineScope.launch {
+                                            delay(500)
+                                            navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                                        }
+
+                                    } else {
+                                        snackbarHostState.showSnackbar(
+                                            mensajeError ?: "Error desconocido al crear la cuenta"
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Por favor completa todos los campos obligatorios.")
+                            }
+                        }
+                    }
+                )
+            }
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("¿Ya tienes una cuenta? ", fontSize = 11.sp, color = Color.Black)
+                Text(
+                    text = "Inicia sesión aquí",
+                    color = MaterialTheme.colorScheme.primary,
+                    textDecoration = TextDecoration.Underline,
+                    fontSize = 11.sp,
+                    modifier = Modifier.clickable {
+                        navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                    }
+                )
+            }
+            Spacer(Modifier.height(60.dp))
         }
     }
 }
-
 /**
  * Extensión de [Modifier] para aplicar un estilo de entrada uniforme
  * en los campos de texto del sistema Beneficio Joven.
@@ -214,7 +297,6 @@ fun SeccionDireccion(
             estado = estado
         )
     )
-
     // Calle
     Etiqueta("Calle",true)
     BeneficioOutlinedTextField(
@@ -223,7 +305,6 @@ fun SeccionDireccion(
         placeholder = "Lázaro Cárdenas",
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
-
     // Número exterior / interior
     Row(
         modifier = Modifier
@@ -266,7 +347,6 @@ fun SeccionDireccion(
             )
         }
     }
-
     // Colonia
     Etiqueta("Colonia",true)
     BeneficioOutlinedTextField(
@@ -275,7 +355,6 @@ fun SeccionDireccion(
         placeholder = "Las Arboledas",
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
     )
-
     // Código Postal (5 dígitos)
     Etiqueta("Código Postal",true)
     BeneficioOutlinedTextField(
@@ -284,7 +363,6 @@ fun SeccionDireccion(
         placeholder = "52900",
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next)
     )
-
     // Municipio
     Etiqueta("Municipio / Alcaldía", true)
     BeneficioOutlinedTextField(
@@ -377,7 +455,6 @@ private fun OpcionPill(
         )
     }
 }
-
 /**
  * Menú desplegable para seleccionar el estado de residencia.
  *
@@ -442,7 +519,6 @@ fun SeleccionarEstado(
         }
     }
 }
-
 /**
  * Selector de fecha de nacimiento compuesto por tres menús desplegables:
  * día, mes y año. Actualiza los valores conforme se seleccionan.
@@ -453,7 +529,7 @@ fun SeleccionarEstado(
 @Composable
 fun Fecha_nacimiento(
     modifier: Modifier = Modifier,
-    yearRange: IntRange = (1900..Calendar.getInstance().get(Calendar.YEAR)),
+    yearRange: IntRange = (1995..Calendar.getInstance().get(Calendar.YEAR)),
     onFechaChange: (Int?, Int?, Int?) -> Unit = { _, _, _ -> }
 ) {
     FechaNacimientoDropdowns(
@@ -462,9 +538,7 @@ fun Fecha_nacimiento(
         onDateSelected = onFechaChange
     )
     modifier.beneficioInput()
-
 }
-
 /**
  * Subcomponente para renderizar los menús desplegables de fecha de nacimiento.
  *
@@ -490,10 +564,7 @@ private fun FechaNacimientoDropdowns(
         2 -> if (y != null && ((y % 4 == 0 && y % 100 != 0) || (y % 400 == 0))) 29 else 28
         else -> 31
     }
-
     val maxDia = daysInMonth(mes, anio)
-
-
     Row(
         modifier = modifier
             .padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
@@ -617,10 +688,12 @@ fun BeneficioOutlinedTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
+    maxLength: Int? = null,
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    readOnly: Boolean = false
+    readOnly: Boolean = false,
+    isError: Boolean = false // 🔹 Agregado aquí
 ) {
     OutlinedTextField(
         value = value,
@@ -762,17 +835,20 @@ private fun ChecklistRow(
 @Composable
 fun CapturaNumeroTelefono(
     placeholder: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    maxLength: Int? = null,
     modifier: Modifier = Modifier
 ) {
-    var texto by rememberSaveable { mutableStateOf("") }
     BeneficioOutlinedTextField(
-        value = texto,
-        onValueChange = { input -> texto = input.filter { it.isDigit() }.take(10) },
+        value = value,
+        onValueChange = { input -> onValueChange(input.filter { it.isDigit() }.take(10)) },
         placeholder = placeholder,
         modifier = modifier,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
     )
 }
+
 /**
  * Campo de texto genérico para capturar texto libre.
  *
@@ -782,18 +858,19 @@ fun CapturaNumeroTelefono(
 @Composable
 fun CapturaTexto(
     placeholder: String,
+    value: String,
+    onValueChange: (String) -> Unit,
     maxLength: Int? = null,
-    modifier: Modifier = Modifier,
-
-    ) {
-    var texto by rememberSaveable { mutableStateOf("") }
+    modifier: Modifier = Modifier
+) {
     BeneficioOutlinedTextField(
-        value = texto,
-        onValueChange = { input -> texto = maxLength?.let { input.take(it) } ?: input },
+        value = value,
+        onValueChange = { input -> onValueChange(maxLength?.let { input.take(it) } ?: input) },
         placeholder = placeholder,
         modifier = modifier
     )
 }
+
 
 /**
  * Etiqueta superior que acompaña cada campo de texto.
@@ -869,8 +946,13 @@ fun SeleccionarGenero(
                     text = { Text(option) },
                     onClick = {
                         selected = option
-                        onSelected(option)
                         expanded = false
+                        val dbValue = when (option) {
+                            "Femenino" -> "F"
+                            "Masculino" -> "M"
+                            else -> "Otro"
+                        }
+                        onSelected(dbValue)
                     }
                 )
             }

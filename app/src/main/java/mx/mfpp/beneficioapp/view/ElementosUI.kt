@@ -58,15 +58,24 @@ import mx.mfpp.beneficioapp.R
  */
 @Composable
 fun BotonMorado(
-    navController: NavController,
+    navController: NavController? = null,
     texto: String,
-    route: String
+    route: String? = null,
+    habilitado: Boolean = true,
+    onClick: (() -> Unit)? = null // 🔹 Nuevo: callback opcional
 ) {
     val moradoFuerte = Color(0xFF9605f7)
     val moradoSuave = Color(0xFFE9d4ff)
 
     Button(
-        onClick = { navController.navigate(route) },
+        onClick = {
+            if (onClick != null) {
+                onClick() // 🔹 Si te pasan un callback, lo ejecuta
+            } else if (route != null && navController != null) {
+                navController.navigate(route)
+            }
+        },
+        enabled = habilitado,
         colors = ButtonDefaults.buttonColors(containerColor = moradoSuave),
         shape = RoundedCornerShape(50.dp),
         modifier = Modifier
@@ -82,6 +91,7 @@ fun BotonMorado(
         )
     }
 }
+
 
 /**
  * Botón blanco con borde morado para acciones secundarias.
