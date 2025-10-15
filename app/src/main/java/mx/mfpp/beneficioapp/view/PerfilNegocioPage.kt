@@ -27,9 +27,11 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -187,87 +189,79 @@ fun PerfilNegocioPage(navController: NavController) {
                 )
             )
         }
-
         if (mostrarDialogo) {
-            AlertDialog(
-                onDismissRequest = { mostrarDialogo = false },
-                confirmButton = {}, // sin botones por defecto
-                title = null,
-                text = {
-                    // Fondo del cuadro principal
-                    Surface(
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color.White, // fondo blanco
-                        shadowElevation = 8.dp, // ligera sombra
-                        tonalElevation = 0.dp // sin color del tema
+            Dialog(onDismissRequest = { mostrarDialogo = false }) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.White,
+                    tonalElevation = 2.dp,
+                    shadowElevation = 6.dp,
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .widthIn(min = 280.dp, max = 360.dp)
+                            .padding(bottom = 16.dp)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(vertical = 24.dp, horizontal = 28.dp)
-                        ) {
-                            Text(
-                                text = "¿Quieres cerrar la sesión?",
-                                color = Color.Black,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                                .background(moradoTexto.copy(alpha = 0.25f))
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Text(
+                            text = "¿Quieres cerrar la sesión?",
+                            color = Color.Black,
+                            fontSize = 18.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(
+                                16.dp,
+                                Alignment.CenterHorizontally
                             )
-
-                            Spacer(modifier = Modifier.height(24.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedButton(
+                                onClick = { mostrarDialogo = false },
+                                shape = RoundedCornerShape(999.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = moradoTexto
+                                ),
+                                border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
+                                modifier = Modifier.weight(1f)
                             ) {
-                                // Botón "No"
-                                Button(
-                                    onClick = { mostrarDialogo = false },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.White
-                                    ),
-                                    shape = RoundedCornerShape(40.dp),
-                                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                                        width = 2.dp,
-                                        brush = SolidColor(moradoTexto)
-                                    ),
-                                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                                ) {
-                                    Text(
-                                        text = "No",
-                                        color = moradoTexto,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(25.dp))
-
-                                // Botón "Sí"
-                                Button(
-                                    onClick = {
-                                        mostrarDialogo = false
-                                        navController.navigate(Pantalla.RUTA_JN_APP) // tu acción aquí
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = moradoBoton
-                                    ),
-                                    shape = RoundedCornerShape(40.dp),
-                                    elevation = ButtonDefaults.buttonElevation(0.dp)
-                                ) {
-                                    Text(
-                                        text = "Sí",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
+                                Text("No")
+                            }
+                            Button(
+                                onClick = {
+                                    mostrarDialogo = false
+                                    navController.navigate(Pantalla.RUTA_JN_APP)
+                                },
+                                shape = RoundedCornerShape(999.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = moradoTexto.copy(alpha = 0.25f),
+                                    contentColor = moradoTexto
+                                ),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Sí")
                             }
                         }
                     }
-                },
-                // Fondo transparente y sin padding del AlertDialog
-                containerColor = Color.Transparent,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-            )
+                }
+            }
         }
     }
 }
