@@ -83,7 +83,7 @@ fun InicioPage(
                     SeccionHorizontal(
                         titulo = "Tus Favoritos",
                         items = favoritos,
-                        onItemClick = { /* Navegar a detalle */ }
+                        onItemClick = { navController.navigate(Pantalla.RUTA_NEGOCIODETALLE_APP) }
                     )
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
