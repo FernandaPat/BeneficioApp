@@ -15,9 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 
 /**
  * Pantalla que muestra los detalles de un negocio específico y sus promociones activas.
@@ -36,9 +38,13 @@ import coil.compose.AsyncImage
  * @see PromocionItem Componente reutilizable que representa cada promoción individual
  * @see Pantalla.RUTA_MAPA_APP Ruta de navegación para la pantalla del mapa
  */
+
 @Composable
-fun NegocioDetallePage(navController: NavController) {
-    val moradoBoton = Color(0xFFE2C8FF)  // Color de fondo para botones
+fun NegocioDetallePage(
+    navController: NavController,
+    viewModel: QRViewModel // ← Recibe el ViewModel como parámetro
+) {
+    val moradoBoton = Color(0xFFE2C8FF)
     val moradoTexto = Color(0xFF9605F7)
 
     Box(
@@ -53,7 +59,6 @@ fun NegocioDetallePage(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                // Imagen superior del negocio
                 AsyncImage(
                     model = "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
                     contentDescription = "Imagen del negocio",
@@ -65,7 +70,6 @@ fun NegocioDetallePage(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Nombre del negocio
                 Text(
                     text = "Establecimiento 1",
                     fontWeight = FontWeight.Bold,
@@ -76,7 +80,6 @@ fun NegocioDetallePage(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Botón "Ver en el mapa"
                 Button(
                     onClick = { navController.navigate(Pantalla.RUTA_MAPA_APP) },
                     colors = ButtonDefaults.buttonColors(
@@ -94,7 +97,6 @@ fun NegocioDetallePage(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(25.dp))
 
-                // Sección de promociones activas
                 Text(
                     text = "Promociones activas",
                     fontWeight = FontWeight.Bold,
@@ -108,22 +110,41 @@ fun NegocioDetallePage(navController: NavController) {
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // 🔹 Lista estática de promociones
+            // Lista de promociones
             items(4) { index ->
+                val promocionData = when (index) {
+                    0 -> PromocionItemData(
+                        imagen = "https://images.unsplash.com/photo-1522336572468-97b06e8ef143",
+                        titulo = "Cupón 1 - 20% descuento",
+                        descripcion = "20% de descuento en compra total"
+                    )
+                    1 -> PromocionItemData(
+                        imagen = "https://images.unsplash.com/photo-1606851092831-0c5d2a909b3a",
+                        titulo = "Cupón 2 - 2x1 en bebidas",
+                        descripcion = "2x1 en todas las bebidas"
+                    )
+                    2 -> PromocionItemData(
+                        imagen = "https://images.unsplash.com/photo-1601924582971-6e1b8a8f4b02",
+                        titulo = "Cupón 3 - Envío gratis",
+                        descripcion = "Envío gratis en pedidos > $100"
+                    )
+                    else -> PromocionItemData(
+                        imagen = "https://images.unsplash.com/photo-1616628182509-5d6f0c8857e5",
+                        titulo = "Cupón 4 - Producto gratis",
+                        descripcion = "Producto gratis con tu compra"
+                    )
+                }
+
                 PromocionItem(
-                    imagen = when (index) {
-                        0 -> "https://images.unsplash.com/photo-1522336572468-97b06e8ef143"
-                        1 -> "https://images.unsplash.com/photo-1606851092831-0c5d2a909b3a"
-                        2 -> "https://images.unsplash.com/photo-1601924582971-6e1b8a8f4b02"
-                        else -> "https://images.unsplash.com/photo-1616628182509-5d6f0c8857e5"
-                    },
-                    titulo = when (index) {
-                        0 -> "Cupón 1"
-                        1 -> "Cupón 2"
-                        2 -> "Cupón 3"
-                        else -> "Cupón 4"
-                    },
-                    descripcion = "Descripción"
+                    imagen = promocionData.imagen,
+                    titulo = promocionData.titulo,
+                    descripcion = promocionData.descripcion,
+                    onAplicarClick = {
+                        // Usar el ViewModel para aplicar la promoción
+                        viewModel.aplicarPromocion(promocionData.titulo)
+                        // Navegar a la pantalla QR
+                        navController.navigate(Pantalla.RUTA_QR_PROMOCION)
+                    }
                 )
             }
 
@@ -131,6 +152,13 @@ fun NegocioDetallePage(navController: NavController) {
         }
     }
 }
+
+// Data class simple para las promociones
+data class PromocionItemData(
+    val imagen: String,
+    val titulo: String,
+    val descripcion: String
+)
 
 /**
  * Componente que representa un item individual de promoción en la lista del negocio.
@@ -146,8 +174,13 @@ fun NegocioDetallePage(navController: NavController) {
  * @see AsyncImage Componente para carga asincrónica de imágenes desde URL
  */
 @Composable
-fun PromocionItem(imagen: String, titulo: String, descripcion: String) {
-    val moradoBoton = Color(0xFFE2C8FF)  // Color de fondo para botones
+fun PromocionItem(
+    imagen: String,
+    titulo: String,
+    descripcion: String,
+    onAplicarClick: () -> Unit
+) {
+    val moradoBoton = Color(0xFFE2C8FF)
     val moradoTexto = Color(0xFF9605F7)
 
     Row(
@@ -182,7 +215,7 @@ fun PromocionItem(imagen: String, titulo: String, descripcion: String) {
         }
 
         Button(
-            onClick = { /* acción aplicar */ },
+            onClick = onAplicarClick,
             colors = ButtonDefaults.buttonColors(containerColor = moradoBoton),
             shape = RoundedCornerShape(40.dp),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
@@ -207,9 +240,3 @@ fun PromocionItem(imagen: String, titulo: String, descripcion: String) {
  *
  * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
  */
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun NegocioDetallePagePreview() {
-    val navController = rememberNavController()
-    NegocioDetallePage(navController)
-}

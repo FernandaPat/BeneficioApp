@@ -36,6 +36,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 
 /**
  * Actividad principal de la aplicación Beneficio Joven.
@@ -45,6 +46,8 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
  */
 class MainActivity : ComponentActivity() {
     private val viewModel: BeneficioJovenVM by viewModels()
+    private val qrViewModel: QRViewModel by viewModels()
+
 
     /**
      * Método llamado cuando se crea la actividad.
@@ -66,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BeneficioAppTheme {
-                AppPrincipal(viewModel)
+                AppPrincipal(viewModel, qrViewModel)
             }
         }
     }
@@ -83,6 +86,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppPrincipal(
     beneficioJovenVM: BeneficioJovenVM,
+    qrViewModel: QRViewModel,
     modifier: Modifier = Modifier
 ) {
     val navController = rememberNavController()
@@ -137,6 +141,7 @@ fun AppPrincipal(
         AppNavHost(
             beneficioJovenVM = beneficioJovenVM,
             navController = navController,
+            qrViewModel = qrViewModel,
             modifier = modifier.padding(innerPadding)
         )
     }
@@ -154,6 +159,7 @@ fun AppPrincipal(
 @Composable
 fun AppNavHost(
     beneficioJovenVM: BeneficioJovenVM,
+    qrViewModel: QRViewModel,
     navController: NavHostController,
     modifier: Modifier
 ) {
@@ -193,8 +199,13 @@ fun AppNavHost(
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
+
         composable(Pantalla.RUTA_NEGOCIODETALLE_APP) {
-            NegocioDetallePage(navController)
+            NegocioDetallePage(navController, qrViewModel)
+        }
+
+        composable(Pantalla.RUTA_QR_PROMOCION) {
+            QRPromocionPage(navController, qrViewModel)
         }
 
         // Grafo de navegación Nav bar - JÓVENES
