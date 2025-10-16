@@ -20,10 +20,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 
 /**
  * Pantalla principal para la gestión de promociones de los negocios afiliados.
@@ -38,17 +40,11 @@ import mx.mfpp.beneficioapp.model.Promocion
 @Composable
 fun Promociones(
     navController: NavController,
+    viewModel: PromocionesViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    // BACKEND
-    val promos = remember {
-        mutableStateListOf(
-            Promocion(1, "Ropa 10% de descuento", "https://picsum.photos/seed/1/300", "10%", "Comida", 3, "Atizapán", false, 4.5, "Cupon ropa 10%"),
-            Promocion(2, "Promoción 2", "https://picsum.photos/seed/2/300", "15%", "Entretenimiento", 0, "CDMX", true, 3.8, "Descripción"),
-            Promocion(3, "Promoción 3", null, "20%", "Cine", 5, "CDMX", false, null, "Descripción")
-        )
-    }
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
+
     Scaffold(
         topBar = {
             ArrowTopBarNegocio(
@@ -66,16 +62,13 @@ fun Promociones(
                 .padding(paddingValues),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            itemsIndexed(promos, key = { _, p -> p.id }) { index, promo ->
+            itemsIndexed(viewModel.promos, key = { _, p -> p.id }) { index, promo ->
                 PromoListItem(
                     promo = promo,
-                    onEdit = { navController.navigate(Pantalla.RUTA_EDITAR_PROMOCIONES)
-                    },
-                    onDelete = { id ->
-                        pendingDeleteId = id // abrir confirmación
-                    }
+                    onEdit = { navController.navigate(Pantalla.RUTA_EDITAR_PROMOCIONES) },
+                    onDelete = { id -> pendingDeleteId = id }
                 )
-                if (index < promos.lastIndex) {
+                if (index < viewModel.promos.lastIndex) {
                     Divider(
                         color = Color(0xFFEAEAEA),
                         thickness = 1.dp,
@@ -85,17 +78,18 @@ fun Promociones(
             }
         }
 
-        // Mostrar diálogo estilo personalizado cuando haya algo por borrar
-        val toDelete = promos.firstOrNull { it.id == pendingDeleteId }
+        // Mostrar diálogo de confirmación al eliminar
+        val toDelete = viewModel.promos.firstOrNull { it.id == pendingDeleteId }
         ConfirmacionEliminarDialog(
             visible = toDelete != null,
             mensaje = toDelete?.let { "¿Seguro que deseas eliminar \"${it.nombre}\"?" } ?: "",
             onDismiss = { pendingDeleteId = null },
             onConfirm = {
-                toDelete?.let { promos.remove(it) } // eliminar del listado
+                toDelete?.let { viewModel.eliminarPromocion(it.id) } // Eliminar desde la API
                 pendingDeleteId = null
             }
         )
+
     }
 }
 /**

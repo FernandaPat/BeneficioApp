@@ -118,14 +118,14 @@ fun Editar_Promociones(
             }
 
             // 📝 Campos editables
-            Etiqueta("Título", true)
+            Etiqueta("Título", false)
             BeneficioOutlinedTextField(
                 value = promo.nombre,
                 onValueChange = viewModel::actualizarNombre,
                 placeholder = "Escribe aquí"
             )
 
-            Etiqueta("Descripción", true)
+            Etiqueta("Descripción", false)
             BeneficioOutlinedTextField(
                 value = promo.descripcion ?: "",
                 onValueChange = viewModel::actualizarDescripcion,
@@ -142,7 +142,7 @@ fun Editar_Promociones(
             SeleccionarCategoria(
                 categoria = promo.categoria,
                 onCategoriaChange = viewModel::actualizarCategoria,
-                categorias = listOf("Belleza", "Comida", "Educación", "Salud", "Entretenimiento", "Moda", "Servicios")
+                categorias = listOf("Belleza", "Comida", "Educación", "Salud", "Entretenimiento", "Moda", "Servicios"),false
             )
 
             // 📅 Fechas (si lo usas)
