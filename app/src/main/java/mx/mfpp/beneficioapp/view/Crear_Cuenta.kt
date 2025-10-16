@@ -128,7 +128,7 @@ fun Crear_Cuenta(
 
             // === CONTACTO ===
             Etiqueta("Correo", true)
-            CapturaTexto("correo@ejemplo.com", value = usuario.correo, onValueChange = viewModel::onCorreoChange,20)
+            CapturaTexto("correo@ejemplo.com", value = usuario.correo, onValueChange = viewModel::onCorreoChange,40)
 
             Etiqueta("Teléfono", true)
             CapturaNumeroTelefono("10 dígitos", value = usuario.celular, onValueChange = viewModel::onTelefonoChange,10)
