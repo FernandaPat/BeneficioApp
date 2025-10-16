@@ -28,7 +28,8 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
-import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
+import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 
 /**
  * Pantalla que muestra resultados de búsqueda de establecimientos.
@@ -38,23 +39,26 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
  *
  * @param navController Controlador de navegación para manejar cambios de pantalla
  * @param categoriaSeleccionada Categoría pre-seleccionada para filtrar (opcional)
- * @param viewModel ViewModel que gestiona el estado de la pantalla
+ * @param categoriasViewModel ViewModel para categorías
+ * @param busquedaViewModel ViewModel para búsqueda
  * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun ResultadosPage(
     navController: NavController,
     categoriaSeleccionada: String? = null,
-    viewModel: BeneficioJovenVM = viewModel(),
+    categoriasViewModel: CategoriasViewModel = viewModel(),
+    busquedaViewModel: BusquedaViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    val establecimientos by viewModel.establecimientos.collectAsState()
-    val categorias by viewModel.categorias.collectAsState()
-    val searchText by viewModel.textoBusqueda.collectAsState()
+    val establecimientos by busquedaViewModel.establecimientos.collectAsState()
+    val categorias by categoriasViewModel.categorias.collectAsState()
+    val searchText by busquedaViewModel.textoBusqueda.collectAsState()
+    val categoriaSeleccionadaState by busquedaViewModel.categoriaSeleccionada.collectAsState()
 
     LaunchedEffect(categoriaSeleccionada) {
         if (categoriaSeleccionada != null) {
-            viewModel.seleccionarCategoria(categoriaSeleccionada)
+            busquedaViewModel.seleccionarCategoria(categoriaSeleccionada)
         }
     }
 
@@ -71,18 +75,24 @@ fun ResultadosPage(
         ) {
             CategoriasResultados(
                 categorias = categorias,
-                categoriaSeleccionada = categoriaSeleccionada,
+                categoriaSeleccionada = categoriaSeleccionadaState,
                 onCategoriaSeleccionada = { categoria ->
-                    viewModel.seleccionarCategoria(categoria)
+                    busquedaViewModel.seleccionarCategoria(categoria)
                 }
             )
 
             ResultadosSeccion(
                 establecimientos = establecimientos,
-                categoria = categoriaSeleccionada ?: "todos los resultados",
+                categoria = categoriaSeleccionadaState ?: "todos los resultados",
                 searchText = searchText,
-                onEstablecimientoClick = { /* navegar a detalle */ },
-                onToggleFavorito = { /* toggle favorito */ }
+                onEstablecimientoClick = { id ->
+                    // Navegar a detalle del establecimiento
+                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id")
+                },
+                onToggleFavorito = { id ->
+                    // Manejar toggle de favorito
+                    // TODO: Implementar lógica de favoritos
+                }
             )
         }
     }
@@ -118,70 +128,79 @@ fun CategoriasResultados(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        // Primera fila de categorías (4 elementos)
-        val primeras4Categorias = categorias.take(4)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            primeras4Categorias.forEachIndexed { index, categoria ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(end = if (index < 3) 12.dp else 0.dp)
-                ) {
-                    ItemCategoriaCirculoResultados(
-                        categoria = categoria,
-                        isSelected = categoria.nombre == categoriaSeleccionada,
-                        onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
-                    )
-                    Text(
-                        text = categoria.nombre,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        ),
+        if (categorias.isEmpty()) {
+            Text(
+                text = "No hay categorías disponibles",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            // Primera fila de categorías (4 elementos)
+            val primeras4Categorias = categorias.take(4)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                primeras4Categorias.forEachIndexed { index, categoria ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(top = 8.dp)
-                            .width(80.dp),
-                        color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
-                    )
+                            .padding(end = if (index < 3) 12.dp else 0.dp)
+                    ) {
+                        ItemCategoriaCirculoResultados(
+                            categoria = categoria,
+                            isSelected = categoria.nombre == categoriaSeleccionada,
+                            onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
+                        )
+                        Text(
+                            text = categoria.nombre,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                            ),
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .width(80.dp),
+                            color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
+                        )
+                    }
                 }
             }
-        }
 
-        // Segunda fila de categorías (3 elementos)
-        val ultimas3Categorias = categorias.takeLast(3)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            ultimas3Categorias.forEachIndexed { index, categoria ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(end = if (index < 2) 12.dp else 0.dp)
-                ) {
-                    ItemCategoriaCirculoResultados(
-                        categoria = categoria,
-                        isSelected = categoria.nombre == categoriaSeleccionada,
-                        onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
-                    )
-                    Text(
-                        text = categoria.nombre,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        ),
+            // Segunda fila de categorías (3 elementos)
+            val ultimas3Categorias = categorias.takeLast(3)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                ultimas3Categorias.forEachIndexed { index, categoria ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(top = 8.dp)
-                            .width(80.dp),
-                        color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
-                    )
+                            .padding(end = if (index < 2) 12.dp else 0.dp)
+                    ) {
+                        ItemCategoriaCirculoResultados(
+                            categoria = categoria,
+                            isSelected = categoria.nombre == categoriaSeleccionada,
+                            onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
+                        )
+                        Text(
+                            text = categoria.nombre,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (categoria.nombre == categoriaSeleccionada) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier
+                                .padding(top = 8.dp)
+                                .width(80.dp),
+                            color = if (categoria.nombre == categoriaSeleccionada) Color(0xFF6200EE) else Color.Black
+                        )
+                    }
                 }
             }
         }

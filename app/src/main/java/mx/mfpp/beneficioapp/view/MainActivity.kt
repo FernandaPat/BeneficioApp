@@ -36,7 +36,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
+import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
+import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
+import kotlin.getValue
 
 /**
  * Actividad principal de la aplicación Beneficio Joven.
@@ -45,9 +50,11 @@ import mx.mfpp.beneficioapp.viewmodel.QRViewModel
  * la visibilidad de las barras del sistema.
  */
 class MainActivity : ComponentActivity() {
-    private val viewModel: BeneficioJovenVM by viewModels()
+    private val categoriasViewModel: CategoriasViewModel by viewModels()
+    private val promocionesViewModel: PromocionesViewModel by viewModels()
+    private val busquedaViewModel: BusquedaViewModel by viewModels()
+    private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
-
 
     /**
      * Método llamado cuando se crea la actividad.
@@ -69,7 +76,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BeneficioAppTheme {
-                AppPrincipal(viewModel, qrViewModel)
+                AppPrincipal(
+                    categoriasViewModel = categoriasViewModel,
+                    promocionesViewModel = promocionesViewModel,
+                    busquedaViewModel = busquedaViewModel,
+                    scannerViewModel = scannerViewModel,
+                    qrViewModel = qrViewModel
+                )
             }
         }
     }
@@ -80,12 +93,19 @@ class MainActivity : ComponentActivity() {
  *
  * Maneja la navegación, la barra inferior y el estado global de la app.
  *
- * @param beneficioJovenVM ViewModel principal que gestiona el estado de la aplicación
+ * @param categoriasViewModel ViewModel para categorías
+ * @param promocionesViewModel ViewModel para promociones
+ * @param busquedaViewModel ViewModel para búsqueda
+ * @param scannerViewModel ViewModel para scanner
+ * @param qrViewModel ViewModel para QR
  * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppPrincipal(
-    beneficioJovenVM: BeneficioJovenVM,
+    categoriasViewModel: CategoriasViewModel,
+    promocionesViewModel: PromocionesViewModel,
+    busquedaViewModel: BusquedaViewModel,
+    scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -139,9 +159,12 @@ fun AppPrincipal(
         },
     ) { innerPadding ->
         AppNavHost(
-            beneficioJovenVM = beneficioJovenVM,
-            navController = navController,
+            categoriasViewModel = categoriasViewModel,
+            promocionesViewModel = promocionesViewModel,
+            busquedaViewModel = busquedaViewModel,
+            scannerViewModel = scannerViewModel,
             qrViewModel = qrViewModel,
+            navController = navController,
             modifier = modifier.padding(innerPadding)
         )
     }
@@ -152,13 +175,20 @@ fun AppPrincipal(
  *
  * Contiene el grafo de navegación completo con todas las pantallas disponibles.
  *
- * @param beneficioJovenVM ViewModel compartido entre pantallas
+ * @param categoriasViewModel ViewModel para categorías
+ * @param promocionesViewModel ViewModel para promociones
+ * @param busquedaViewModel ViewModel para búsqueda
+ * @param scannerViewModel ViewModel para scanner
+ * @param qrViewModel ViewModel para QR
  * @param navController Controlador de navegación principal
  * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppNavHost(
-    beneficioJovenVM: BeneficioJovenVM,
+    categoriasViewModel: CategoriasViewModel,
+    promocionesViewModel: PromocionesViewModel,
+    busquedaViewModel: BusquedaViewModel,
+    scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
     navController: NavHostController,
     modifier: Modifier
@@ -210,7 +240,11 @@ fun AppNavHost(
 
         // Grafo de navegación Nav bar - JÓVENES
         composable(Pantalla.RUTA_INICIO_APP) {
-            InicioPage(navController, beneficioJovenVM)
+            InicioPage(
+                navController = navController,
+                categoriasViewModel = categoriasViewModel,
+                promocionesViewModel = promocionesViewModel
+            )
         }
         composable(Pantalla.RUTA_MAPA_APP) {
             MapaPage(navController)
@@ -219,28 +253,34 @@ fun AppNavHost(
             TarjetaPage(navController)
         }
         composable(Pantalla.RUTA_BUSCAR_APP) {
-            ExplorarPage(navController)
+            ExplorarPage(
+                navController = navController,
+                categoriasViewModel = categoriasViewModel,
+                busquedaViewModel = busquedaViewModel
+            )
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             ActividadPage(navController)
         }
 
         // Rutas de búsqueda y resultados
-        composable(Pantalla.RUTA_BUSCAR_APP) {
-            ExplorarPage(navController)
-        }
-
         composable(Pantalla.RUTA_RESULTADOS_CON_CATEGORIA) { backStackEntry ->
             val categoria = backStackEntry.arguments?.getString("categoria")
             ResultadosPage(
                 navController = navController,
-                categoriaSeleccionada = categoria
+                categoriaSeleccionada = categoria,
+                categoriasViewModel = categoriasViewModel,
+                busquedaViewModel = busquedaViewModel
             )
         }
 
         // Ruta simple para resultados sin categoría
         composable(Pantalla.RUTA_RESULTADOS_APP) {
-            ResultadosPage(navController)
+            ResultadosPage(
+                navController = navController,
+                categoriasViewModel = categoriasViewModel,
+                busquedaViewModel = busquedaViewModel
+            )
         }
 
         // Grafo de navegación Nav bar - NEGOCIO
@@ -252,23 +292,22 @@ fun AppNavHost(
         }
 
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
-            val viewModel: BeneficioJovenVM = viewModel()
-            val showScanner by viewModel.showScanner.collectAsState()
+            val showScanner by scannerViewModel.showScanner.collectAsState()
 
             if (showScanner) {
                 ScannerQrScreen(
                     onQrScanned = { qrContent ->
-                        viewModel.addQrScanResult(qrContent)
+                        scannerViewModel.addQrScanResult(qrContent)
                     },
                     onBack = {
-                        viewModel.hideScanner()
+                        scannerViewModel.hideScanner()
                     },
                     navController = navController
                 )
             } else {
                 HistorialScannerScreen(
                     navController = navController,
-                    viewModel = viewModel
+                    viewModel = scannerViewModel
                 )
             }
         }

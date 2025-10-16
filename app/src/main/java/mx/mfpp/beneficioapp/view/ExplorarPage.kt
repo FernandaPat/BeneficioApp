@@ -36,9 +36,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
-import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
+import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 
 /**
  * Pantalla de exploración y búsqueda de establecimientos por categorías.
@@ -47,15 +47,20 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
  * por categorías específicas para filtrar resultados.
  *
  * @param navController Controlador de navegación para manejar la navegación entre pantallas
- * @param viewModel ViewModel que gestiona el estado y datos de búsqueda
+ * @param categoriasViewModel ViewModel para categorías
+ * @param busquedaViewModel ViewModel para búsqueda
  */
 @Composable
 fun ExplorarPage(
     navController: NavController,
-    viewModel: BeneficioJovenVM = viewModel()
+    categoriasViewModel: CategoriasViewModel = viewModel(),
+    busquedaViewModel: BusquedaViewModel = viewModel()
 ) {
-    val categorias by viewModel.categorias.collectAsState()
-    val searchText by viewModel.textoBusqueda.collectAsState()
+    val categorias by categoriasViewModel.categorias.collectAsState()
+    val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
+    val categoriasError by categoriasViewModel.error.collectAsState()
+
+    val searchText by busquedaViewModel.textoBusqueda.collectAsState()
 
     Scaffold { paddingValues ->
         Column(
@@ -68,7 +73,7 @@ fun ExplorarPage(
 
             SearchBar(
                 searchText = searchText,
-                onSearchTextChanged = { viewModel.actualizarTextoBusqueda(it) },
+                onSearchTextChanged = { busquedaViewModel.actualizarTextoBusqueda(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -81,21 +86,71 @@ fun ExplorarPage(
                 modifier = Modifier.padding(start = 16.dp, top = 24.dp, bottom = 16.dp)
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp)
-            ) {
-                items(categorias) { categoria ->
-                    CategoryButton(
-                        categoria = categoria,
-                        onCategoryClicked = {
-                            viewModel.seleccionarCategoria(categoria.nombre)
-                            navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
+            when {
+                categoriasLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Cargando categorías...")
+                    }
+                }
+                categoriasError != null -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Error al cargar categorías",
+                                color = Color.Red,
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = categoriasError ?: "Error desconocido",
+                                color = Color.Gray,
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                categorias.isEmpty() -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No hay categorías disponibles",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+                else -> {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        items(categorias) { categoria ->
+                            CategoryButton(
+                                categoria = categoria,
+                                onCategoryClicked = {
+                                    busquedaViewModel.seleccionarCategoria(categoria.nombre)
+                                    navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
                 }
             }
         }
@@ -126,8 +181,9 @@ fun CategoryButton(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Usa el icono específico de la categoría en lugar del circulestar genérico
             Icon(
-                painter = painterResource(id = R.drawable.circlestar),
+                painter = painterResource(id = categoria.iconoResId),
                 contentDescription = "Categoría ${categoria.nombre}",
                 modifier = Modifier.size(24.dp),
                 tint = Color(0xFF9605F7)

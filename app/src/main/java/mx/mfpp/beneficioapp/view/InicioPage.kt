@@ -29,7 +29,8 @@ import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 
 /**
  * Pantalla de inicio principal para usuarios jóvenes.
@@ -38,44 +39,51 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
  * en un diseño scrollable organizado por secciones.
  *
  * @param navController Controlador de navegación para manejar la navegación entre pantallas
- * @param viewModel ViewModel que gestiona el estado y datos de la pantalla
+ * @param categoriasViewModel ViewModel para categorías
+ * @param promocionesViewModel ViewModel para promociones
  * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun InicioPage(
     navController: NavController,
-    viewModel: BeneficioJovenVM = viewModel(),
+    categoriasViewModel: CategoriasViewModel = viewModel(),
+    promocionesViewModel: PromocionesViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
-    val categorias by viewModel.categorias.collectAsState()
-    val favoritos by viewModel.favoritos.collectAsState()
-    val nuevasPromociones by viewModel.nuevasPromociones.collectAsState()
-    val promocionesExpiracion by viewModel.promocionesExpiracion.collectAsState()
-    val promocionesCercanas by viewModel.promocionesCercanas.collectAsState()
-    val estadoCargando by viewModel.estadoCargando.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val categorias by categoriasViewModel.categorias.collectAsState()
+    val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
+    val categoriasError by categoriasViewModel.error.collectAsState()
+
+    val favoritos by promocionesViewModel.favoritos.collectAsState()
+    val nuevasPromociones by promocionesViewModel.nuevasPromociones.collectAsState()
+    val promocionesExpiracion by promocionesViewModel.promocionesExpiracion.collectAsState()
+    val promocionesCercanas by promocionesViewModel.promocionesCercanas.collectAsState()
+    val promocionesLoading by promocionesViewModel.isLoading.collectAsState()
+    val promocionesError by promocionesViewModel.error.collectAsState()
+
+    val isLoading = categoriasLoading || promocionesLoading
+    val error = categoriasError ?: promocionesError
 
     Scaffold(
         topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
-
-        // Scrollable Column sin mostrar barra
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState(),
-                    enabled = true)
-
+                .verticalScroll(rememberScrollState())
         ) {
             when {
-                estadoCargando -> {
+                isLoading -> {
                     EstadoCargando()
                 }
                 error != null -> {
                     EstadoError(
-                        mensajeError = error!!,
-                        onReintentar = { viewModel.refrescarDatos() }
+                        mensajeError = error,
+                        onReintentar = {
+                            categoriasViewModel.refrescarCategorias()
+                            promocionesViewModel.refrescarPromociones()
+                        }
                     )
                 }
                 else -> {
@@ -83,22 +91,33 @@ fun InicioPage(
                     SeccionHorizontal(
                         titulo = "Tus Favoritos",
                         items = favoritos,
-                        onItemClick = { navController.navigate(Pantalla.RUTA_NEGOCIODETALLE_APP) }
+                        onItemClick = { promocion ->
+                            navController.navigate(Pantalla.RUTA_NEGOCIODETALLE_APP)
+                        }
                     )
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
                         items = nuevasPromociones,
-                        onItemClick = { /* Navegar a detalle */ }
+                        onItemClick = { promocion ->
+                            // Navegar a detalle de promoción
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                        }
                     )
                     SeccionHorizontal(
                         titulo = "Expiran pronto",
                         items = promocionesExpiracion,
-                        onItemClick = { /* Navegar a detalle */ }
+                        onItemClick = { promocion ->
+                            // Navegar a detalle de promoción
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                        }
                     )
                     SeccionHorizontal(
                         titulo = "Cerca de ti",
                         items = promocionesCercanas,
-                        onItemClick = { /* Navegar a detalle */ }
+                        onItemClick = { promocion ->
+                            // Navegar a detalle de promoción
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                        }
                     )
                 }
             }
@@ -202,11 +221,20 @@ fun SeccionHorizontal(
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(items) { item ->
-                CardItemHorizontal(promocion = item, onItemClick = { onItemClick(item) })
+        if (items.isEmpty()) {
+            Text(
+                text = "No hay $titulo disponibles",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(items) { item ->
+                    CardItemHorizontal(promocion = item, onItemClick = { onItemClick(item) })
+                }
             }
         }
     }
@@ -222,7 +250,7 @@ fun SeccionHorizontal(
  */
 @Composable
 fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
-    val colorMorado = Color(0xFF6A5ACD) // Color morado estándar - ajusta este valor según tu app
+    val colorMorado = Color(0xFF6A5ACD)
 
     Card(
         onClick = onItemClick,
@@ -233,7 +261,7 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen placeholder (manteniendo el tamaño original)
+            // Imagen placeholder
             AsyncImage(
                 model = promocion.imagenUrl ?: "https://picsum.photos/200/300?random=${promocion.id}",
                 contentDescription = "Imagen de ${promocion.nombre}",
@@ -241,7 +269,7 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
                 contentScale = ContentScale.Crop
             )
 
-            // Tiempo de expiración arriba a la derecha (como estaba antes)
+            // Tiempo de expiración arriba a la derecha
             Text(
                 text = promocion.obtenerTextoExpiracion(),
                 color = Color.White,
@@ -261,12 +289,12 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
                     .background(colorMorado.copy(alpha = 0.8f))
             )
 
-            // Nombre del lugar abajo - texto más pequeño
+            // Nombre del lugar abajo
             Text(
                 text = promocion.nombre,
                 color = Color.White,
-                fontWeight = FontWeight.Medium, // Cambiado a Medium para que sea un poco menos grueso
-                fontSize = 12.sp, // Reducido de 14.sp a 12.sp
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
@@ -302,61 +330,70 @@ fun Categorias(categorias: List<Categoria>) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        val primeras4Categorias = categorias.take(4)
-        val ultimas3Categorias = categorias.takeLast(3)
+        if (categorias.isEmpty()) {
+            Text(
+                text = "No hay categorías disponibles",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            val primeras4Categorias = categorias.take(4)
+            val ultimas3Categorias = categorias.takeLast(3)
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            primeras4Categorias.forEachIndexed { index, categoria ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(end = if (index < 3) 12.dp else 0.dp)
-                ) {
-                    ItemCategoriaCirculo(categoria = categoria)
-                    Text(
-                        text = categoria.nombre,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        ),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                primeras4Categorias.forEachIndexed { index, categoria ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(top = 6.dp)
-                            .width(80.dp),
-                        color = Color.Black
-                    )
+                            .padding(end = if (index < 3) 12.dp else 0.dp)
+                    ) {
+                        ItemCategoriaCirculo(categoria = categoria)
+                        Text(
+                            text = categoria.nombre,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                            ),
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .width(80.dp),
+                            color = Color.Black
+                        )
+                    }
                 }
             }
-        }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            ultimas3Categorias.forEachIndexed { index, categoria ->
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .padding(end = if (index < 2) 12.dp else 0.dp)
-                ) {
-                    ItemCategoriaCirculo(categoria = categoria)
-                    Text(
-                        text = categoria.nombre,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center
-                        ),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                ultimas3Categorias.forEachIndexed { index, categoria ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .padding(top = 6.dp)
-                            .width(80.dp),
-                        color = Color.Black
-                    )
+                            .padding(end = if (index < 2) 12.dp else 0.dp)
+                    ) {
+                        ItemCategoriaCirculo(categoria = categoria)
+                        Text(
+                            text = categoria.nombre,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier
+                                .padding(top = 6.dp)
+                                .width(80.dp),
+                            color = Color.Black
+                        )
+                    }
                 }
             }
         }
@@ -373,8 +410,10 @@ fun Categorias(categorias: List<Categoria>) {
 @Composable
 fun ItemCategoriaCirculo(categoria: Categoria) {
     Card(
-        onClick = { /* Acción al hacer clic en la categoría */ },
-        modifier = Modifier.size(70.dp), // MANTENIDO en 70.dp
+        onClick = {
+            // Acción al hacer clic en la categoría - podría navegar a resultados filtrados
+        },
+        modifier = Modifier.size(70.dp),
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -383,7 +422,7 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
             Icon(
                 painter = painterResource(id = categoria.iconoResId),
                 contentDescription = categoria.nombre,
-                modifier = Modifier.size(42.dp), // AUMENTADO de 32.dp a 42.dp
+                modifier = Modifier.size(42.dp),
                 tint = Color.Unspecified
             )
         }
@@ -400,18 +439,17 @@ fun ItemCategoriaCirculo(categoria: Categoria) {
  */
 @Composable
 fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
-    // Vamos a hacerla similar a la de negocio pero manteniendo la estructura original
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp) // Reducido de 120.dp para que sea similar a negocio
+            .height(100.dp)
             .background(Color.White)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.Center)
-                .padding(horizontal = 25.dp), // Mismo padding horizontal que negocio
+                .padding(horizontal = 25.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -420,19 +458,19 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
                     onClick = {
                         navController.navigate(Pantalla.RUTA_PERFIL_APP)
                     },
-                    modifier = Modifier.size(60.dp) // Reducido de 90.dp a 60.dp (igual que negocio)
+                    modifier = Modifier.size(60.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Foto de perfil",
-                        modifier = Modifier.size(60.dp), // Reducido de 93.dp a 60.dp
+                        modifier = Modifier.size(60.dp),
                         tint = Color.LightGray
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp)) // Mismo espaciado que negocio
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
                     text = "Nombre",
-                    style = MaterialTheme.typography.titleMedium.copy( // Mismo estilo que negocio
+                    style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
@@ -447,7 +485,7 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(id = R.drawable.bell),
                     contentDescription = "Notificaciones",
-                    tint = Color.Gray // Mismo color que negocio
+                    tint = Color.Gray
                 )
             }
         }

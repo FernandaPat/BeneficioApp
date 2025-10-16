@@ -26,7 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import mx.mfpp.beneficioapp.R
-import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 
 /**
  * Pantalla principal del flujo de negocio que sirve como dashboard para las operaciones del negocio.
@@ -43,7 +43,7 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
  *
  * @param navController Controlador de navegación para manejar transiciones entre pantallas
  *
- * @see BeneficioJovenVM ViewModel que gestiona el estado de la aplicación para negocios
+ * @see ScannerViewModel ViewModel que gestiona el estado del scanner para negocios
  * @see Pantalla Definiciones de rutas y configuración de navegación
  *
  * @sample InicioNegocioPreview Función de preview para Android Studio
@@ -67,12 +67,12 @@ fun InicioNegocioPage(navController: NavController) {
     val moradoTexto = Color(0xFF9605F7)  // Color principal para texto e iconos
 
     /**
-     * ViewModel que gestiona el estado de la aplicación para el flujo de negocio.
+     * ViewModel que gestiona el estado del scanner para el flujo de negocio.
      *
      * Se inicializa aquí para asegurar que esté disponible para todas las operaciones
-     * que requieran gestión de estado, como resetear el estado del scanner.
+     * que requieran gestión del scanner, como resetear el estado del scanner.
      */
-    val viewModel: BeneficioJovenVM = viewModel()
+    val scannerViewModel: ScannerViewModel = viewModel()
 
     /**
      * Estructura principal de la pantalla usando Material Design 3.
@@ -172,12 +172,12 @@ fun InicioNegocioPage(navController: NavController) {
                  * 1. Resetea el estado del scanner en el ViewModel
                  * 2. Navega a la pantalla de scanner
                  *
-                 * @see BeneficioJovenVM.resetScannerState Método que prepara el scanner para nuevo uso
+                 * @see ScannerViewModel.resetScannerState Método que prepara el scanner para nuevo uso
                  */
                 Button(
                     onClick = {
                         // Resetear el estado del scanner antes de navegar
-                        viewModel.resetScannerState()  // Prepara el scanner para nuevo uso
+                        scannerViewModel.resetScannerState()  // Prepara el scanner para nuevo uso
                         navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO) {
                             launchSingleTop = true  // Evita múltiples instancias
                         }

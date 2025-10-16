@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
+import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 
 /**
  * Pantalla que muestra el historial de escaneos QR realizados por el negocio.
@@ -35,7 +35,7 @@ import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 @Composable
 fun HistorialScannerScreen(
     navController: NavController,
-    viewModel: BeneficioJovenVM = viewModel()
+    viewModel: ScannerViewModel = viewModel()
 ) {
     val qrScanResults by viewModel.qrScanResults.collectAsState()
     val totalScans = viewModel.getTotalScans()
