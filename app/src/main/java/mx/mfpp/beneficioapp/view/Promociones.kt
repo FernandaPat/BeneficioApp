@@ -85,10 +85,11 @@ fun Promociones(
             mensaje = toDelete?.let { "¿Seguro que deseas eliminar \"${it.nombre}\"?" } ?: "",
             onDismiss = { pendingDeleteId = null },
             onConfirm = {
-                toDelete?.let { viewModel.eliminarPromocion(it.id) } // eliminar del listado
+                toDelete?.let { viewModel.eliminarPromocion(it.id) } // Eliminar desde la API
                 pendingDeleteId = null
             }
         )
+
     }
 }
 /**
