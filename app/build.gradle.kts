@@ -18,6 +18,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         manifestPlaceholders["MAPS_KEY"] = "AIzaSyAUigjUxAy0oJufJ9S_euF8c2qiHiTYEgs"
+        //Configuracion para auth0
+        manifestPlaceholders["auth0Domain"] = "dev-rhwetn2ukgnhh8ic.us.auth0.com"
+        manifestPlaceholders["auth0Scheme"] = "demo"
     }
 
     buildTypes {
@@ -40,6 +43,8 @@ android {
         compose = true
         buildConfig = true
     }
+
+
 }
 
 dependencies {
@@ -68,6 +73,10 @@ dependencies {
     // Google Maps
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose)
+
+
+    //Libreria para auth0
+    implementation("com.auth0.android:auth0:2.10.2")
 
     implementation(libs.zxing.core) 
 

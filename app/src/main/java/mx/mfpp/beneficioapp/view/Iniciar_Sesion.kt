@@ -1,23 +1,29 @@
 package mx.mfpp.beneficioapp.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.viewmodel.IniciarSesionViewModel
+import mx.mfpp.beneficioapp.viewmodel.LoginState
 
 @Composable
 fun Iniciar_Sesion(
@@ -27,6 +33,27 @@ fun Iniciar_Sesion(
 ) {
     val scrollState = rememberScrollState()
     val login = viewModel.login.value
+
+    val loginState by viewModel.loginState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(loginState) {
+        when (val state = loginState) {
+            is LoginState.Success -> {
+                // Navega a la pantalla principal y limpia el login del historial
+                navController.navigate(Pantalla.RUTA_INICIO_APP) {
+                    popUpTo(Pantalla.RUTA_INICIAR_SESION) { inclusive = true }
+                }
+                viewModel.resetState() // Resetea el estado para la próxima vez
+            }
+            is LoginState.Error -> {
+                // Muestra el mensaje de error en un Snackbar
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState() // Resetea el estado
+            }
+            else -> Unit // No hacer nada en los estados Idle o Loading
+        }
+    }
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Iniciar Sesión") },
@@ -78,10 +105,13 @@ fun Iniciar_Sesion(
                 verticalArrangement = Arrangement.Center
             ) {
                 BotonMorado(
-                    navController = navController,
                     texto = "Iniciar Sesión",
-                    route = if (viewModel.esFormularioValido()) Pantalla.RUTA_INICIO_APP else "",
-                    habilitado = viewModel.esFormularioValido()
+                    // Aquí le dices al botón qué hacer: llamar al ViewModel
+                    onClick = {
+                        Log.d("LOGIN_UI_CHECK", "✅ ¡El onClick del Botón Morado FUE EJECUTADO!")
+                        viewModel.iniciarSesion()
+                              },
+                    habilitado = viewModel.esFormularioValido() && loginState !is LoginState.Loading
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -100,6 +130,36 @@ fun Iniciar_Sesion(
                 }
             }
         }
+    }
+}
+
+
+@Composable
+fun BotonMorado(
+    texto: String,
+    onClick: () -> Unit, // 🔹 Ahora es el único responsable de la acción
+    modifier: Modifier = Modifier,
+    habilitado: Boolean = true
+) {
+    val moradoFuerte = Color(0xFF9605f7)
+    val moradoSuave = Color(0xFFE9d4ff)
+
+    Button(
+        onClick = onClick, // 🔹 Llama directamente a la función que le pasas
+        enabled = habilitado,
+        colors = ButtonDefaults.buttonColors(containerColor = moradoSuave),
+        shape = RoundedCornerShape(50.dp),
+        modifier = modifier
+            .width(250.dp)
+            .height(60.dp)
+    ) {
+        Text(
+            text = texto,
+            color = moradoFuerte,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

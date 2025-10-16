@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Atizapp</string>
+    <string name="com_auth0_domain">dev-rhwetn2ukgnhh8ic.us.auth0.com</string>
+    <string name="com_auth0_client_id">Yrxq8gryuqLiHi4T5MzHyNhQVB0CP1uc</string>
 </resources>
