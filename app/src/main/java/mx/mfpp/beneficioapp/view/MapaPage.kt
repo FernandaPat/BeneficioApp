@@ -52,15 +52,6 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         LocationServices.getFusedLocationProviderClient(context)
     }
 
-    val permissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            hasLocationPermission = isGranted
-            if (!isGranted) {
-                Toast.makeText(context, "No se otorgó el permiso de ubicación", Toast.LENGTH_SHORT)
-                    .show()
-            }
-        }
-
     // --- Configurar request y callback ---
     val locationRequest = remember {
         LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
@@ -77,7 +68,38 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         }
     }
 
-    // --- Verificar permiso ---
+    // --- Estado del mapa y hoja ---
+    val sheetState = rememberStandardBottomSheetState(
+        initialValue = SheetValue.PartiallyExpanded,
+        skipHiddenState = true
+    )
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    val cameraPositionState = rememberCameraPositionState()
+
+    // --- Permiso launcher ---
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            hasLocationPermission = isGranted
+            if (isGranted) {
+                // 🔥 En cuanto se da el permiso, pedimos la ubicación inmediatamente
+                fusedLocationClient.requestLocationUpdates(
+                    locationRequest,
+                    locationCallback,
+                    Looper.getMainLooper()
+                )
+                // También obtenemos la última ubicación conocida
+                fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                    loc?.let {
+                        currentLocation = LatLng(it.latitude, it.longitude)
+                    }
+                }
+            } else {
+                Toast.makeText(context, "Es necesario que se otorgue permiso para la ubicación", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+    // --- Verificar permiso al iniciar ---
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(
                 context,
@@ -90,27 +112,24 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 locationCallback,
                 Looper.getMainLooper()
             )
+            fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                loc?.let {
+                    currentLocation = LatLng(it.latitude, it.longitude)
+                }
+            }
         } else {
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
 
-    // --- Estado del mapa y hoja ---
-    val sheetState = rememberStandardBottomSheetState(
-        initialValue = SheetValue.PartiallyExpanded,
-        skipHiddenState = true
-    )
-
-    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
-    val cameraPositionState = rememberCameraPositionState()
-
-    // Cuando se obtiene ubicación, centramos el mapa
+    // Cuando se obtiene ubicación, centramos el mapa automáticamente
     LaunchedEffect(currentLocation) {
         currentLocation?.let {
             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
         }
     }
 
+    // --- Contenido del mapa ---
     var query by remember { mutableStateOf("") }
 
     val lugaresMock = listOf(
@@ -154,6 +173,7 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                         text = "Cerca de ti",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
+                        color = Color.Black,
                         modifier = Modifier.padding(start = 16.dp)
                     )
                 }
@@ -174,7 +194,7 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                     Marker(
                         state = MarkerState(position = it),
                         title = "Mi ubicación actual",
-                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
                     )
                 }
 
@@ -188,7 +208,6 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 }
             }
 
-            // --- Barra de búsqueda ---
             SearchBar2(
                 searchText = query,
                 onSearchTextChanged = { query = it },
