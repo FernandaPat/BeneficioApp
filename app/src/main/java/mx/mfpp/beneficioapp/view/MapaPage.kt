@@ -1,6 +1,11 @@
 package mx.mfpp.beneficioapp.view
 
-import androidx.compose.foundation.Image
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Looper
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -19,36 +24,91 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
-    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    // --- Permiso y ubicación ---
+    var hasLocationPermission by remember { mutableStateOf(false) }
+    var currentLocation by remember { mutableStateOf<LatLng?>(null) }
+
+    val fusedLocationClient = remember {
+        LocationServices.getFusedLocationProviderClient(context)
+    }
+
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            hasLocationPermission = isGranted
+            if (!isGranted) {
+                Toast.makeText(context, "No se otorgó el permiso de ubicación", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+    // --- Configurar request y callback ---
+    val locationRequest = remember {
+        LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
+    }
+
+    val locationCallback = remember {
+        object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult) {
+                val loc = locationResult.lastLocation
+                if (loc != null) {
+                    currentLocation = LatLng(loc.latitude, loc.longitude)
+                }
+            }
+        }
+    }
+
+    // --- Verificar permiso ---
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            hasLocationPermission = true
+            fusedLocationClient.requestLocationUpdates(
+                locationRequest,
+                locationCallback,
+                Looper.getMainLooper()
+            )
+        } else {
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    // --- Estado del mapa y hoja ---
     val sheetState = rememberStandardBottomSheetState(
         initialValue = SheetValue.PartiallyExpanded,
         skipHiddenState = true
     )
 
-    val scaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = sheetState
-    )
+    val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
+    val cameraPositionState = rememberCameraPositionState()
 
-    val cdmx = LatLng(19.4326, -99.1332)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(cdmx, 13f)
+    // Cuando se obtiene ubicación, centramos el mapa
+    LaunchedEffect(currentLocation) {
+        currentLocation?.let {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+        }
     }
 
     var query by remember { mutableStateOf("") }
@@ -57,7 +117,7 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         Lugar("Café Roma", "10 min - 1.2 km", "4.6", LatLng(19.436, -99.14), "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"),
         Lugar("Parque México", "5 min - 0.8 km", "4.8", LatLng(19.411, -99.17), "https://images.unsplash.com/photo-1505843513577-22bb7d21e455"),
         Lugar("Museo Soumaya", "18 min - 5.0 km", "4.7", LatLng(19.440, -99.202), "https://images.unsplash.com/photo-1601042879364-f36cde5f1c91"),
-        Lugar("Restaurante El Cardenal", "12 min - 2.3 km", "4.9", LatLng(19.429, -99.135), "https://images.unsplash.com/photo-1552566626-52f8b828add9"),
+        Lugar("Restaurante El Cardenal", "12 min - 2.3 km", "4.9", LatLng(19.429, -99.135), "https://images.unsplash.com/photo-1552566626-52f8b828add9")
     )
 
     BottomSheetScaffold(
@@ -66,25 +126,19 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         sheetContainerColor = Color.White,
         sheetDragHandle = {
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 1.dp)
+                    .padding(vertical = 4.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .width(32.dp)
-                            .height(3.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color.Gray.copy(alpha = 0.4f))
-                    )
-                }
+                        .width(32.dp)
+                        .height(3.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(Color.Gray.copy(alpha = 0.4f))
+                )
             }
         },
         sheetContent = {
@@ -92,43 +146,37 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(6.dp), //
-                contentPadding = PaddingValues(bottom = 60.dp, top = 0.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                contentPadding = PaddingValues(bottom = 60.dp)
             ) {
-                // Header SIN ESPACIO
                 item {
                     Text(
                         text = "Cerca de ti",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 16.dp, top = 0.dp, bottom = 0.dp)
+                        modifier = Modifier.padding(start = 16.dp)
                     )
                 }
-
                 items(lugaresMock) { lugar ->
-                    LugarCardModernCompact(
-                        lugar,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
+                    LugarCardModernCompact(lugar, modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         },
         modifier = modifier.fillMaxSize()
     ) { innerPadding ->
-
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-
             GoogleMap(
                 modifier = Modifier.fillMaxSize(),
-                cameraPositionState = cameraPositionState
+                cameraPositionState = cameraPositionState,
+                properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
             ) {
-
-                Marker(
-                    state = MarkerState(position = cdmx),
-                    title = "Tú estás aquí",
-                    snippet = "Centro de CDMX",
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
-                )
+                currentLocation?.let {
+                    Marker(
+                        state = MarkerState(position = it),
+                        title = "Mi ubicación actual",
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
+                    )
+                }
 
                 lugaresMock.forEach { lugar ->
                     Marker(
@@ -168,7 +216,7 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
             contentDescription = lugar.nombre,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(140.dp) // Aumentado para mejor visualización
+                .height(140.dp)
                 .clip(RoundedCornerShape(10.dp)),
             contentScale = ContentScale.Crop
         )
@@ -176,7 +224,7 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 1.dp), // MÍNIMO ABSOLUTO
+                .padding(top = 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -189,24 +237,18 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(0.dp)) // SIN espacio
                 Text(
                     text = "${lugar.distancia} • ${lugar.rating} ⭐",
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
             }
-
-            // Icono de corazón MÁS GRANDE
-            IconButton(
-                onClick = { esFavorito = !esFavorito },
-                modifier = Modifier.size(32.dp) // AUMENTADO significativamente
-            ) {
+            IconButton(onClick = { esFavorito = !esFavorito }, modifier = Modifier.size(32.dp)) {
                 Icon(
                     imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Favorito",
                     tint = if (esFavorito) Color.Red else Color.Gray,
-                    modifier = Modifier.size(28.dp) // AUMENTADO significativamente
+                    modifier = Modifier.size(28.dp)
                 )
             }
         }
@@ -255,64 +297,6 @@ fun SearchBar2(
     }
 }
 
-@Composable
-fun LugarCardModern(lugar: Lugar, modifier: Modifier = Modifier) {
-    var esFavorito by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable { /* Navegar a detalle */ }
-    ) {
-        AsyncImage(
-            model = lugar.imagen,
-            contentDescription = lugar.nombre,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .clip(RoundedCornerShape(12.dp)),
-            contentScale = ContentScale.Crop
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lugar.nombre,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${lugar.distancia} • ${lugar.rating} ⭐",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
-            }
-
-            IconButton(
-                onClick = { esFavorito = !esFavorito },
-                modifier = Modifier.size(32.dp) // AUMENTADO también en la versión original
-            ) {
-                Icon(
-                    imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorito",
-                    tint = if (esFavorito) Color.Red else Color.Gray,
-                    modifier = Modifier.size(28.dp) // AUMENTADO también en la versión original
-                )
-            }
-        }
-    }
-}
-
 data class Lugar(
     val nombre: String,
     val distancia: String,
@@ -320,10 +304,3 @@ data class Lugar(
     val coordenadas: LatLng,
     val imagen: String
 )
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun MapaPreview() {
-    val navController = rememberNavController()
-    MapaPage(navController = navController)
-}
