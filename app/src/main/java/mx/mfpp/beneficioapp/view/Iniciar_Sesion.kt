@@ -68,7 +68,7 @@ fun Iniciar_Sesion(
                 .padding(top = 3.dp)
         ) {
             // === CORREO ===
-            Etiqueta("Correo o número de teléfono", true)
+            Etiqueta("Correo", true)
             CapturaTexto(
                 placeholder = "Escribe aquí",
                 value = login.correo,
