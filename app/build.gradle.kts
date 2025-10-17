@@ -71,14 +71,17 @@ dependencies {
     implementation("androidx.camera:camera-view:1.3.0")
 
     // Google Maps
-    implementation(libs.play.services.maps)
-    implementation(libs.maps.compose)
+    implementation("com.google.maps.android:maps-compose:4.3.3")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
 
 
     //Libreria para auth0
     implementation("com.auth0.android:auth0:2.10.2")
 
-    implementation(libs.zxing.core) 
+    implementation(libs.zxing.core)
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
