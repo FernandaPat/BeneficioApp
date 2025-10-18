@@ -56,7 +56,6 @@ class EditarPromocionViewModel : ViewModel() {
     // 🔹 Simular guardado
     fun guardarCambios(): Boolean {
         // Aquí podrías conectar con tu repositorio o backend
-        println("✅ Promoción actualizada: ${promocion.value}")
         return true
     }
 }

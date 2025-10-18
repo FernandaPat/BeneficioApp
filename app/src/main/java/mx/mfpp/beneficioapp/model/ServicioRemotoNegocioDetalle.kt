@@ -20,12 +20,9 @@ object ServicioRemotoNegocioDetalle {
 
     suspend fun obtenerPromocionesActivas(establecimientoId: Int): List<PromocionJoven> {
         return try {
-            println("🔗 Obteniendo promociones para establecimiento: $establecimientoId")
             val resp = api.obtenerPromociones(establecimientoId = establecimientoId, estado = "activa")
-            println("✅ Promociones obtenidas: ${resp.data.size}")
             resp.data
         } catch (e: Exception) {
-            println("❌ Error obteniendo promociones: ${e.message}")
             e.printStackTrace()
             emptyList()
         }

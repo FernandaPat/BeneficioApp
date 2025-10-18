@@ -64,18 +64,15 @@ class MapaViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                println("🗺️ Cargando establecimientos para el mapa...")
                 val todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos()
 
                 _establecimientos.value = todosEstablecimientos
                 _establecimientosFiltrados.value = todosEstablecimientos
 
                 val conCoordenadas = todosEstablecimientos.count { it.latitud != null && it.longitud != null }
-                println("✅ Establecimientos cargados: ${todosEstablecimientos.size}, con coordenadas: $conCoordenadas")
 
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
-                println("❌ Error cargando establecimientos para mapa: ${e.message}")
             } finally {
                 _isLoading.value = false
             }

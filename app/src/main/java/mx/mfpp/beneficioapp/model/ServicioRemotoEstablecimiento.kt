@@ -22,10 +22,8 @@ object ServicioRemotoEstablecimiento {
 
     suspend fun obtenerEstablecimientos(): List<Establecimiento> {
         return try {
-            println("🟡 Iniciando descarga de todos los establecimientos...")
             descargarTodasLasPaginas()
         } catch (e: Exception) {
-            println("🔴 Error fatal al descargar establecimientos: ${e.message}")
             e.printStackTrace()
             emptyList()
         }
@@ -38,20 +36,16 @@ object ServicioRemotoEstablecimiento {
 
         while (tieneMasPaginas) {
             try {
-                println("📄 Descargando página $paginaActual de establecimientos...")
                 val response = obtenerPaginaConReintentos(paginaActual, 50)
 
                 // Verificar si hay datos
                 if (response.data.isNotEmpty()) {
                     todosLosEstablecimientos.addAll(response.data)
-                    println("✅ Página $paginaActual: ${response.data.size} establecimientos (Total: ${todosLosEstablecimientos.size})")
                 } else {
-                    println("⚠️ Página $paginaActual: Sin datos")
                 }
 
                 // Verificar si hay más páginas
                 tieneMasPaginas = response.pagination.has_next
-                println("🔍 ¿Hay más páginas? $tieneMasPaginas")
 
                 paginaActual++
 
@@ -61,7 +55,6 @@ object ServicioRemotoEstablecimiento {
                 }
 
             } catch (e: Exception) {
-                println("❌ Error en página $paginaActual: ${e.message}")
                 // Si falla una página, continuamos con la siguiente en lugar de detener todo
                 paginaActual++
                 tieneMasPaginas = paginaActual < 10 // Límite de seguridad
@@ -91,13 +84,10 @@ object ServicioRemotoEstablecimiento {
 
         repeat(reintentos) { intento ->
             try {
-                println("🔗 Llamando API: página=$pagina, límite=$limite")
                 val response = servicio.obtenerEstablecimientos(pagina, limite)
-                println("🔗 Llamada exitosa")
                 return response
             } catch (e: Exception) {
                 ultimoError = e
-                println("🔄 Reintento ${intento + 1}/$reintentos falló: ${e.message}")
                 if (intento < reintentos - 1) {
                     delay(1000L * (intento + 1))
                 }
@@ -110,10 +100,8 @@ object ServicioRemotoEstablecimiento {
     // Método para probar solo una página específica
     suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): EstablecimientosResponse {
         return try {
-            println("🧪 Probando página $pagina de establecimientos...")
             servicio.obtenerEstablecimientos(pagina, limite)
         } catch (e: Exception) {
-            println("🧪 Error en página $pagina: ${e.message}")
             throw e
         }
     }

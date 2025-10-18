@@ -29,13 +29,10 @@ class NegocioDetalleViewModel(
             _isLoading.value = true
             _error.value = null
             try {
-                println("🔄 Cargando promociones para establecimiento: $establecimientoId")
                 val promos = ServicioRemotoNegocioDetalle.obtenerPromocionesActivas(establecimientoId)
                 _promociones.value = promos
-                println("✅ Promociones cargadas: ${promos.size}")
             } catch (e: Exception) {
                 _error.value = "Error cargando promociones: ${e.message}"
-                println("❌ Error cargando promociones: ${e.message}")
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false

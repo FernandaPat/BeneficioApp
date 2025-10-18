@@ -49,7 +49,6 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val viewModel: MapaViewModel = viewModel()
 
-    // --- Estados del ViewModel ---
     val establecimientos by viewModel.establecimientosFiltrados.collectAsState()
     val establecimientosConCoordenadas by remember {
         derivedStateOf { viewModel.establecimientosConCoordenadas }

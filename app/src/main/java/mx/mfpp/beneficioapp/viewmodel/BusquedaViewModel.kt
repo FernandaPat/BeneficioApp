@@ -42,13 +42,10 @@ class BusquedaViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                println("🔄 Cargando establecimientos desde API...")
                 todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos()
                 aplicarFiltros()
-                println("✅ Establecimientos cargados y filtrados: ${_establecimientos.value.size}")
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
-                println("❌ Error cargando establecimientos: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
@@ -70,14 +67,12 @@ class BusquedaViewModel : ViewModel() {
     }
 
     fun seleccionarCategoria(categoria: String) {
-        println("🔄 seleccionarCategoria: $categoria")
         _categoriaSeleccionada.value = categoria
         _textoBusqueda.value = "" // opcional: limpia el texto si seleccionas categoría
         aplicarFiltros()
     }
 
     fun actualizarTextoBusqueda(texto: String) {
-        println("🔄 actualizarTextoBusqueda: $texto")
         _textoBusqueda.value = texto
 
         // Si estás escribiendo texto, elimina la categoría
@@ -92,10 +87,6 @@ class BusquedaViewModel : ViewModel() {
         val categoria = _categoriaSeleccionada.value
         val texto = _textoBusqueda.value
 
-        println("🔍 Aplicando filtros:")
-        println("   - Categoría: $categoria")
-        println("   - Texto: $texto")
-
         val filtrados = todosEstablecimientos.filter { establecimiento ->
             val coincideCategoria = categoria?.let {
                 establecimiento.nombre_categoria.equals(it, ignoreCase = true)
@@ -108,7 +99,6 @@ class BusquedaViewModel : ViewModel() {
             coincideCategoria && coincideTexto
         }
 
-        println("✅ Resultados filtrados: ${filtrados.size}")
         _establecimientos.value = filtrados
     }
 }

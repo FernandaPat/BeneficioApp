@@ -119,7 +119,6 @@ fun InicioPage(
                         }
                     )
 
-                    // NUEVA SECCIÓN: Todas las promociones
                     SeccionHorizontal(
                         titulo = "Todas las promociones",
                         items = todasPromociones,
@@ -128,8 +127,6 @@ fun InicioPage(
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
                         }
                     )
-
-                    // NUEVA SECCIÓN: Todos los establecimientos
                     SeccionHorizontalEstablecimientos(
                         titulo = "Todos los establecimientos",
                         establecimientos = todosEstablecimientos,

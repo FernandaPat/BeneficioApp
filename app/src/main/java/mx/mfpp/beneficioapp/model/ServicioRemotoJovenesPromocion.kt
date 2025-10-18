@@ -22,10 +22,8 @@ object ServicioRemotoJovenesPromocion {
 
     suspend fun obtenerPromociones(): List<PromocionJoven> {
         return try {
-            println("🟡 Iniciando descarga de todas las promociones...")
             descargarTodasLasPaginas()
         } catch (e: Exception) {
-            println("🔴 Error fatal al descargar promociones: ${e.message}")
             e.printStackTrace()
             emptyList()
         }
@@ -38,20 +36,16 @@ object ServicioRemotoJovenesPromocion {
 
         while (tieneMasPaginas) {
             try {
-                println("📄 Descargando página $paginaActual...")
                 val response = obtenerPaginaConReintentos(paginaActual, 50)
 
                 // Verificar si hay datos
                 if (response.data.isNotEmpty()) {
                     todasLasPromociones.addAll(response.data)
-                    println("✅ Página $paginaActual: ${response.data.size} promociones (Total: ${todasLasPromociones.size})")
                 } else {
-                    println("⚠️ Página $paginaActual: Sin datos")
                 }
 
                 // Verificar si hay más páginas
                 tieneMasPaginas = response.pagination.has_next
-                println("🔍 ¿Hay más páginas? $tieneMasPaginas")
 
                 paginaActual++
 
@@ -61,15 +55,12 @@ object ServicioRemotoJovenesPromocion {
                 }
 
             } catch (e: Exception) {
-                println("❌ Error en página $paginaActual: ${e.message}")
                 // Si falla una página, continuamos con la siguiente en lugar de detener todo
                 paginaActual++
                 tieneMasPaginas = paginaActual < 10 // Límite de seguridad
                 delay(1000L)
             }
         }
-
-        println("🎉 Descarga completada: ${todasLasPromociones.size} promociones en total")
 
         // Mostrar resumen de las promociones descargadas
         todasLasPromociones.take(5).forEachIndexed { index, promocion ->
@@ -91,13 +82,10 @@ object ServicioRemotoJovenesPromocion {
 
         repeat(reintentos) { intento ->
             try {
-                println("🔗 Llamando API: página=$pagina, límite=$limite")
                 val response = servicio.obtenerPromociones(pagina, limite)
-                println("🔗 Llamada exitosa")
                 return response
             } catch (e: Exception) {
                 ultimoError = e
-                println("🔄 Reintento ${intento + 1}/$reintentos falló: ${e.message}")
                 if (intento < reintentos - 1) {
                     delay(1000L * (intento + 1))
                 }
@@ -110,10 +98,8 @@ object ServicioRemotoJovenesPromocion {
     // Método para probar solo una página específica
     suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): PromocionesJovenResponse {
         return try {
-            println("🧪 Probando página $pagina...")
             servicio.obtenerPromociones(pagina, limite)
         } catch (e: Exception) {
-            println("🧪 Error en página $pagina: ${e.message}")
             throw e
         }
     }
