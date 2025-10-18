@@ -38,7 +38,21 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import mx.mfpp.beneficioapp.model.Lugar
 
+/**
+ * Pantalla que muestra el **mapa interactivo** con establecimientos cercanos al usuario.
+ *
+ * Esta vista utiliza la API de **Google Maps Compose** y servicios de localización de Google
+ * para obtener la ubicación actual del usuario (previo permiso de ubicación)
+ * y desplegar marcadores de lugares cercanos de forma visual.
+ *
+ * También incluye una barra de búsqueda y una hoja inferior (BottomSheet) con una lista
+ * de lugares sugeridos, diseñada para mejorar la experiencia de exploración dentro de la app.
+ *
+ * @param navController Controlador de navegación utilizado para redirigir a otras pantallas.
+ * @param modifier Permite modificar la apariencia o el layout del componente raíz.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
@@ -220,7 +234,14 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         }
     }
 }
-
+/**
+ * Tarjeta compacta que muestra la información de un establecimiento dentro de la hoja inferior.
+ *
+ * Incluye imagen, nombre, distancia, calificación y un botón de favorito interactivo.
+ *
+ * @param lugar Objeto [Lugar] que contiene los datos del establecimiento.
+ * @param modifier Permite modificar el layout o espaciado del componente.
+ */
 @Composable
 fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
     var esFavorito by remember { mutableStateOf(false) }
@@ -273,7 +294,15 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
         }
     }
 }
-
+/**
+ * Barra de búsqueda simple para filtrar lugares o establecimientos.
+ *
+ * Incluye un campo de texto con ícono de búsqueda y un placeholder visible cuando el texto está vacío.
+ *
+ * @param searchText Texto actual del campo de búsqueda.
+ * @param onSearchTextChanged Función callback que se ejecuta al cambiar el texto.
+ * @param modifier Permite ajustar el ancho o el espaciado del componente.
+ */
 @Composable
 fun SearchBar2(
     searchText: String,
@@ -315,11 +344,12 @@ fun SearchBar2(
         }
     }
 }
-
-data class Lugar(
-    val nombre: String,
-    val distancia: String,
-    val rating: String,
-    val coordenadas: LatLng,
-    val imagen: String
-)
+/**
+ * Modelo de datos que representa un lugar o establecimiento dentro del mapa.
+ *
+ * @property nombre Nombre del lugar.
+ * @property distancia Distancia o tiempo estimado desde la ubicación del usuario.
+ * @property rating Calificación promedio del lugar.
+ * @property coordenadas Coordenadas geográficas del lugar (latitud y longitud).
+ * @property imagen URL de la imagen representativa del establecimiento.
+ */

@@ -25,6 +25,20 @@ import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.viewmodel.IniciarSesionViewModel
 import mx.mfpp.beneficioapp.viewmodel.LoginState
 
+/**
+ * Pantalla de **inicio de sesión** de usuarios dentro de BeneficioApp.
+ *
+ * Esta función Composable muestra el formulario de login para los usuarios tipo “joven”.
+ * Se conecta al [IniciarSesionViewModel] para gestionar el estado del formulario y las respuestas
+ * del servidor, mostrando mensajes de error o navegando a la pantalla principal en caso de éxito.
+ *
+ * El diseño incluye campos de correo y contraseña, un botón de inicio de sesión
+ * y accesos para crear cuenta o recuperar la contraseña.
+ *
+ * @param navController Controlador de navegación utilizado para cambiar de pantalla.
+ * @param modifier Permite aplicar modificadores de estilo o layout al componente raíz.
+ * @param viewModel ViewModel asociado que maneja la lógica de autenticación.
+ */
 @Composable
 fun Iniciar_Sesion(
     navController: NavController,
@@ -37,6 +51,10 @@ fun Iniciar_Sesion(
     val loginState by viewModel.loginState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    /**
+     * Observa los cambios del estado de inicio de sesión y ejecuta acciones
+     * según el resultado (navegación o mensaje de error).
+     */
     LaunchedEffect(loginState) {
         when (val state = loginState) {
             is LoginState.Success -> {
@@ -133,7 +151,17 @@ fun Iniciar_Sesion(
     }
 }
 
-
+/**
+ * Botón personalizado de color morado usado en el flujo de autenticación.
+ *
+ * Este componente reutilizable centraliza el estilo visual del botón principal,
+ * aplicando colores institucionales y un diseño redondeado.
+ *
+ * @param texto Texto mostrado dentro del botón.
+ * @param onClick Acción que se ejecuta al presionar el botón.
+ * @param modifier Modificador opcional para personalizar su tamaño o posición.
+ * @param habilitado Define si el botón se puede presionar.
+ */
 @Composable
 fun BotonMorado(
     texto: String,
@@ -162,7 +190,11 @@ fun BotonMorado(
         )
     }
 }
-
+/**
+ * Vista previa de la pantalla de inicio de sesión.
+ *
+ * Permite visualizar el diseño en Android Studio sin ejecutar la aplicación.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Iniciar_SesionPreview() {
