@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
@@ -15,15 +18,22 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,83 +44,86 @@ fun Promociones(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
-
-    // ✅ Recolecta los datos reales desde la API
     val promociones by viewModel.promociones.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
-
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    LaunchedEffect(Unit) {
+        val idNegocio = sessionManager.getNegocioId() ?: 0
+        if (idNegocio != 0) {
+            viewModel.cargarPromociones(idNegocio)
+        }
+    }
+
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        "Promociones registradas",
+                        "Promociones",
                         color = Color.Black,
-                        fontSize = 20.sp
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.Black
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
-        }
+        },
+
+        // 💜 Botón flotante para agregar nuevas promociones
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES) },
+                containerColor = Color(0xFF9605F7),
+                contentColor = Color.White,
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar promoción"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
+        containerColor = Color.White
     ) { paddingValues ->
 
-        when {
-            isLoading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Color(0xFF9605F7))
-                }
-            }
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(paddingValues),
+            contentPadding = PaddingValues(bottom = 100.dp)
+        ) {
+            itemsIndexed(promociones, key = { _, p -> p.id }) { index, promo ->
+                PromoListItem(
+                    promo = promo,
+                    onEdit = { navController.navigate("editarPromocion/${promo.id}") },
+                    onDelete = { id -> pendingDeleteId = id }
+                )
 
-            error != null -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = error ?: "Error desconocido",
-                        color = Color.Red,
-                        textAlign = TextAlign.Center
+                if (index < promociones.lastIndex) {
+                    HorizontalDivider(
+                        color = Color(0xFFEAEAEA),
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(horizontal = 20.dp)
                     )
-                }
-            }
-
-            promociones.isEmpty() -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        "No hay promociones registradas.",
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            else -> {
-                LazyColumn(
-                    modifier = modifier
-                        .fillMaxSize()
-                        .background(Color.White)
-                        .padding(paddingValues),
-                    contentPadding = PaddingValues(bottom = 24.dp)
-                ) {
-                    itemsIndexed(promociones, key = { _, p -> p.id }) { index, promo ->
-                        PromoListItem(
-                            promo = promo,
-                            onEdit = { navController.navigate("editarPromocion/${promo.id}") },
-                            onDelete = { id -> pendingDeleteId = id }
-                        )
-                        if (index < promociones.lastIndex) {
-                            HorizontalDivider(
-                                color = Color(0xFFEAEAEA),
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 20.dp)
-                            )
-                        }
-                    }
                 }
             }
         }
 
-        // 🔹 Diálogo de confirmación
+        // 🔹 Diálogo de confirmación para eliminar
         val toDelete = promociones.firstOrNull { it.id == pendingDeleteId }
         ConfirmacionEliminarDialog(
             visible = toDelete != null,
@@ -118,9 +131,7 @@ fun Promociones(
             onDismiss = { pendingDeleteId = null },
             onConfirm = {
                 toDelete?.let {
-                    scope.launch {
-                        viewModel.eliminarPromocion(it.id)
-                    }
+                    scope.launch { viewModel.eliminarPromocion(it.id) }
                 }
                 pendingDeleteId = null
             }
@@ -141,11 +152,12 @@ private fun PromoListItem(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 🖼️ Imagen de promoción (o contenedor vacío si no hay)
         Box(
             modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFEFF3FF)),
+                .size(80.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF4F4F4)),
             contentAlignment = Alignment.Center
         ) {
             if (!promo.imagenUrl.isNullOrBlank()) {
@@ -171,7 +183,7 @@ private fun PromoListItem(
                 )
             )
             Text(
-                text = promo.descripcion ?: "Sin descripción",
+                text = promo.descripcion ?: "Descripción",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color.Gray,
                     fontSize = 14.sp
@@ -188,6 +200,7 @@ private fun PromoListItem(
     }
 }
 
+
 @Composable
 fun ConfirmacionEliminarDialog(
     visible: Boolean,
@@ -197,7 +210,7 @@ fun ConfirmacionEliminarDialog(
 ) {
     if (!visible) return
 
-    val accent = Color(0xFF9605F7)
+    val moradoTexto = Color(0xFF9605F7)
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -211,16 +224,31 @@ fun ConfirmacionEliminarDialog(
                     .widthIn(min = 280.dp, max = 360.dp)
                     .padding(bottom = 16.dp)
             ) {
+                // 🔹 Encabezado decorativo morado (igual que el de cerrar sesión)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                        .background(moradoTexto.copy(alpha = 0.25f))
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                // 🔹 Texto principal
                 Text(
                     text = mensaje,
                     color = Color.Black,
                     fontSize = 18.sp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                        .padding(horizontal = 20.dp),
                     textAlign = TextAlign.Center
                 )
 
+                Spacer(Modifier.height(24.dp))
+
+                // 🔹 Botones de acción
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -230,17 +258,23 @@ fun ConfirmacionEliminarDialog(
                     OutlinedButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(999.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = accent),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = moradoTexto
+                        ),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("No")
                     }
                     Button(
-                        onClick = onConfirm,
+                        onClick = {
+                            onConfirm()
+                            onDismiss()
+                        },
                         shape = RoundedCornerShape(999.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = accent.copy(alpha = 0.2f),
-                            contentColor = accent
+                            containerColor = moradoTexto.copy(alpha = 0.25f),
+                            contentColor = moradoTexto
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
@@ -251,3 +285,4 @@ fun ConfirmacionEliminarDialog(
         }
     }
 }
+

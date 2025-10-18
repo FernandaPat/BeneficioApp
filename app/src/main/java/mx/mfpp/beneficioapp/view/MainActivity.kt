@@ -217,9 +217,11 @@ fun AppNavHost(
             route = "editarPromocion/{id}",
             arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getInt("id")
-            Editar_Promociones(navController)
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            Editar_Promociones(navController = navController, idPromocion = id)
         }
+
+
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }

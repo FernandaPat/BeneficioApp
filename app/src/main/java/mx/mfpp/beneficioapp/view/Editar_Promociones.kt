@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
@@ -29,13 +30,17 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.EditarPromocionViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Editar_Promociones(
     navController: NavController,
-    viewModel: EditarPromocionViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
-    modifier: Modifier = Modifier
+    idPromocion: Int,
+    modifier: Modifier = Modifier,
+    viewModel: EditarPromocionViewModel = viewModel()
 ) {
+    // Cargar la promoción desde la API
+    LaunchedEffect(idPromocion) {
+        viewModel.cargarPromocionPorId(idPromocion)
+    }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -188,6 +193,6 @@ fun Editar_Promociones(
 fun Editar_PromocionesPreview() {
     MaterialTheme {
         val navController = rememberNavController()
-        Editar_Promociones(navController)
+        Editar_Promociones(navController = navController, idPromocion = 1)
     }
 }

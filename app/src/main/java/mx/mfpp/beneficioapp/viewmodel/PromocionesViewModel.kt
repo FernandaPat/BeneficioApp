@@ -35,22 +35,15 @@ class PromocionesViewModel : ViewModel() {
 
             try {
                 val response = RetrofitClient.api.obtenerPromociones(idNegocio)
-                _promociones.value = response.data // ✅ Lista real desde la API
-                Log.d("PROMO_DEBUG", "✅ Se cargaron ${response.data.size} promociones del negocio $idNegocio")
-            } catch (e: IOException) {
-                _error.value = "Error de conexión: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error de conexión: ${e.message}")
-            } catch (e: HttpException) {
-                _error.value = "Error HTTP: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error HTTP: ${e.message}")
+                _promociones.value = response.data
             } catch (e: Exception) {
-                _error.value = "Error desconocido: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error desconocido: ${e.message}")
+                _error.value = "Error al cargar promociones: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
         }
     }
+
 
     /**
      * 🔸 Eliminar una promoción del backend y actualizar la lista local
