@@ -77,6 +77,10 @@ dependencies {
 
     //Libreria para auth0
     implementation("com.auth0.android:auth0:2.10.2")
+    implementation("com.auth0.android:jwtdecode:2.+")
+
+    //Libreria para seguridad
+    implementation("androidx.security:security-crypto:1.0.0")
 
     implementation(libs.zxing.core) 
 
