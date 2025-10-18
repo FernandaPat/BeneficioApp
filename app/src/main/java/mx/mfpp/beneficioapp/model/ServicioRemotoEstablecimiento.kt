@@ -1,11 +1,11 @@
-// mx.mfpp.beneficioapp.model.ServicioRemotoJovenesPromocion
+// mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimientos
 package mx.mfpp.beneficioapp.model
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlinx.coroutines.delay
 
-object ServicioRemotoJovenesPromocion {
+object ServicioRemotoEstablecimiento {
     private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
     private const val MAX_REINTENTOS = 3
 
@@ -16,35 +16,35 @@ object ServicioRemotoJovenesPromocion {
             .build()
     }
 
-    private val servicio: PromocionJovenAPI by lazy {
-        retrofit.create(PromocionJovenAPI::class.java)
+    private val servicio: EstablecimientoAPI by lazy {
+        retrofit.create(EstablecimientoAPI::class.java)
     }
 
-    suspend fun obtenerPromociones(): List<PromocionJoven> {
+    suspend fun obtenerEstablecimientos(): List<Establecimiento> {
         return try {
-            println("🟡 Iniciando descarga de todas las promociones...")
+            println("🟡 Iniciando descarga de todos los establecimientos...")
             descargarTodasLasPaginas()
         } catch (e: Exception) {
-            println("🔴 Error fatal al descargar promociones: ${e.message}")
+            println("🔴 Error fatal al descargar establecimientos: ${e.message}")
             e.printStackTrace()
             emptyList()
         }
     }
 
-    private suspend fun descargarTodasLasPaginas(): List<PromocionJoven> {
-        val todasLasPromociones = mutableListOf<PromocionJoven>()
+    private suspend fun descargarTodasLasPaginas(): List<Establecimiento> {
+        val todosLosEstablecimientos = mutableListOf<Establecimiento>()
         var paginaActual = 1
         var tieneMasPaginas = true
 
         while (tieneMasPaginas) {
             try {
-                println("📄 Descargando página $paginaActual...")
+                println("📄 Descargando página $paginaActual de establecimientos...")
                 val response = obtenerPaginaConReintentos(paginaActual, 50)
 
                 // Verificar si hay datos
                 if (response.data.isNotEmpty()) {
-                    todasLasPromociones.addAll(response.data)
-                    println("✅ Página $paginaActual: ${response.data.size} promociones (Total: ${todasLasPromociones.size})")
+                    todosLosEstablecimientos.addAll(response.data)
+                    println("✅ Página $paginaActual: ${response.data.size} establecimientos (Total: ${todosLosEstablecimientos.size})")
                 } else {
                     println("⚠️ Página $paginaActual: Sin datos")
                 }
@@ -69,30 +69,30 @@ object ServicioRemotoJovenesPromocion {
             }
         }
 
-        println("🎉 Descarga completada: ${todasLasPromociones.size} promociones en total")
+        println("🎉 Descarga completada: ${todosLosEstablecimientos.size} establecimientos en total")
 
-        // Mostrar resumen de las promociones descargadas
-        todasLasPromociones.take(5).forEachIndexed { index, promocion ->
-            println("   ${index + 1}. ${promocion.titulo_promocion} - ${promocion.nombre_establecimiento}")
+        // Mostrar resumen de los establecimientos descargados
+        todosLosEstablecimientos.take(5).forEachIndexed { index, establecimiento ->
+            println("   ${index + 1}. ${establecimiento.nombre} - ${establecimiento.nombre_categoria}")
         }
-        if (todasLasPromociones.size > 5) {
-            println("   ... y ${todasLasPromociones.size - 5} más")
+        if (todosLosEstablecimientos.size > 5) {
+            println("   ... y ${todosLosEstablecimientos.size - 5} más")
         }
 
-        return todasLasPromociones
+        return todosLosEstablecimientos
     }
 
     private suspend fun obtenerPaginaConReintentos(
         pagina: Int,
         limite: Int,
         reintentos: Int = MAX_REINTENTOS
-    ): PromocionesJovenResponse {
+    ): EstablecimientosResponse {
         var ultimoError: Exception? = null
 
         repeat(reintentos) { intento ->
             try {
                 println("🔗 Llamando API: página=$pagina, límite=$limite")
-                val response = servicio.obtenerPromociones(pagina, limite)
+                val response = servicio.obtenerEstablecimientos(pagina, limite)
                 println("🔗 Llamada exitosa")
                 return response
             } catch (e: Exception) {
@@ -108,10 +108,10 @@ object ServicioRemotoJovenesPromocion {
     }
 
     // Método para probar solo una página específica
-    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): PromocionesJovenResponse {
+    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): EstablecimientosResponse {
         return try {
-            println("🧪 Probando página $pagina...")
-            servicio.obtenerPromociones(pagina, limite)
+            println("🧪 Probando página $pagina de establecimientos...")
+            servicio.obtenerEstablecimientos(pagina, limite)
         } catch (e: Exception) {
             println("🧪 Error en página $pagina: ${e.message}")
             throw e

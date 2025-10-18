@@ -1,3 +1,4 @@
+// mx.mfpp.beneficioapp.view.MapaPage
 package mx.mfpp.beneficioapp.view
 
 import android.Manifest
@@ -30,19 +31,35 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
+import kotlin.math.*
+import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.viewmodel.MapaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val viewModel: MapaViewModel = viewModel()
+
+    // --- Estados del ViewModel ---
+    val establecimientos by viewModel.establecimientosFiltrados.collectAsState()
+    val establecimientosConCoordenadas by remember {
+        derivedStateOf { viewModel.establecimientosConCoordenadas }
+    }
+    val establecimientosOrdenados by remember {
+        derivedStateOf { viewModel.establecimientosOrdenadosPorDistancia }
+    }
+    val ubicacionActual by viewModel.ubicacionActual.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
     // --- Permiso y ubicación ---
     var hasLocationPermission by remember { mutableStateOf(false) }
@@ -62,7 +79,10 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
             override fun onLocationResult(locationResult: LocationResult) {
                 val loc = locationResult.lastLocation
                 if (loc != null) {
-                    currentLocation = LatLng(loc.latitude, loc.longitude)
+                    val nuevaUbicacion = LatLng(loc.latitude, loc.longitude)
+                    currentLocation = nuevaUbicacion
+                    // Actualizar la ubicación en el ViewModel para calcular distancias
+                    viewModel.actualizarUbicacionActual(nuevaUbicacion)
                 }
             }
         }
@@ -76,21 +96,24 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
     val cameraPositionState = rememberCameraPositionState()
 
+    // --- Búsqueda ---
+    var query by remember { mutableStateOf("") }
+
     // --- Permiso launcher ---
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             hasLocationPermission = isGranted
             if (isGranted) {
-                // 🔥 En cuanto se da el permiso, pedimos la ubicación inmediatamente
                 fusedLocationClient.requestLocationUpdates(
                     locationRequest,
                     locationCallback,
                     Looper.getMainLooper()
                 )
-                // También obtenemos la última ubicación conocida
                 fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
                     loc?.let {
-                        currentLocation = LatLng(it.latitude, it.longitude)
+                        val ubicacion = LatLng(it.latitude, it.longitude)
+                        currentLocation = ubicacion
+                        viewModel.actualizarUbicacionActual(ubicacion)
                     }
                 }
             } else {
@@ -114,7 +137,9 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
             )
             fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
                 loc?.let {
-                    currentLocation = LatLng(it.latitude, it.longitude)
+                    val ubicacion = LatLng(it.latitude, it.longitude)
+                    currentLocation = ubicacion
+                    viewModel.actualizarUbicacionActual(ubicacion)
                 }
             }
         } else {
@@ -126,18 +151,22 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
     LaunchedEffect(currentLocation) {
         currentLocation?.let {
             cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
+            viewModel.actualizarUbicacionActual(it)
         }
     }
 
-    // --- Contenido del mapa ---
-    var query by remember { mutableStateOf("") }
+    // Filtrar establecimientos cuando cambia la query
+    LaunchedEffect(query) {
+        viewModel.filtrarEstablecimientos(query)
+    }
 
-    val lugaresMock = listOf(
-        Lugar("Café Roma", "10 min - 1.2 km", "4.6", LatLng(19.436, -99.14), "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"),
-        Lugar("Parque México", "5 min - 0.8 km", "4.8", LatLng(19.411, -99.17), "https://images.unsplash.com/photo-1505843513577-22bb7d21e455"),
-        Lugar("Museo Soumaya", "18 min - 5.0 km", "4.7", LatLng(19.440, -99.202), "https://images.unsplash.com/photo-1601042879364-f36cde5f1c91"),
-        Lugar("Restaurante El Cardenal", "12 min - 2.3 km", "4.9", LatLng(19.429, -99.135), "https://images.unsplash.com/photo-1552566626-52f8b828add9")
-    )
+    // Manejar errores
+    LaunchedEffect(error) {
+        error?.let { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
+    }
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
@@ -170,15 +199,46 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
             ) {
                 item {
                     Text(
-                        text = "Cerca de ti",
+                        text = if (ubicacionActual != null) "Establecimientos cercanos" else "Todos los establecimientos",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
-                        modifier = Modifier.padding(start = 16.dp)
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
                     )
                 }
-                items(lugaresMock) { lugar ->
-                    LugarCardModernCompact(lugar, modifier = Modifier.padding(horizontal = 16.dp))
+
+                if (isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else if (establecimientosOrdenados.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No hay establecimientos disponibles",
+                            color = Color.Gray,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        )
+                    }
+                } else {
+                    items(items = establecimientosOrdenados, key = { it.id_establecimiento }) { establecimiento ->
+                        EstablecimientoCard(
+                            establecimiento = establecimiento,
+                            ubicacionActual = ubicacionActual,
+                            onItemClick = {
+                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${establecimiento.id_establecimiento}")
+                            },
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
             }
         },
@@ -190,21 +250,28 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
             ) {
-                currentLocation?.let {
+                // Marcador de ubicación actual
+                currentLocation?.let { location ->
                     Marker(
-                        state = MarkerState(position = it),
+                        state = MarkerState(position = location),
                         title = "Mi ubicación actual",
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
                     )
                 }
 
-                lugaresMock.forEach { lugar ->
-                    Marker(
-                        state = MarkerState(position = lugar.coordenadas),
-                        title = lugar.nombre,
-                        snippet = lugar.distancia,
-                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
-                    )
+                // Marcadores de establecimientos con coordenadas
+                establecimientosConCoordenadas.forEach { establecimiento ->
+                    establecimiento.latitud?.let { lat ->
+                        establecimiento.longitud?.let { lng ->
+                            val coordenadas = LatLng(lat, lng)
+                            Marker(
+                                state = MarkerState(position = coordenadas),
+                                title = establecimiento.nombre,
+                                snippet = "${establecimiento.nombre_categoria} • ${establecimiento.colonia}",
+                                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+                            )
+                        }
+                    }
                 }
             }
 
@@ -222,17 +289,35 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
+fun EstablecimientoCard(
+    establecimiento: Establecimiento,
+    ubicacionActual: LatLng?,
+    onItemClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     var esFavorito by remember { mutableStateOf(false) }
+
+    // Calcular distancia si tenemos ubicación actual
+    val distanciaTexto = remember(establecimiento, ubicacionActual) {
+        if (ubicacionActual != null && establecimiento.latitud != null && establecimiento.longitud != null) {
+            val distancia = calcularDistancia(
+                ubicacionActual,
+                LatLng(establecimiento.latitud!!, establecimiento.longitud!!)
+            )
+            "• ${formatearDistancia(distancia)}"
+        } else {
+            ""
+        }
+    }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { /* Navegar a detalle */ }
+            .clickable(onClick = onItemClick)
     ) {
         AsyncImage(
-            model = lugar.imagen,
-            contentDescription = lugar.nombre,
+            model = establecimiento.foto ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
+            contentDescription = establecimiento.nombre,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(140.dp)
@@ -249,7 +334,7 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = lugar.nombre,
+                    text = establecimiento.nombre,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.Black,
@@ -257,12 +342,15 @@ fun LugarCardModernCompact(lugar: Lugar, modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${lugar.distancia} • ${lugar.rating} ⭐",
+                    text = "${establecimiento.nombre_categoria} • ${establecimiento.colonia} $distanciaTexto",
                     color = Color.Gray,
                     fontSize = 13.sp
                 )
             }
-            IconButton(onClick = { esFavorito = !esFavorito }, modifier = Modifier.size(32.dp)) {
+            IconButton(
+                onClick = { esFavorito = !esFavorito },
+                modifier = Modifier.size(32.dp)
+            ) {
                 Icon(
                     imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Favorito",
@@ -316,10 +404,29 @@ fun SearchBar2(
     }
 }
 
-data class Lugar(
-    val nombre: String,
-    val distancia: String,
-    val rating: String,
-    val coordenadas: LatLng,
-    val imagen: String
-)
+// Funciones auxiliares para calcular distancia
+private fun calcularDistancia(punto1: LatLng, punto2: LatLng): Double {
+    val radioTierra = 6371000.0 // Radio de la Tierra en metros
+
+    val lat1 = Math.toRadians(punto1.latitude)
+    val lon1 = Math.toRadians(punto1.longitude)
+    val lat2 = Math.toRadians(punto2.latitude)
+    val lon2 = Math.toRadians(punto2.longitude)
+
+    val dLat = lat2 - lat1
+    val dLon = lon2 - lon1
+
+    val a = sin(dLat / 2).pow(2) + cos(lat1) * cos(lat2) * sin(dLon / 2).pow(2)
+    val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return radioTierra * c
+}
+
+private fun formatearDistancia(metros: Double): String {
+    return when {
+        metros < 1000 -> "${metros.toInt()} m"
+        else -> "${(metros / 1000).format(1)} km"
+    }
+}
+
+private fun Double.format(digits: Int) = "%.${digits}f".format(this)

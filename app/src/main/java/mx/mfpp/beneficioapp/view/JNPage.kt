@@ -58,9 +58,9 @@ fun JNPage(navController: NavController) {
                     .size(290.dp)
                     .padding(bottom = 32.dp)
             )
-            BotonMorado(navController, "Soy joven", RUTA_LOGIN_APP)
+            BotonMorado(navController, "Soy Joven", RUTA_LOGIN_APP)
             Spacer(modifier = Modifier.height(20.dp))
-            BotonBlanco(navController, "Soy negocio",RUTA_INICIAR_SESION_NEGOCIO)
+            BotonBlanco(navController, "Soy Negocio",RUTA_INICIAR_SESION_NEGOCIO)
         }
     }
 }

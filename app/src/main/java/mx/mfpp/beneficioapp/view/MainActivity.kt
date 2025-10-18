@@ -30,10 +30,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
@@ -52,8 +54,8 @@ import kotlin.getValue
  */
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
-    private val promocionesViewModel: PromocionJovenViewModel by viewModels() // CAMBIAR AQUÍ
-    private val busquedaViewModel: BusquedaViewModel by viewModels()
+    private val promocionesViewModel: PromocionJovenViewModel by viewModels()
+    private val busquedaViewModel: BusquedaViewModel by viewModels() // Este es importante
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
@@ -72,8 +74,8 @@ class MainActivity : ComponentActivity() {
             BeneficioAppTheme {
                 AppPrincipal(
                     categoriasViewModel = categoriasViewModel,
-                    promocionesViewModel = promocionesViewModel, // YA CORRECTO
-                    busquedaViewModel = busquedaViewModel,
+                    promocionesViewModel = promocionesViewModel,
+                    busquedaViewModel = busquedaViewModel, // Pasar este ViewModel
                     scannerViewModel = scannerViewModel,
                     qrViewModel = qrViewModel
                 )
@@ -81,6 +83,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 
 /**
  * Componente principal que orquesta toda la aplicación.
@@ -199,10 +202,6 @@ fun AppNavHost(
             Crear_Cuenta(navController)
         }
 
-        composable(Pantalla.RUTA_NEGOCIODETALLE_APP) {
-            NegocioDetallePage(navController, qrViewModel)
-        }
-
         composable(Pantalla.RUTA_QR_PROMOCION) {
             QRPromocionPage(navController, qrViewModel)
         }
@@ -241,6 +240,23 @@ fun AppNavHost(
                 categoriasViewModel = categoriasViewModel,
                 busquedaViewModel = busquedaViewModel
             )
+        }
+
+        composable(
+            route = "${Pantalla.RUTA_RESULTADOS_APP}/{categoriaSeleccionada}",
+            arguments = listOf(navArgument("categoriaSeleccionada") { type = NavType.StringType })
+        ) { backStackEntry ->
+            ResultadosPage(
+                navController = navController,
+                categoriaSeleccionada = backStackEntry.arguments?.getString("categoriaSeleccionada"),
+                categoriasViewModel = categoriasViewModel,
+                busquedaViewModel = busquedaViewModel
+            )
+        }
+
+        composable("NegocioDetallePage/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")
+            NegocioDetallePage(id = id, navController = navController)
         }
 
         // Ruta simple para resultados sin categoría

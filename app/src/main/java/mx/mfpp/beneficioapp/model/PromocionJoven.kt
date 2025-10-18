@@ -13,7 +13,7 @@ data class PromocionJoven(
     val nombre_establecimiento: String
 )
 
-// CORREGIR: el JSON tiene "data" no "promocionesJoven"
 data class PromocionesJovenResponse(
-    val data: List<PromocionJoven> // Cambiar aquí
+    val data: List<PromocionJoven>,
+    val pagination: Pagination // Agregar paginación
 )
