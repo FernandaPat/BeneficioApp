@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import android.app.Dialog
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,12 +34,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
-import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 
 /**
  * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
@@ -59,17 +59,6 @@ import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
-
-    val viewModel: PerfilViewModel = viewModel ()
-
-    LaunchedEffect(Unit) {
-        viewModel.logoutEvent.collect {
-            navController.navigate(Pantalla.RUTA_JN_APP){
-                popUpTo(0)
-            }
-        }
-    }
-
 
     val moradoClaro = Color(0xFFE9D4FF)
     val moradoBoton = Color(0xFFD5A8FF)
@@ -260,7 +249,7 @@ fun PerfilPage(navController: NavController) {
                             Button(
                                 onClick = {
                                     mostrarDialogo = false
-                                    viewModel.cerrarSesion()
+                                    navController.navigate(Pantalla.RUTA_JN_APP)
                                 },
                                 shape = RoundedCornerShape(999.dp),
                                 colors = ButtonDefaults.buttonColors(
