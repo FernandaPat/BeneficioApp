@@ -34,10 +34,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 
 /**
  * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
@@ -59,6 +61,16 @@ import mx.mfpp.beneficioapp.R
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
+    val viewModel: PerfilViewModel = viewModel ()
+
+    LaunchedEffect(Unit) {
+        viewModel.logoutEvent.collect {
+            navController.navigate(Pantalla.RUTA_JN_APP){
+                popUpTo(0)
+            }
+        }
+    }
+
 
     val moradoClaro = Color(0xFFE9D4FF)
     val moradoBoton = Color(0xFFD5A8FF)
@@ -249,7 +261,8 @@ fun PerfilPage(navController: NavController) {
                             Button(
                                 onClick = {
                                     mostrarDialogo = false
-                                    navController.navigate(Pantalla.RUTA_JN_APP)
+                                    viewModel.cerrarSesion()
+
                                 },
                                 shape = RoundedCornerShape(999.dp),
                                 colors = ButtonDefaults.buttonColors(

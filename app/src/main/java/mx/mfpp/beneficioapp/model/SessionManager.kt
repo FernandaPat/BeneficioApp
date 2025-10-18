@@ -38,4 +38,7 @@ class SessionManager(context: Context) {
             clear()
         }
     }
+    fun getRefreshToken(): String? {
+        return sharedPreferences.getString("refresh_token", null)
+    }
 }
