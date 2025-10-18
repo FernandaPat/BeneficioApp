@@ -28,9 +28,9 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
-import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.PromocionJoven
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
-import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
+import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 
 /**
  * Pantalla de inicio principal para usuarios jóvenes.
@@ -47,17 +47,16 @@ import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 fun InicioPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
-    promocionesViewModel: PromocionesViewModel = viewModel(),
+    promocionesViewModel: PromocionJovenViewModel = viewModel(), // Cambiar aquí
     modifier: Modifier = Modifier
 ) {
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
     val categoriasError by categoriasViewModel.error.collectAsState()
 
-    val favoritos by promocionesViewModel.favoritos.collectAsState()
+    // SOLO estas dos secciones ahora
     val nuevasPromociones by promocionesViewModel.nuevasPromociones.collectAsState()
     val promocionesExpiracion by promocionesViewModel.promocionesExpiracion.collectAsState()
-    val promocionesCercanas by promocionesViewModel.promocionesCercanas.collectAsState()
     val promocionesLoading by promocionesViewModel.isLoading.collectAsState()
     val promocionesError by promocionesViewModel.error.collectAsState()
 
@@ -88,18 +87,12 @@ fun InicioPage(
                 }
                 else -> {
                     Categorias(categorias = categorias)
-                    SeccionHorizontal(
-                        titulo = "Tus Favoritos",
-                        items = favoritos,
-                        onItemClick = { promocion ->
-                            navController.navigate(Pantalla.RUTA_NEGOCIODETALLE_APP)
-                        }
-                    )
+
+                    // SOLO estas dos secciones
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
                         items = nuevasPromociones,
                         onItemClick = { promocion ->
-                            // Navegar a detalle de promoción
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
                         }
                     )
@@ -107,15 +100,6 @@ fun InicioPage(
                         titulo = "Expiran pronto",
                         items = promocionesExpiracion,
                         onItemClick = { promocion ->
-                            // Navegar a detalle de promoción
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
-                        }
-                    )
-                    SeccionHorizontal(
-                        titulo = "Cerca de ti",
-                        items = promocionesCercanas,
-                        onItemClick = { promocion ->
-                            // Navegar a detalle de promoción
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
                         }
                     )
@@ -202,8 +186,8 @@ fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
 @Composable
 fun SeccionHorizontal(
     titulo: String,
-    items: List<Promocion>,
-    onItemClick: (Promocion) -> Unit,
+    items: List<PromocionJoven>, // Cambiar aquí
+    onItemClick: (PromocionJoven) -> Unit, // Cambiar aquí
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -240,6 +224,7 @@ fun SeccionHorizontal(
     }
 }
 
+
 /**
  * Componente que representa un item individual en una sección horizontal.
  *
@@ -249,7 +234,7 @@ fun SeccionHorizontal(
  * @param onItemClick Callback invocado cuando se hace clic en el card
  */
 @Composable
-fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
+fun CardItemHorizontal(promocion: PromocionJoven, onItemClick: () -> Unit) {
     val colorMorado = Color(0xFF6A5ACD)
 
     Card(
@@ -261,17 +246,17 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen placeholder
+            // Imagen - usa promocion.foto
             AsyncImage(
-                model = promocion.imagenUrl ?: "https://picsum.photos/200/300?random=${promocion.id}",
-                contentDescription = "Imagen de ${promocion.nombre}",
+                model = promocion.foto ?: "https://picsum.photos/200/300?random=${promocion.id}",
+                contentDescription = "Imagen de ${promocion.titulo_promocion}",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 
-            // Tiempo de expiración arriba a la derecha
+            // Tiempo de expiración
             Text(
-                text = promocion.obtenerTextoExpiracion(),
+                text = "Válido hasta ${promocion.fecha_expiracion}",
                 color = Color.White,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
@@ -280,7 +265,7 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
                     .padding(top = 8.dp, end = 8.dp)
             )
 
-            // Fondo morado solo en la parte inferior para el texto
+            // Fondo morado para el texto
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -289,9 +274,9 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
                     .background(colorMorado.copy(alpha = 0.8f))
             )
 
-            // Nombre del lugar abajo
+            // Nombre de la promoción
             Text(
-                text = promocion.nombre,
+                text = promocion.titulo_promocion,
                 color = Color.White,
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp,
@@ -305,7 +290,6 @@ fun CardItemHorizontal(promocion: Promocion, onItemClick: () -> Unit) {
         }
     }
 }
-
 /**
  * Componente que muestra la sección de categorías.
  *
