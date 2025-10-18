@@ -132,13 +132,24 @@ fun AppPrincipal(
         Pantalla.RUTA_SCANER_NEGOCIO
     )
 
-    val currentRoute = navController
-        .currentBackStackEntryAsState()
-        .value
-        ?.destination
-        ?.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val destination = navBackStackEntry?.destination
+    val arguments = navBackStackEntry?.arguments
 
-    val showBottomBar = currentRoute !in hiddenBottomBarRoutes
+// Detecta la ruta actual real (incluyendo parámetros)
+    val currentRoute = buildString {
+        append(destination?.route ?: "")
+        arguments?.keySet()?.forEach { key ->
+            append("/${arguments?.get(key)}")
+        }
+    }
+
+// Oculta la bottom bar si la ruta coincide o comienza con una ruta oculta
+    val showBottomBar = hiddenBottomBarRoutes.none { route ->
+        val baseRoute = route.substringBefore("/{")
+        currentRoute.startsWith(baseRoute)
+    }
+
 
     val isNegocioRoute = currentRoute in listOf(
         Pantalla.RUTA_INICIO_NEGOCIO,
@@ -220,8 +231,6 @@ fun AppNavHost(
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             Editar_Promociones(navController = navController, idPromocion = id)
         }
-
-
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }
