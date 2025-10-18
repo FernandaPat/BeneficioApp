@@ -2,6 +2,8 @@ package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,6 +45,7 @@ import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
  * @param busquedaViewModel ViewModel para búsqueda
  * @param modifier Modificador de Composable para personalizar el layout
  */
+// En mx.mfpp.beneficioapp.view.ResultadosPage
 @Composable
 fun ResultadosPage(
     navController: NavController,
@@ -55,45 +58,117 @@ fun ResultadosPage(
     val categorias by categoriasViewModel.categorias.collectAsState()
     val searchText by busquedaViewModel.textoBusqueda.collectAsState()
     val categoriaSeleccionadaState by busquedaViewModel.categoriaSeleccionada.collectAsState()
+    val isLoading by busquedaViewModel.isLoading.collectAsState()
+    val error by busquedaViewModel.error.collectAsState()
 
     LaunchedEffect(categoriaSeleccionada) {
-        if (categoriaSeleccionada != null) {
-            busquedaViewModel.seleccionarCategoria(categoriaSeleccionada)
+        categoriaSeleccionada?.let {
+            busquedaViewModel.seleccionarCategoria(it)
         }
     }
 
     Scaffold(
-        topBar = {
-            HomeTopBar(navController)
-        }
+        topBar = { HomeTopBar(navController) }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-        ) {
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Error al cargar establecimientos", color = Color.Red, fontSize = 16.sp)
+                        Text(error ?: "Error desconocido", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+                        Button(onClick = { busquedaViewModel.refrescarEstablecimientos() }, modifier = Modifier.padding(top = 16.dp)) {
+                            Text("Reintentar")
+                        }
+                    }
+                }
+            }
+            else -> {
+                ResultadosPageContent(
+                    establecimientos = establecimientos,
+                    categorias = categorias,
+                    categoriaSeleccionada = categoriaSeleccionadaState,
+                    searchText = searchText,
+                    onCategoriaSeleccionada = busquedaViewModel::seleccionarCategoria,
+                    onEstablecimientoClick = { id -> navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id") },
+                    onToggleFavorito = { /* TODO: lógica favoritos */ },
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ResultadosPageContent(
+    establecimientos: List<Establecimiento>,
+    categorias: List<Categoria>,
+    categoriaSeleccionada: String?,
+    searchText: String,
+    onCategoriaSeleccionada: (String) -> Unit,
+    onEstablecimientoClick: (Int) -> Unit,
+    onToggleFavorito: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
+        item {
             CategoriasResultados(
                 categorias = categorias,
-                categoriaSeleccionada = categoriaSeleccionadaState,
-                onCategoriaSeleccionada = { categoria ->
-                    busquedaViewModel.seleccionarCategoria(categoria)
-                }
+                categoriaSeleccionada = categoriaSeleccionada,
+                onCategoriaSeleccionada = onCategoriaSeleccionada
             )
+        }
 
-            ResultadosSeccion(
-                establecimientos = establecimientos,
-                categoria = categoriaSeleccionadaState ?: "todos los resultados",
-                searchText = searchText,
-                onEstablecimientoClick = { id ->
-                    // Navegar a detalle del establecimiento
-                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id")
+        item {
+            Text(
+                text = if (searchText.isNotEmpty()) {
+                    "${establecimientos.size} resultados para \"$searchText\""
+                } else {
+                    "${establecimientos.size} resultados en ${categoriaSeleccionada ?: "todas las categorías"}"
                 },
-                onToggleFavorito = { id ->
-                    // Manejar toggle de favorito
-                    // TODO: Implementar lógica de favoritos
-                }
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold, fontSize = 20.sp, color = Color.Black),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+        }
+
+        if (establecimientos.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (searchText.isNotEmpty()) {
+                            "No se encontraron resultados para \"$searchText\""
+                        } else {
+                            "No hay establecimientos en esta categoría"
+                        },
+                        color = Color.Gray,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            items(establecimientos) { establecimiento ->
+                ItemEstablecimiento(
+                    establecimiento = establecimiento,
+                    onEstablecimientoClick = { onEstablecimientoClick(establecimiento.id_establecimiento) },
+                    onToggleFavorito = { onToggleFavorito(establecimiento.id_establecimiento) },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
         }
     }
 }
@@ -153,7 +228,10 @@ fun CategoriasResultados(
                         ItemCategoriaCirculoResultados(
                             categoria = categoria,
                             isSelected = categoria.nombre == categoriaSeleccionada,
-                            onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
+                            onCategoriaClick = {
+                                println("🎯 Categoría clickeada en UI: ${categoria.nombre}")
+                                onCategoriaSeleccionada(categoria.nombre)
+                            }
                         )
                         Text(
                             text = categoria.nombre,
@@ -186,7 +264,10 @@ fun CategoriasResultados(
                         ItemCategoriaCirculoResultados(
                             categoria = categoria,
                             isSelected = categoria.nombre == categoriaSeleccionada,
-                            onCategoriaClick = { onCategoriaSeleccionada(categoria.nombre) }
+                            onCategoriaClick = {
+                                println("🎯 Categoría clickeada en UI: ${categoria.nombre}")
+                                onCategoriaSeleccionada(categoria.nombre)
+                            }
                         )
                         Text(
                             text = categoria.nombre,
@@ -207,118 +288,7 @@ fun CategoriasResultados(
     }
 }
 
-/**
- * Item individual de categoría en forma circular.
- *
- * @param categoria Datos de la categoría a mostrar
- * @param isSelected Indica si la categoría está seleccionada
- * @param onCategoriaClick Callback invocado cuando se hace clic en la categoría
- */
-@Composable
-fun ItemCategoriaCirculoResultados(
-    categoria: Categoria,
-    isSelected: Boolean,
-    onCategoriaClick: () -> Unit
-) {
-    Card(
-        onClick = onCategoriaClick,
-        modifier = Modifier.size(70.dp),
-        shape = RoundedCornerShape(100.dp),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 4.dp
-        ),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) Color(0xFF6200EE) else Color.LightGray
-        )
-    ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(id = categoria.iconoResId),
-                contentDescription = categoria.nombre,
-                modifier = Modifier.size(32.dp),
-                tint = if (isSelected) Color.White else Color.Unspecified
-            )
-        }
-    }
-}
-
-/**
- * Sección que muestra los resultados de establecimientos filtrados.
- *
- * @param establecimientos Lista de establecimientos a mostrar
- * @param categoria Categoría actual de filtrado
- * @param searchText Texto de búsqueda actual
- * @param onEstablecimientoClick Callback invocado cuando se hace clic en un establecimiento
- * @param onToggleFavorito Callback invocado cuando se togglea el estado de favorito
- * @param modifier Modificador de Composable para personalizar el layout
- */
-@Composable
-fun ResultadosSeccion(
-    establecimientos: List<Establecimiento>,
-    categoria: String,
-    searchText: String,
-    onEstablecimientoClick: (String) -> Unit,
-    onToggleFavorito: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = if (searchText.isNotEmpty()) {
-                "${establecimientos.size} resultados para \"$searchText\""
-            } else {
-                "${establecimientos.size} resultados en $categoria"
-            },
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = Color.Black
-            ),
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        if (establecimientos.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = if (searchText.isNotEmpty()) {
-                        "No se encontraron resultados para \"$searchText\""
-                    } else {
-                        "No hay establecimientos en esta categoría"
-                    },
-                    color = Color.Gray,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
-            establecimientos.forEach { establecimiento ->
-                ItemEstablecimiento(
-                    establecimiento = establecimiento,
-                    onEstablecimientoClick = { onEstablecimientoClick(establecimiento.id) },
-                    onToggleFavorito = { onToggleFavorito(establecimiento.id) },
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-            }
-        }
-    }
-}
-
-/**
- * Item individual de establecimiento en la lista de resultados.
- *
- * @param establecimiento Datos del establecimiento a mostrar
- * @param onEstablecimientoClick Callback invocado cuando se hace clic en el establecimiento
- * @param onToggleFavorito Callback invocado cuando se togglea el estado de favorito
- * @param modifier Modificador de Composable para personalizar el layout
- */
+// ItemEstablecimiento se mantiene igual
 @Composable
 fun ItemEstablecimiento(
     establecimiento: Establecimiento,
@@ -326,7 +296,7 @@ fun ItemEstablecimiento(
     onToggleFavorito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var esFavorito by remember { mutableStateOf(establecimiento.isFavorito) }
+    var esFavorito by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -334,7 +304,7 @@ fun ItemEstablecimiento(
             .clickable { onEstablecimientoClick() }
     ) {
         AsyncImage(
-            model = establecimiento.imagenUrl ?: "https://picsum.photos/200/300?random=${establecimiento.id}",
+            model = establecimiento.foto ?: "https://picsum.photos/200/300?random=${establecimiento.id_establecimiento}",
             contentDescription = "Imagen de ${establecimiento.nombre}",
             modifier = Modifier
                 .fillMaxWidth()
@@ -363,7 +333,7 @@ fun ItemEstablecimiento(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "${establecimiento.tiempo} – ${establecimiento.distancia} • ${establecimiento.rating} ⭐",
+                    text = "${establecimiento.nombre_categoria} • ${establecimiento.colonia}",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = Color.Gray,
                         fontSize = 14.sp
@@ -389,6 +359,54 @@ fun ItemEstablecimiento(
     }
 }
 
+/**
+ * Item individual de categoría en forma circular.
+ *
+ * @param categoria Datos de la categoría a mostrar
+ * @param isSelected Indica si la categoría está seleccionada
+ * @param onCategoriaClick Callback invocado cuando se hace clic en la categoría
+ */
+@Composable
+fun ItemCategoriaCirculoResultados(
+    categoria: Categoria,
+    isSelected: Boolean,
+    onCategoriaClick: () -> Unit
+) {
+    Card(
+        onClick = onCategoriaClick,
+        modifier = Modifier.size(70.dp),
+        shape = RoundedCornerShape(100.dp),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 8.dp else 4.dp
+        ),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) Color(0xFF6200EE) else Color.White // Círculo blanco por defecto
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = categoria.iconoResId),
+                contentDescription = categoria.nombre,
+                modifier = Modifier.size(40.dp), // Tamaño más grande
+                tint = Color.Unspecified // Mantiene el color original del ícono
+            )
+        }
+    }
+}
+
+/**
+ * Sección que muestra los resultados de establecimientos filtrados.
+ *
+ * @param establecimientos Lista de establecimientos a mostrar
+ * @param categoria Categoría actual de filtrado
+ * @param searchText Texto de búsqueda actual
+ * @param onEstablecimientoClick Callback invocado cuando se hace clic en un establecimiento
+ * @param onToggleFavorito Callback invocado cuando se togglea el estado de favorito
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 /**
  * Previsualización de la pantalla de resultados.
  */

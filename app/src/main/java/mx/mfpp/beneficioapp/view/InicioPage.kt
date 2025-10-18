@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -28,7 +29,9 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
+import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.model.PromocionJoven
+import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 
@@ -47,21 +50,30 @@ import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 fun InicioPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
-    promocionesViewModel: PromocionJovenViewModel = viewModel(), // Cambiar aquí
+    promocionesViewModel: PromocionJovenViewModel = viewModel(),
+    busquedaViewModel: BusquedaViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
     val categoriasError by categoriasViewModel.error.collectAsState()
 
-    // SOLO estas dos secciones ahora
     val nuevasPromociones by promocionesViewModel.nuevasPromociones.collectAsState()
     val promocionesExpiracion by promocionesViewModel.promocionesExpiracion.collectAsState()
+    val todasPromociones by promocionesViewModel.todasPromociones.collectAsState()
+
+    // CORRECCIÓN: Obtener loading y error del ViewModel de promociones
     val promocionesLoading by promocionesViewModel.isLoading.collectAsState()
     val promocionesError by promocionesViewModel.error.collectAsState()
 
-    val isLoading = categoriasLoading || promocionesLoading
-    val error = categoriasError ?: promocionesError
+    // Obtener establecimientos del ViewModel de búsqueda
+    val todosEstablecimientos by busquedaViewModel.establecimientos.collectAsState()
+    val establecimientosLoading by busquedaViewModel.isLoading.collectAsState()
+    val establecimientosError by busquedaViewModel.error.collectAsState()
+
+    val isLoading = categoriasLoading || promocionesLoading || establecimientosLoading
+    val error = categoriasError ?: promocionesError ?: establecimientosError
 
     Scaffold(
         topBar = { HomeTopBar(navController) }
@@ -73,34 +85,53 @@ fun InicioPage(
                 .verticalScroll(rememberScrollState())
         ) {
             when {
-                isLoading -> {
-                    EstadoCargando()
-                }
+                isLoading -> { EstadoCargando() }
                 error != null -> {
                     EstadoError(
                         mensajeError = error,
                         onReintentar = {
                             categoriasViewModel.refrescarCategorias()
                             promocionesViewModel.refrescarPromociones()
+                            busquedaViewModel.refrescarEstablecimientos()
                         }
                     )
                 }
                 else -> {
-                    Categorias(categorias = categorias)
+                    Categorias(categorias = categorias, onCategoriaClick = { categoria ->
+                        navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
+                    })
 
-                    // SOLO estas dos secciones
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
                         items = nuevasPromociones,
+                        promocionesViewModel = promocionesViewModel,
                         onItemClick = { promocion ->
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
                         }
                     )
+
                     SeccionHorizontal(
                         titulo = "Expiran pronto",
                         items = promocionesExpiracion,
+                        promocionesViewModel = promocionesViewModel,
                         onItemClick = { promocion ->
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                        }
+                    )
+
+                    SeccionHorizontal(
+                        titulo = "Todas las promociones",
+                        items = todasPromociones,
+                        promocionesViewModel = promocionesViewModel,
+                        onItemClick = { promocion ->
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                        }
+                    )
+                    SeccionHorizontalEstablecimientos(
+                        titulo = "Todos los establecimientos",
+                        establecimientos = todosEstablecimientos,
+                        onItemClick = { establecimiento ->
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${establecimiento.id_establecimiento}")
                         }
                     )
                 }
@@ -108,6 +139,111 @@ fun InicioPage(
         }
     }
 }
+
+@Composable
+fun SeccionHorizontalEstablecimientos(
+    titulo: String,
+    establecimientos: List<Establecimiento>,
+    onItemClick: (Establecimiento) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        if (establecimientos.isEmpty()) {
+            Text(
+                text = "No hay $titulo disponibles",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(establecimientos) { establecimiento ->
+                    CardEstablecimientoHorizontal(
+                        establecimiento = establecimiento,
+                        onItemClick = { onItemClick(establecimiento) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// NUEVO COMPONENTE: Card para establecimientos (similar al de promociones)
+@Composable
+fun CardEstablecimientoHorizontal(
+    establecimiento: Establecimiento,
+    onItemClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.width(176.dp)
+    ) {
+        Card(
+            onClick = onItemClick,
+            modifier = Modifier
+                .size(width = 176.dp, height = 100.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Imagen del establecimiento
+                AsyncImage(
+                    model = establecimiento.foto ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
+                    contentDescription = "Imagen de ${establecimiento.nombre}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        // Información del establecimiento
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
+        ) {
+            // Nombre del establecimiento
+            Text(
+                text = establecimiento.nombre,
+                color = Color.Black,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 14.sp
+            )
+
+            // Categoría y ubicación
+            Text(
+                text = "${establecimiento.nombre_categoria} • ${establecimiento.colonia}",
+                color = Color.Gray,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 0.dp),
+                lineHeight = 12.sp
+            )
+        }
+    }
+}
+
 
 /**
  * Componente que muestra un estado de carga.
@@ -183,11 +319,13 @@ fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
  * @param onItemClick Callback invocado cuando se hace clic en un item
  * @param modifier Modificador de Composable para personalizar el layout
  */
+
 @Composable
 fun SeccionHorizontal(
     titulo: String,
-    items: List<PromocionJoven>, // Cambiar aquí
-    onItemClick: (PromocionJoven) -> Unit, // Cambiar aquí
+    items: List<PromocionJoven>,
+    promocionesViewModel: PromocionJovenViewModel,
+    onItemClick: (PromocionJoven) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -217,79 +355,133 @@ fun SeccionHorizontal(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(items) { item ->
-                    CardItemHorizontal(promocion = item, onItemClick = { onItemClick(item) })
+                    CardItemHorizontal(
+                        promocion = item,
+                        promocionesViewModel = promocionesViewModel,
+                        esNuevaSeccion = titulo == "Nuevas Promociones", // Pasar si es nueva sección
+                        onItemClick = { onItemClick(item) }
+                    )
                 }
             }
         }
     }
 }
-
-
-/**
- * Componente que representa un item individual en una sección horizontal.
- *
- * Muestra una promoción con imagen, tiempo de expiración y nombre.
- *
- * @param promocion Datos de la promoción a mostrar
- * @param onItemClick Callback invocado cuando se hace clic en el card
- */
 @Composable
-fun CardItemHorizontal(promocion: PromocionJoven, onItemClick: () -> Unit) {
+fun CardItemHorizontal(
+    promocion: PromocionJoven,
+    promocionesViewModel: PromocionJovenViewModel,
+    esNuevaSeccion: Boolean = false,
+    onItemClick: () -> Unit
+) {
     val colorMorado = Color(0xFF6A5ACD)
 
-    Card(
-        onClick = onItemClick,
-        modifier = Modifier
-            .size(width = 176.dp, height = 108.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+    // Texto y color según la sección
+    val (textoEstado, colorFondo, colorTexto) = if (esNuevaSeccion) {
+        val diasDesdeCreacion = promocionesViewModel.diasDesdeCreacion(promocion.fecha_creacion)
+        val textoCreacion = when {
+            diasDesdeCreacion < 0 -> "Fecha inválida"
+            diasDesdeCreacion == 0L -> "hoy"
+            diasDesdeCreacion == 1L -> "ayer"
+            diasDesdeCreacion <= 7L -> "hace $diasDesdeCreacion días"
+            else -> "hace $diasDesdeCreacion días"
+        }
+        Triple(
+            textoCreacion,
+            Color(0xFF7AF1A7), // Verde claro para "agregada"
+            Color(0xFF008033)  // Verde oscuro
+        )
+    } else {
+        val textoExpiracion = promocionesViewModel.formatearTextoExpiracion(promocion.fecha_expiracion)
+        val (fondo, texto) = when {
+            textoExpiracion.contains("hoy") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja
+            textoExpiracion.contains("1 día") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja para "vence en 1 día"
+            textoExpiracion.contains("días") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja
+            textoExpiracion.contains("Expirada") -> Color(0xFFBDBDBD) to Color(0xFF616161) // Gris
+            else -> Color(0xFF7AF1A7) to Color(0xFF008033) // Verde para válida
+        }
+        Triple(textoExpiracion, fondo, texto)
+    }
+
+    Column(
+        modifier = Modifier.width(176.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            // Imagen - usa promocion.foto
-            AsyncImage(
-                model = promocion.foto ?: "https://picsum.photos/200/300?random=${promocion.id}",
-                contentDescription = "Imagen de ${promocion.titulo_promocion}",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
+        Card(
+            onClick = onItemClick,
+            modifier = Modifier
+                .size(width = 176.dp, height = 100.dp), // Rectangular
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Imagen rectangular
+                AsyncImage(
+                    model = promocion.foto ?: "https://picsum.photos/200/150?random=${promocion.id}",
+                    contentDescription = "Imagen de ${promocion.titulo_promocion}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
 
-            // Tiempo de expiración
+                // Badge de estado con offset forzado
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 6.dp, end = 6.dp)
+                        .width(if (textoEstado == "hoy" || textoEstado == "ayer") 50.dp else 80.dp)
+                        .height(18.dp) // Mismo alto para todos
+                        .background(
+                            color = colorFondo,
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                ) {
+                    Text(
+                        text = textoEstado.uppercase(),
+                        fontSize = 8.sp,
+                        color = colorTexto,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp)
+                            .offset(y = (-1).dp) // Offset forzado para centrado vertical
+                    )
+                }
+            }
+        }
+
+        // Información muy compacta
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp) // Mínimo espaciado
+        ) {
+            // Nombre del establecimiento
             Text(
-                text = "Válido hasta ${promocion.fecha_expiracion}",
-                color = Color.White,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 8.dp, end = 8.dp)
+                text = promocion.nombre_establecimiento,
+                color = Color.Black,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 14.sp
             )
 
-            // Fondo morado para el texto
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(36.dp)
-                    .background(colorMorado.copy(alpha = 0.8f))
-            )
-
-            // Nombre de la promoción
+            // Título de la promoción
             Text(
                 text = promocion.titulo_promocion,
-                color = Color.White,
-                fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
+                color = Color.Gray,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 10.dp, end = 10.dp, bottom = 10.dp)
-                    .fillMaxWidth()
+                modifier = Modifier.padding(top = 0.dp), // Sin espaciado
+                lineHeight = 12.sp
             )
         }
     }
 }
+
 /**
  * Componente que muestra la sección de categorías.
  *
@@ -298,7 +490,10 @@ fun CardItemHorizontal(promocion: PromocionJoven, onItemClick: () -> Unit) {
  * @param categorias Lista de categorías a mostrar
  */
 @Composable
-fun Categorias(categorias: List<Categoria>) {
+fun Categorias(
+    categorias: List<Categoria>,
+    onCategoriaClick: (Categoria) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -322,59 +517,49 @@ fun Categorias(categorias: List<Categoria>) {
                 modifier = Modifier.padding(vertical = 16.dp)
             )
         } else {
-            val primeras4Categorias = categorias.take(4)
-            val ultimas3Categorias = categorias.takeLast(3)
+            val primeras4 = categorias.take(4)
+            val ultimas3 = categorias.takeLast(3)
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                primeras4Categorias.forEachIndexed { index, categoria ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                primeras4.forEachIndexed { index, categoria ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .padding(end = if (index < 3) 12.dp else 0.dp)
+                        modifier = Modifier.padding(end = if (index < 3) 12.dp else 0.dp)
                     ) {
-                        ItemCategoriaCirculo(categoria = categoria)
+                        ItemCategoriaCirculo(categoria = categoria, onClick = {
+                            onCategoriaClick(categoria)
+                        })
                         Text(
                             text = categoria.nombre,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center,
-                            ),
                             modifier = Modifier
                                 .padding(top = 6.dp)
                                 .width(80.dp),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
                             color = Color.Black
                         )
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                ultimas3Categorias.forEachIndexed { index, categoria ->
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ultimas3.forEachIndexed { index, categoria ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .padding(end = if (index < 2) 12.dp else 0.dp)
+                        modifier = Modifier.padding(end = if (index < 2) 12.dp else 0.dp)
                     ) {
-                        ItemCategoriaCirculo(categoria = categoria)
+                        ItemCategoriaCirculo(categoria = categoria, onClick = {
+                            onCategoriaClick(categoria)
+                        })
                         Text(
                             text = categoria.nombre,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 14.sp,
-                                textAlign = TextAlign.Center
-                            ),
                             modifier = Modifier
                                 .padding(top = 6.dp)
                                 .width(80.dp),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
                             color = Color.Black
                         )
                     }
@@ -384,6 +569,7 @@ fun Categorias(categorias: List<Categoria>) {
     }
 }
 
+
 /**
  * Componente que representa un item individual de categoría en forma circular.
  *
@@ -392,11 +578,9 @@ fun Categorias(categorias: List<Categoria>) {
  * @param categoria Datos de la categoría a mostrar
  */
 @Composable
-fun ItemCategoriaCirculo(categoria: Categoria) {
+fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
     Card(
-        onClick = {
-            // Acción al hacer clic en la categoría - podría navegar a resultados filtrados
-        },
+        onClick = onClick,
         modifier = Modifier.size(70.dp),
         shape = RoundedCornerShape(100.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),

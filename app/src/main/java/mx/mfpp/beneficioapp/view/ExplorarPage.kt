@@ -54,7 +54,7 @@ import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 fun ExplorarPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
-    busquedaViewModel: BusquedaViewModel = viewModel()
+    busquedaViewModel: BusquedaViewModel = viewModel() // Asegúrate de usar el mismo ViewModel
 ) {
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
@@ -144,6 +144,7 @@ fun ExplorarPage(
                             CategoryButton(
                                 categoria = categoria,
                                 onCategoryClicked = {
+                                    println("🎯 ExplorarPage: Navegando a resultados con categoría: ${categoria.nombre}")
                                     busquedaViewModel.seleccionarCategoria(categoria.nombre)
                                     navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                                 }

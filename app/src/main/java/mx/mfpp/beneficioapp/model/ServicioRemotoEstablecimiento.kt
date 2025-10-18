@@ -1,11 +1,11 @@
-// mx.mfpp.beneficioapp.model.ServicioRemotoJovenesPromocion
+// mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimientos
 package mx.mfpp.beneficioapp.model
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlinx.coroutines.delay
 
-object ServicioRemotoJovenesPromocion {
+object ServicioRemotoEstablecimiento {
     private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
     private const val MAX_REINTENTOS = 3
 
@@ -16,11 +16,11 @@ object ServicioRemotoJovenesPromocion {
             .build()
     }
 
-    private val servicio: PromocionJovenAPI by lazy {
-        retrofit.create(PromocionJovenAPI::class.java)
+    private val servicio: EstablecimientoAPI by lazy {
+        retrofit.create(EstablecimientoAPI::class.java)
     }
 
-    suspend fun obtenerPromociones(): List<PromocionJoven> {
+    suspend fun obtenerEstablecimientos(): List<Establecimiento> {
         return try {
             descargarTodasLasPaginas()
         } catch (e: Exception) {
@@ -29,8 +29,8 @@ object ServicioRemotoJovenesPromocion {
         }
     }
 
-    private suspend fun descargarTodasLasPaginas(): List<PromocionJoven> {
-        val todasLasPromociones = mutableListOf<PromocionJoven>()
+    private suspend fun descargarTodasLasPaginas(): List<Establecimiento> {
+        val todosLosEstablecimientos = mutableListOf<Establecimiento>()
         var paginaActual = 1
         var tieneMasPaginas = true
 
@@ -40,7 +40,7 @@ object ServicioRemotoJovenesPromocion {
 
                 // Verificar si hay datos
                 if (response.data.isNotEmpty()) {
-                    todasLasPromociones.addAll(response.data)
+                    todosLosEstablecimientos.addAll(response.data)
                 } else {
                 }
 
@@ -62,27 +62,29 @@ object ServicioRemotoJovenesPromocion {
             }
         }
 
-        // Mostrar resumen de las promociones descargadas
-        todasLasPromociones.take(5).forEachIndexed { index, promocion ->
-            println("   ${index + 1}. ${promocion.titulo_promocion} - ${promocion.nombre_establecimiento}")
+        println("🎉 Descarga completada: ${todosLosEstablecimientos.size} establecimientos en total")
+
+        // Mostrar resumen de los establecimientos descargados
+        todosLosEstablecimientos.take(5).forEachIndexed { index, establecimiento ->
+            println("   ${index + 1}. ${establecimiento.nombre} - ${establecimiento.nombre_categoria}")
         }
-        if (todasLasPromociones.size > 5) {
-            println("   ... y ${todasLasPromociones.size - 5} más")
+        if (todosLosEstablecimientos.size > 5) {
+            println("   ... y ${todosLosEstablecimientos.size - 5} más")
         }
 
-        return todasLasPromociones
+        return todosLosEstablecimientos
     }
 
     private suspend fun obtenerPaginaConReintentos(
         pagina: Int,
         limite: Int,
         reintentos: Int = MAX_REINTENTOS
-    ): PromocionesJovenResponse {
+    ): EstablecimientosResponse {
         var ultimoError: Exception? = null
 
         repeat(reintentos) { intento ->
             try {
-                val response = servicio.obtenerPromociones(pagina, limite)
+                val response = servicio.obtenerEstablecimientos(pagina, limite)
                 return response
             } catch (e: Exception) {
                 ultimoError = e
@@ -96,9 +98,9 @@ object ServicioRemotoJovenesPromocion {
     }
 
     // Método para probar solo una página específica
-    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): PromocionesJovenResponse {
+    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): EstablecimientosResponse {
         return try {
-            servicio.obtenerPromociones(pagina, limite)
+            servicio.obtenerEstablecimientos(pagina, limite)
         } catch (e: Exception) {
             throw e
         }
