@@ -213,7 +213,11 @@ fun AppNavHost(
         composable(Pantalla.RUTA_AGREGAR_PROMOCIONES) {
             AgregarPromocion(navController)
         }
-        composable(Pantalla.RUTA_EDITAR_PROMOCIONES) {
+        composable(
+            route = "editarPromocion/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id")
             Editar_Promociones(navController)
         }
         composable(Pantalla.RUTA_INICIAR_SESION) {

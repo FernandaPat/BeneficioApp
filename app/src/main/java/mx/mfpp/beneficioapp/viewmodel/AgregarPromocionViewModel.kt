@@ -1,16 +1,17 @@
 package mx.mfpp.beneficioapp.viewmodel
 
+import android.app.Application
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.PromocionRequest
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.network.RetrofitClient
-import java.util.*
 
-class AgregarPromocionViewModel : ViewModel() {
+class AgregarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
     // Campos de la UI
     val uri = mutableStateOf<Uri?>(null)
@@ -23,8 +24,10 @@ class AgregarPromocionViewModel : ViewModel() {
     val expiraEn = mutableStateOf<Int?>(null)
     val categorias = listOf("Alimentos", "Ropa", "Entretenimiento", "Servicios", "Salud")
 
+    private val sessionManager = SessionManager(application)
+
     /**
-     * Envía la promoción a la API.
+     * Envía la promoción a la API con ID dinámico del negocio logueado.
      */
     fun guardarPromocion(
         onSuccess: () -> Unit,
@@ -32,29 +35,41 @@ class AgregarPromocionViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                // ⚠️ En tu app deberías convertir la imagen URI a Base64 real.
-                val imagenBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/..."
+                val idNegocio = sessionManager.getNegocioId()
+                if (idNegocio == null || idNegocio <= 0) {
+                    onError("No se encontró el ID del negocio en la sesión.")
+                    return@launch
+                }
+
+                // ⚠️ En producción deberías convertir la imagen URI a Base64 real
+                val imagenBase64 =
+                    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/..." // temporal
 
                 val promocion = PromocionRequest(
-                    id_negocio = 6, // puedes hacerlo dinámico luego
-                    titulo = nombre.value,
-                    descripcion = descripcion.value,
-                    descuento = descuento.value,
-                    disponible_desde = desde.value,
-                    hasta = hasta.value,
-                    imagen = imagenBase64
+                    id_negocio = idNegocio,
+                    titulo = nombre.value.ifBlank { "" },
+                    descripcion = descripcion.value.ifBlank { "" },
+                    descuento = descuento.value.ifBlank { null }, // este puede ser null
+                    disponible_desde = desde.value.ifBlank { "" },
+                    hasta = hasta.value.ifBlank { "" },
+                    imagen = imagenBase64.ifBlank { "" }
                 )
+
+                Log.d("API_REQUEST", "Enviando promoción: $promocion")
 
                 val response = RetrofitClient.api.registrarPromocion(promocion)
                 if (response.isSuccessful) {
+                    Log.d("API_SUCCESS", "Promoción agregada correctamente")
                     onSuccess()
                 } else {
-                    onError("Error al registrar promoción: ${response.code()}")
-                    Log.e("API", "Código: ${response.code()}, mensaje: ${response.message()}")
+                    val errorMsg = "Error al registrar promoción: ${response.code()} ${response.message()}"
+                    Log.e("API_ERROR", errorMsg)
+                    onError(errorMsg)
                 }
+
             } catch (e: Exception) {
+                Log.e("API_EXCEPTION", e.message ?: "Error desconocido")
                 onError("Error de conexión: ${e.message}")
-                Log.e("API", "Excepción: ${e.localizedMessage}")
             }
         }
     }

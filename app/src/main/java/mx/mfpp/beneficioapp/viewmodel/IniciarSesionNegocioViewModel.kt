@@ -87,10 +87,20 @@ class IniciarSesionNegocioViewModel(application: Application) : AndroidViewModel
                     val namespace = "https://api.beneficiojoven.com/"
                     val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
 
-                    Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
+                    // 🔹 Extrae los datos del negocio (claims personalizados)
+                    val idNegocio = jwt.getClaim(namespace + "id_negocio").asInt() ?: -1
+                    val nombreNegocio = jwt.getClaim(namespace + "nombre_negocio").asString() ?: "Negocio"
 
-                    val sessionManager= SessionManager(getApplication())
+                    val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
+
+                    // 🔹 Aquí guardas el nombre y el ID del negocio encriptados también
+                    sessionManager.saveNegocioData(idNegocio, nombreNegocio)
+
+                    Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
+                    Log.d("AUTH0_SUCCESS", "ID negocio: $idNegocio")
+                    Log.d("AUTH0_SUCCESS", "Nombre negocio: $nombreNegocio")
+
 
                     _loginState.value = LoginStateNegocio.Success(accessToken)
 

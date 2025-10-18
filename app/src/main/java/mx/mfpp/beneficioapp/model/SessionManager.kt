@@ -27,12 +27,30 @@ class SessionManager(context: Context) {
     fun getAccessToken(): String? {
         return sharedPreferences.getString("access_token", null)
     }
+    fun saveNegocioData(idNegocio: Int, nombreNegocio: String) {
+        sharedPreferences.edit {
+            putInt("id_negocio", idNegocio)
+            putString("nombre_negocio", nombreNegocio)
+        }
+    }
 
 
     fun getUserType(): String? {
         return sharedPreferences.getString("user_type", null)
     }
 
+    // 🔹 Recupera el ID del negocio
+    fun getNegocioId(): Int? {
+        val id = sharedPreferences.getInt("id_negocio", -1)
+        return if (id != -1) id else null
+    }
+
+    // 🔹 Recupera el nombre del negocio
+    fun getNombreNegocio(): String? {
+        return sharedPreferences.getString("nombre_negocio", null)
+    }
+
+    // 🔹 Limpia toda la sesión
     fun clearSession() {
         sharedPreferences.edit {
             clear()
