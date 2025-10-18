@@ -39,6 +39,7 @@ import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
@@ -52,18 +53,11 @@ import kotlin.getValue
  */
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
-    private val promocionesViewModel: PromocionesViewModel by viewModels()
+    private val promocionesViewModel: PromocionJovenViewModel by viewModels() // CAMBIAR AQUÍ
     private val busquedaViewModel: BusquedaViewModel by viewModels()
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
-    /**
-     * Método llamado cuando se crea la actividad.
-     *
-     * Configura la interfaz full-screen y inicializa el contenido de Compose.
-     *
-     * @param savedInstanceState Estado guardado de la instancia anterior
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -96,7 +90,7 @@ class MainActivity : ComponentActivity() {
                 AppPrincipal(
                     startDestination = startDestination,
                     categoriasViewModel = categoriasViewModel,
-                    promocionesViewModel = promocionesViewModel,
+                    promocionesViewModel = promocionesViewModel, // YA CORRECTO
                     busquedaViewModel = busquedaViewModel,
                     scannerViewModel = scannerViewModel,
                     qrViewModel = qrViewModel
@@ -108,21 +102,12 @@ class MainActivity : ComponentActivity() {
 
 /**
  * Componente principal que orquesta toda la aplicación.
- *
- * Maneja la navegación, la barra inferior y el estado global de la app.
- *
- * @param categoriasViewModel ViewModel para categorías
- * @param promocionesViewModel ViewModel para promociones
- * @param busquedaViewModel ViewModel para búsqueda
- * @param scannerViewModel ViewModel para scanner
- * @param qrViewModel ViewModel para QR
- * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppPrincipal(
     startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionesViewModel,
+    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -130,9 +115,6 @@ fun AppPrincipal(
 ) {
     val navController = rememberNavController()
 
-    /**
-     * Rutas donde la barra inferior debe estar oculta.
-     */
     val hiddenBottomBarRoutes = listOf(
         Pantalla.RUTA_SOLICITUD_APP,
         Pantalla.RUTA_ESTATUS_SOLICITUD_APP,
@@ -155,9 +137,6 @@ fun AppPrincipal(
 
     val showBottomBar = currentRoute !in hiddenBottomBarRoutes
 
-    /**
-     * Determina si la ruta actual pertenece al flujo de negocio.
-     */
     val isNegocioRoute = currentRoute in listOf(
         Pantalla.RUTA_INICIO_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES_NEGOCIO,
@@ -180,7 +159,7 @@ fun AppPrincipal(
         AppNavHost(
             startDestination = startDestination,
             categoriasViewModel = categoriasViewModel,
-            promocionesViewModel = promocionesViewModel,
+            promocionesViewModel = promocionesViewModel, // YA CORRECTO
             busquedaViewModel = busquedaViewModel,
             scannerViewModel = scannerViewModel,
             qrViewModel = qrViewModel,
@@ -192,22 +171,12 @@ fun AppPrincipal(
 
 /**
  * Host de navegación principal que define todas las rutas de la aplicación.
- *
- * Contiene el grafo de navegación completo con todas las pantallas disponibles.
- *
- * @param categoriasViewModel ViewModel para categorías
- * @param promocionesViewModel ViewModel para promociones
- * @param busquedaViewModel ViewModel para búsqueda
- * @param scannerViewModel ViewModel para scanner
- * @param qrViewModel ViewModel para QR
- * @param navController Controlador de navegación principal
- * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppNavHost(
     startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionesViewModel,
+    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -264,7 +233,7 @@ fun AppNavHost(
             InicioPage(
                 navController = navController,
                 categoriasViewModel = categoriasViewModel,
-                promocionesViewModel = promocionesViewModel
+                promocionesViewModel = promocionesViewModel // YA CORRECTO
             )
         }
         composable(Pantalla.RUTA_MAPA_APP) {
