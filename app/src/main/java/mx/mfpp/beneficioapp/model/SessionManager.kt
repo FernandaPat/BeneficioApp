@@ -33,6 +33,10 @@ class SessionManager(context: Context) {
         return sharedPreferences.getString("user_type", null)
     }
 
+    fun getRefreshToken(): String? {
+        return sharedPreferences.getString("refresh_token", null)
+    }
+
     fun clearSession() {
         sharedPreferences.edit {
             clear()
