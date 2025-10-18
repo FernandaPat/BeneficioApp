@@ -43,13 +43,13 @@ sealed class Pantalla(
         )
 
         // Rutas constantes para la aplicación de jóvenes
-        const val RUTA_JN_APP = "JNPage"
+        const val RUTA_JN_APP = "JNPage" //Bienvenida
         const val RUTA_QR_PROMOCION = "QRPromocionPage"
         const val RUTA_PERFIL_APP = "PerfilPage"
         const val RUTA_LOGIN_APP = "LoginPage"
-        const val RUTA_INICIONEGOCIO_APP = "InicioNegocioPage"
+        const val RUTA_INICIONEGOCIO_APP = "InicioNegocioPage" //Negocio
         const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
-        const val RUTA_INICIO_APP = "InicioPage"
+        const val RUTA_INICIO_APP = "InicioPage" //Joven
         const val RUTA_MAPA_APP = "MapaPage"
         const val RUTA_TARJETA_APP = "TarjetaPage"
         const val RUTA_BUSCAR_APP = "ExplorarPage"

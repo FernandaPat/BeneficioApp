@@ -1,15 +1,19 @@
 package mx.mfpp.beneficioapp.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,6 +22,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.viewmodel.IniciarSesionNegocioViewModel
+import mx.mfpp.beneficioapp.viewmodel.LoginStateNegocio
 
 /**
  * Pantalla de inicio de sesión para negocios afiliados al programa Beneficio Joven.
@@ -34,6 +39,25 @@ fun Iniciar_Sesion_Negocio(
 ) {
     val scrollState = rememberScrollState()
     val login = viewModel.login.value
+
+    val loginState by viewModel.loginState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(loginState) {
+        when (val state: LoginStateNegocio = loginState){
+            is LoginStateNegocio.Success -> {
+                navController.navigate(Pantalla.RUTA_INICIONEGOCIO_APP){
+                    popUpTo(Pantalla.RUTA_INICIAR_SESION){inclusive = true}
+                }
+                viewModel.resetState()
+            }
+            is LoginStateNegocio.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                viewModel.resetState()
+            }
+            else -> Unit
+        }
+    }
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Iniciar Sesión (Negocio)") },
@@ -85,12 +109,12 @@ fun Iniciar_Sesion_Negocio(
                 verticalArrangement = Arrangement.Center
             ) {
                 BotonMorado(
-                    navController = navController,
-                    texto = "Iniciar Sesión",
-                    route = if (viewModel.esFormularioValido())
-                        Pantalla.RUTA_INICIONEGOCIO_APP
-                    else "",
-                    habilitado = viewModel.esFormularioValido()
+                    texto = "Iniciar Sesion",
+                    onClick = {
+                        Log.d("LOGIN_UI_CHECK", "¡El onClick del Botón Morado FUE EJECUTADO!")
+                        viewModel.iniciarSesion()
+                    },
+                    habilitado = viewModel.esFormularioValido() && loginState !is LoginStateNegocio.Loading
                 )
 
                 Spacer(Modifier.height(16.dp))
@@ -98,6 +122,8 @@ fun Iniciar_Sesion_Negocio(
         }
     }
 }
+
+
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

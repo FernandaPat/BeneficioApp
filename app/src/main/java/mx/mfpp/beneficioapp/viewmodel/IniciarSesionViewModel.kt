@@ -1,7 +1,6 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.app.Application
-import android.provider.Settings.Global.putString
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -15,6 +14,8 @@ import kotlinx.coroutines.flow.StateFlow
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.LoginRequest
 import androidx.core.content.edit
+import mx.mfpp.beneficioapp.model.SessionManager
+import com.auth0.android.jwt.JWT
 
 sealed class LoginState {
     object Idle : LoginState()
@@ -63,16 +64,16 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun iniciarSesion() {
-        Log.d("AUTH0_LOGIN", "🔵 iniciarSesion() llamado")
+        Log.d("AUTH0_LOGIN", "iniciarSesion() llamado")
 
         if (!esFormularioValido()) {
-            Log.d("AUTH0_LOGIN", "❌ Formulario no válido")
+            Log.d("AUTH0_LOGIN", "Formulario no válido")
             _loginState.value = LoginState.Error("Correo y contraseña válidos requeridos")
             return
         }
 
-        Log.d("AUTH0_LOGIN", "✅ Iniciando login con Auth0")
-        Log.d("AUTH0_LOGIN", "📧 Email: ${login.value.correo}")
+        Log.d("AUTH0_LOGIN", "Iniciando login con Auth0")
+        Log.d("AUTH0_LOGIN", "Email: ${login.value.correo}")
 
         _loginState.value = LoginState.Loading
 
@@ -82,14 +83,28 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
-                    Log.d("AUTH0_SUCCESS", "🎉 Login exitoso!")
+                    val idToken = result.idToken
                     val accessToken = result.accessToken
-                    saveTokenSecurely(accessToken)
+                    val refreshToken = result.refreshToken
+
+
+                    val jwt = JWT(idToken)
+                    val namespace = "https://api.beneficiojoven.com/"
+                    val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
+
+                    Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
+
+
+                    val sessionManager = SessionManager(getApplication())
+                    sessionManager.saveToken(accessToken, refreshToken, userType)
+
                     _loginState.value = LoginState.Success(accessToken)
+
+                    Log.d("AUTH0_SUCCESS", "Login exitoso!")
                 }
 
                 override fun onFailure(error: AuthenticationException) {
-                    Log.e("AUTH0_ERROR", "❌ ${error.getCode()}: ${error.getDescription()}")
+                    Log.e("AUTH0_ERROR", "${error.getCode()}: ${error.getDescription()}")
 
                     val errorMessage = when (error.getCode()) {
                         "invalid_grant", "invalid_user_password" -> "Email o contraseña incorrectos"
@@ -108,7 +123,7 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
         prefs.edit { // The KTX function provides a safe block
             putString("access_token", token)
         }
-        Log.d("AUTH0_TOKEN", "✅ Token guardado")
+        Log.d("AUTH0_TOKEN", "Token guardado")
     }
 
     fun resetState() {
