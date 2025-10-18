@@ -71,7 +71,7 @@ fun Iniciar_Sesion_Negocio(
                 .padding(paddingValues)
                 .padding(top = 3.dp)
         ) {
-            // === CORREO O TELÉFONO ===
+            // === CORREO  ===
             Etiqueta("Correo", true)
             CapturaTexto(
                 placeholder = "Escribe aquí",
@@ -99,7 +99,6 @@ fun Iniciar_Sesion_Negocio(
                         navController.navigate(Pantalla.RUTA_INICIAR_SESION)
                     }
             )
-
             // === BOTÓN INICIAR SESIÓN ===
             Column(
                 modifier = Modifier
@@ -108,6 +107,14 @@ fun Iniciar_Sesion_Negocio(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                if (loginState is LoginStateNegocio.Error) {
+                    Text(
+                        text = (loginState as LoginStateNegocio.Error).message,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 BotonMorado(
                     texto = "Iniciar Sesion",
                     onClick = {
