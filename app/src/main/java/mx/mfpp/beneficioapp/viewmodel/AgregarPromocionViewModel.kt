@@ -1,20 +1,19 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import mx.mfpp.beneficioapp.model.Promocion
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.model.PromocionRequest
+import mx.mfpp.beneficioapp.network.RetrofitClient
+import java.util.*
 
-/**
- * ViewModel encargado de manejar el estado y lógica
- * de la pantalla de "Agregar Promociones".
- */
 class AgregarPromocionViewModel : ViewModel() {
 
-    // 📸 Imagen seleccionada
+    // Campos de la UI
     val uri = mutableStateOf<Uri?>(null)
-
-    // 📝 Campos de texto
     val nombre = mutableStateOf("")
     val descripcion = mutableStateOf("")
     val descuento = mutableStateOf("")
@@ -22,53 +21,41 @@ class AgregarPromocionViewModel : ViewModel() {
     val desde = mutableStateOf("")
     val hasta = mutableStateOf("")
     val expiraEn = mutableStateOf<Int?>(null)
+    val categorias = listOf("Alimentos", "Ropa", "Entretenimiento", "Servicios", "Salud")
 
-    // 🔽 Lista de categorías disponibles
-    val categorias = listOf(
-        "Belleza", "Comida", "Educación",
-        "Salud", "Entretenimiento", "Moda", "Servicios"
-    )
-
-    // ✅ Simulación de guardar promoción (puedes conectar al backend después)
+    /**
+     * Envía la promoción a la API.
+     */
     fun guardarPromocion(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        if (nombre.value.isBlank() || descripcion.value.isBlank() || categoria.value.isBlank()) {
-            onError("Por favor completa todos los campos obligatorios.")
-            return
+        viewModelScope.launch {
+            try {
+                // ⚠️ En tu app deberías convertir la imagen URI a Base64 real.
+                val imagenBase64 = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/..."
+
+                val promocion = PromocionRequest(
+                    id_negocio = 6, // puedes hacerlo dinámico luego
+                    titulo = nombre.value,
+                    descripcion = descripcion.value,
+                    descuento = descuento.value,
+                    disponible_desde = desde.value,
+                    hasta = hasta.value,
+                    imagen = imagenBase64
+                )
+
+                val response = RetrofitClient.api.registrarPromocion(promocion)
+                if (response.isSuccessful) {
+                    onSuccess()
+                } else {
+                    onError("Error al registrar promoción: ${response.code()}")
+                    Log.e("API", "Código: ${response.code()}, mensaje: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                onError("Error de conexión: ${e.message}")
+                Log.e("API", "Excepción: ${e.localizedMessage}")
+            }
         }
-
-        val nuevaPromo = Promocion(
-            id = (0..10000).random(),
-            nombre = nombre.value,
-            imagenUrl = uri.value?.toString(),
-            descuento = descuento.value,
-            categoria = categoria.value,
-            expiraEn = expiraEn.value,
-            ubicacion = "Atizapán",
-            esFavorito = false,
-            rating = null,
-            descripcion = descripcion.value
-        )
-
-        // Simula guardado exitoso (aquí podrías hacer tu POST al backend)
-        println("✅ Promoción agregada: $nuevaPromo")
-
-        // Limpiar campos tras guardar
-        limpiarCampos()
-        onSuccess()
-    }
-
-    // 🧹 Limpia los campos después de guardar
-    private fun limpiarCampos() {
-        uri.value = null
-        nombre.value = ""
-        descripcion.value = ""
-        descuento.value = ""
-        categoria.value = ""
-        desde.value = ""
-        hasta.value = ""
-        expiraEn.value = null
     }
 }

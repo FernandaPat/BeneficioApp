@@ -143,12 +143,6 @@ fun AgregarPromocion(
                 placeholder = "Ej. 10% o 2x1"
             )
 
-            SeleccionarCategoria(
-                categoria = viewModel.categoria.value,
-                onCategoriaChange = { viewModel.categoria.value = it },
-                categorias = viewModel.categorias
-            )
-
             RangoFechasPicker(
                 desde = viewModel.desde.value,
                 hasta = viewModel.hasta.value,

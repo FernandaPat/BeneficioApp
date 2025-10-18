@@ -203,7 +203,7 @@ fun Crear_Cuenta(
                         Log.d("CrearCuenta", "Botón 'Crear Cuenta' presionado ")
                         if (viewModel.esFormularioValido()) {
                             viewModel.registrarUsuario(
-                                apiService = RetrofitClient.apiService
+                                apiService = RetrofitClient.api
                             ) { exito, mensajeError ->
                                 coroutineScope.launch {
                                     if (exito) {
