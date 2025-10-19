@@ -97,7 +97,7 @@ fun InicioNegocioPage(navController: NavController) {
                     }
 
                     IconButton(onClick = {
-                        navController.navigate(Pantalla.RUTA_NOTIFICACIONES_APP)
+                        navController.navigate(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO)
                     }) {
                         Icon(
                             painter = painterResource(id = R.drawable.bell),

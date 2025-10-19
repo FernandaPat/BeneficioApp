@@ -68,13 +68,8 @@ class MainActivity : ComponentActivity() {
         val userType = sessionManager.getUserType()
 
         val startDestination = when {
-            // Si hay un token y el tipo es "joven", ve a su inicio.
             accessToken != null && userType == "joven" -> Pantalla.RUTA_INICIO_APP
-
-            // Si hay un token y el tipo es "establecimiento", ve a su inicio.
             accessToken != null && userType == "establecimiento" -> Pantalla.RUTA_INICIO_NEGOCIO
-
-            // manda al usuario a la pantalla de bienvenida para que elija su camino.
             else -> Pantalla.RUTA_JN_APP
         }
 
@@ -110,7 +105,7 @@ class MainActivity : ComponentActivity() {
 fun AppPrincipal(
     startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
+    promocionesViewModel: PromocionJovenViewModel,
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -126,38 +121,31 @@ fun AppPrincipal(
         Pantalla.RUTA_INICIAR_SESION,
         Pantalla.RUTA_CREAR_CUENTA,
         Pantalla.RUTA_INICIAR_SESION_NEGOCIO,
-        Pantalla.RUTA_PROMOCIONES,
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
         Pantalla.RUTA_EDITAR_PROMOCIONES,
-        Pantalla.RUTA_SCANER_NEGOCIO
+        Pantalla.RUTA_SCANER_NEGOCIO,
+        Pantalla.RUTA_QR_PROMOCION
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val destination = navBackStackEntry?.destination
-    val arguments = navBackStackEntry?.arguments
+    val currentRoute = destination?.route
 
-// Detecta la ruta actual real (incluyendo parámetros)
-    val currentRoute = buildString {
-        append(destination?.route ?: "")
-        arguments?.keySet()?.forEach { key ->
-            append("/${arguments?.get(key)}")
-        }
-    }
-
-// Oculta la bottom bar si la ruta coincide o comienza con una ruta oculta
     val showBottomBar = hiddenBottomBarRoutes.none { route ->
-        val baseRoute = route.substringBefore("/{")
-        currentRoute.startsWith(baseRoute)
+        currentRoute?.startsWith(route.substringBefore("/{")) == true
     }
 
-
-    val isNegocioRoute = currentRoute in listOf(
-        Pantalla.RUTA_INICIO_NEGOCIO,
-        Pantalla.RUTA_PROMOCIONES_NEGOCIO,
-        Pantalla.RUTA_SCANER_NEGOCIO,
-        Pantalla.RUTA_PERFIL_NEGOCIO,
-        Pantalla.RUTA_INICIONEGOCIO_APP
-    )
+    val isNegocioRoute = when {
+        currentRoute == null -> false
+        currentRoute == Pantalla.RUTA_INICIO_NEGOCIO -> true // ✅ Ruta específica
+        currentRoute.startsWith(Pantalla.RUTA_PROMOCIONES_NEGOCIO) -> true
+        currentRoute.startsWith(Pantalla.RUTA_SCANER_NEGOCIO) -> true
+        currentRoute.startsWith(Pantalla.RUTA_PERFIL_NEGOCIO) -> true
+        currentRoute.startsWith(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO) -> true
+        currentRoute.startsWith(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) -> true
+        currentRoute.startsWith("editarPromocion/") -> true
+        else -> false
+    }
 
     Scaffold(
         bottomBar = {
@@ -173,7 +161,7 @@ fun AppPrincipal(
         AppNavHost(
             startDestination = startDestination,
             categoriasViewModel = categoriasViewModel,
-            promocionesViewModel = promocionesViewModel, // YA CORRECTO
+            promocionesViewModel = promocionesViewModel,
             busquedaViewModel = busquedaViewModel,
             scannerViewModel = scannerViewModel,
             qrViewModel = qrViewModel,
@@ -203,9 +191,6 @@ fun AppNavHost(
         modifier = modifier.fillMaxSize()
     ) {
         // Rutas de autenticación y negocio
-        composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
-            Iniciar_Sesion_Negocio(navController)
-        }
         composable(Pantalla.RUTA_PROMOCIONES) {
             Promociones(navController)
         }
@@ -215,7 +200,7 @@ fun AppNavHost(
         composable(Pantalla.RUTA_PERFIL_APP) {
             PerfilPage(navController)
         }
-        composable(Pantalla.RUTA_INICIONEGOCIO_APP) {
+        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
             InicioNegocioPage(navController)
         }
         composable(Pantalla.RUTA_LOGIN_APP) {
@@ -231,12 +216,18 @@ fun AppNavHost(
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             Editar_Promociones(navController = navController, idPromocion = id)
         }
+
+        composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
+            Iniciar_Sesion_Negocio(navController)
+        }
+
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
+
 
         composable(Pantalla.RUTA_QR_PROMOCION) {
             QRPromocionPage(navController, qrViewModel)
@@ -250,6 +241,11 @@ fun AppNavHost(
                 promocionesViewModel = promocionesViewModel // YA CORRECTO
             )
         }
+
+        composable(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO) {
+            NotificacionesNegocioPage(navController)
+        }
+
         composable(Pantalla.RUTA_MAPA_APP) {
             MapaPage(navController)
         }
