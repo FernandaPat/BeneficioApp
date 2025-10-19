@@ -44,7 +44,6 @@ fun DetallePromocionScreen(
     navController: NavController,
     qrData: String
 ) {
-    // Intentamos parsear el JSON del QR con mejor manejo de errores
     val promocion = remember(qrData) {
         try {
             val decodedData = URLDecoder.decode(qrData, "UTF-8")
@@ -85,7 +84,6 @@ fun DetallePromocionScreen(
                     .background(Color.White)
                     .padding(24.dp)
             ) {
-                // Icono de éxito
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Éxito",
@@ -177,18 +175,20 @@ fun InfoRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
             fontWeight = FontWeight.Medium,
             color = Color.Gray,
-            modifier = Modifier.weight(1f)
+            fontSize = 16.sp
         )
         Text(
             text = value,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
+            fontWeight = FontWeight.SemiBold,
+            color = Color.Black,
+            fontSize = 16.sp
         )
     }
 }

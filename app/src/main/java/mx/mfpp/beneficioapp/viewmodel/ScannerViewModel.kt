@@ -22,8 +22,7 @@ class ScannerViewModel : ViewModel() {
 
     fun processScannedQR(content: String): PromocionData? {
         return try {
-            val decodedData = java.net.URLDecoder.decode(content, "UTF-8")
-            val json = org.json.JSONObject(decodedData)
+            val json = JSONObject(content) // <-- Sin decodificar
             PromocionData(
                 numeroTarjeta = json.optString("numeroTarjeta", "N/A"),
                 fecha = json.optString("fecha", "N/A"),
@@ -33,10 +32,6 @@ class ScannerViewModel : ViewModel() {
             e.printStackTrace()
             null
         }
-    }
-        fun resetScannerState() {
-        _showScanner.value = false
-        lastScannedValue = null
     }
 
 
@@ -63,4 +58,9 @@ class ScannerViewModel : ViewModel() {
     fun getTotalScans(): Int {
         return _qrScanResults.value.size
     }
+    fun resetScannerState() {
+        _showScanner.value = false
+        lastScannedValue = null
+    }
+
 }

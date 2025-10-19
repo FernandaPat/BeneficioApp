@@ -45,6 +45,7 @@ import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
+import java.net.URLDecoder
 import kotlin.getValue
 
 /**
@@ -277,6 +278,22 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             ActividadPage(navController)
+        }
+        composable(Pantalla.RUTA_QR_SCANNER_SCREEN) {
+            QrScannerScreen(navController)
+        }
+        composable(
+            route = "${Pantalla.RUTA_DETALLEPROMOCION_APP}/{qrData}",
+            arguments = listOf(navArgument("qrData") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val qrData = backStackEntry.arguments?.getString("qrData")?.let {
+                URLDecoder.decode(it, "UTF-8")
+            } ?: ""
+
+            DetallePromocionScreen(
+                navController = navController,
+                qrData = qrData
+            )
         }
 
         // Rutas de búsqueda y resultados

@@ -25,7 +25,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanner
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import mx.mfpp.beneficioapp.R
 import java.util.concurrent.Executors
 
 /**

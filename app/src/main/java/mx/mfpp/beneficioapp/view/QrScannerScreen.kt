@@ -32,7 +32,9 @@ import com.google.mlkit.vision.common.InputImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
+import java.net.URLEncoder
 import java.util.concurrent.Executors
+
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -142,8 +144,9 @@ fun QrScannerScreen(
                                                         coroutineScope.launch {
                                                             // Pequeño delay para evitar múltiples escaneos
                                                             delay(1000)
-                                                            navController.navigate("detallePromocion/${Uri.encode(qrContent)}") {
-                                                                popUpTo("qrScannerScreen") { inclusive = true }
+                                                            val encodedQrContent = URLEncoder.encode(qrContent, "UTF-8")
+                                                            navController.navigate("${Pantalla.RUTA_DETALLEPROMOCION_APP}/$encodedQrContent") {
+                                                                popUpTo(Pantalla.RUTA_QR_SCANNER_SCREEN) { inclusive = true }
                                                             }
                                                         }
                                                     } else {
@@ -167,6 +170,7 @@ fun QrScannerScreen(
                                         }
                                         .addOnCompleteListener {
                                             imageProxy.close()
+                                            isProcessing = false
                                         }
                                 } else {
                                     imageProxy.close()

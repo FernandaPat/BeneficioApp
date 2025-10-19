@@ -53,6 +53,7 @@ sealed class Pantalla(
         const val RUTA_AYUDA_APP = "Ayuda_Page"
         const val RUTA_CAMBIARCONTRASENA_APP = "CambiarContrasena_Page"
         const val RUTA_DATOSPERSONALES_APP = "VerDatosPersonales_Page"
+        const val RUTA_DETALLEPROMOCION_APP = "DetallePromocionScreen"
         const val RUTA_INICIO_APP = "InicioPage" //Joven
         const val RUTA_MAPA_APP = "MapaPage"
         const val RUTA_TARJETA_APP = "TarjetaPage"

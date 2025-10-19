@@ -72,7 +72,7 @@ fun HistorialScannerScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate("qrScannerScreen")
+                    navController.navigate(Pantalla.RUTA_QR_SCANNER_SCREEN)
                 },
                 containerColor = Color(0xFF9605F7),
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -160,7 +160,7 @@ fun HistorialScannerScreen(
                             fontSize = 16.sp
                         )
                         Text(
-                            text = "Presiona el botón + para comenzar a escanear",
+                            text = "Presiona el botón para comenzar a escanear",
                             color = Color.Gray,
                             fontSize = 14.sp,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center

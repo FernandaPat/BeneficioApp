@@ -9,7 +9,6 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import mx.mfpp.beneficioapp.model.PromocionData
-import org.json.JSONObject
 import java.util.EnumMap
 
 class QRViewModel : ViewModel() {
@@ -22,6 +21,7 @@ class QRViewModel : ViewModel() {
 
     // Datos mock de la tarjeta del usuario
     private val userCardNumber = "1234567890123456"
+
 
     fun aplicarPromocion(nombrePromocion: String) {
         // Generar datos mock para el QR
@@ -42,17 +42,19 @@ class QRViewModel : ViewModel() {
 
     private fun generateQRCode(promocionData: PromocionData): Bitmap {
         return try {
-            // Crear JSON válido
-            val jsonData = JSONObject().apply {
-                put("numeroTarjeta", promocionData.numeroTarjeta)
-                put("fecha", promocionData.fecha)
-                put("nombrePromocion", promocionData.nombrePromocion)
-            }.toString()
+            // Crear JSON manualmente para evitar escapes extra
+            val jsonData = """
+            {
+                "numeroTarjeta":"${promocionData.numeroTarjeta}",
+                "fecha":"${promocionData.fecha}",
+                "nombrePromocion":"${promocionData.nombrePromocion}"
+            }
+        """.trimIndent()
 
-            // Resto del código para generar el QR...
             val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java)
             hints[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.Q
             hints[EncodeHintType.MARGIN] = 2
+            hints[EncodeHintType.CHARACTER_SET] = "UTF-8"
 
             val writer = QRCodeWriter()
             val bitMatrix = writer.encode(jsonData, BarcodeFormat.QR_CODE, 512, 512, hints)
@@ -64,10 +66,10 @@ class QRViewModel : ViewModel() {
 
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    val color = if (bitMatrix[x, y]) moradoColor else 0xFFFFFFFF.toInt()
-                    bitmap.setPixel(x, y, color)
+                    bitmap.setPixel(x, y, if (bitMatrix[x, y]) moradoColor else 0xFFFFFFFF.toInt())
                 }
             }
+
             bitmap
         } catch (e: Exception) {
             e.printStackTrace()
