@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 
@@ -60,15 +62,17 @@ fun ResultadosPage(
     val categoriaSeleccionadaState by busquedaViewModel.categoriaSeleccionada.collectAsState()
     val isLoading by busquedaViewModel.isLoading.collectAsState()
     val error by busquedaViewModel.error.collectAsState()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
 
     LaunchedEffect(categoriaSeleccionada) {
         categoriaSeleccionada?.let {
             busquedaViewModel.seleccionarCategoria(it)
         }
     }
-
+    val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
     Scaffold(
-        topBar = { HomeTopBar(navController) }
+        topBar = { HomeTopBar(nombreJoven,navController) }
     ) { paddingValues ->
         when {
             isLoading -> {

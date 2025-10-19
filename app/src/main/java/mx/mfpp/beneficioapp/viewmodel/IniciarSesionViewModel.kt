@@ -91,12 +91,19 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
                     val jwt = JWT(idToken)
                     val namespace = "https://api.beneficiojoven.com/"
                     val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
+                    val idJoven = jwt.getClaim(namespace + "id_usuario").asInt() ?: -1
+                    val nombreJoven = jwt.getClaim(namespace + "nombre_completo").asString() ?: "Joven"
+                    val folioDigital = jwt.getClaim(namespace + "folio_digital").asString() ?: "0"
 
                     Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
+                    Log.d("AUTH0_SUCCESS", "ID joven: $idJoven")
+                    Log.d("AUTH0_SUCCESS", "Nombre joven: $nombreJoven")
+                    Log.d("AUTH0_SUCCESS", "Tarjeta ID: $folioDigital")
 
 
                     val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
+                    sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital)
 
                     _loginState.value = LoginState.Success(accessToken)
 
