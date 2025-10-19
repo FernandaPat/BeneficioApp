@@ -12,13 +12,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import mx.mfpp.beneficioapp.model.SessionManager
 
 /**
  * Pantalla que muestra la tarjeta digital del usuario.
@@ -31,6 +34,12 @@ import androidx.navigation.compose.rememberNavController
  */
 @Composable
 fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    val folioTarjeta = sessionManager.getFolioTarjeta().toString()
+
+
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -43,7 +52,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(55.dp))
             CardImage()
             Spacer(modifier = Modifier.height(55.dp))
-            TextoMedioGrande("1234 5678 9012 0001", modifier)
+            TextoMedioGrande(folioTarjeta , modifier)
             Spacer(modifier = Modifier.height(50.dp))
 
             Column(

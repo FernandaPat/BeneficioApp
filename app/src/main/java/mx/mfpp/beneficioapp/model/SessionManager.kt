@@ -34,6 +34,14 @@ class SessionManager(context: Context) {
         }
     }
 
+    fun saveJovenData(idJoven: Int, nombreJoven: String, folioDigital: String) {
+        sharedPreferences.edit {
+            putInt("id_usuario", idJoven)
+            putString("nombre_completo", nombreJoven)
+            putString("folio_digital", folioDigital)
+        }
+    }
+
 
     fun getUserType(): String? {
         return sharedPreferences.getString("user_type", null)
@@ -49,6 +57,20 @@ class SessionManager(context: Context) {
     fun getNombreNegocio(): String? {
         return sharedPreferences.getString("nombre_negocio", null)
     }
+
+    fun getJovenId(): Int?{
+        val id = sharedPreferences.getInt("id_usuario", -1)
+        return if (id != -1) id else null
+    }
+
+    fun getNombreJoven(): String? {
+        return sharedPreferences.getString("nombre_completo", null)
+    }
+
+    fun getFolioTarjeta(): String? {
+        return sharedPreferences.getString("folio_digital", null)
+    }
+
 
     // 🔹 Limpia toda la sesión
     fun clearSession() {

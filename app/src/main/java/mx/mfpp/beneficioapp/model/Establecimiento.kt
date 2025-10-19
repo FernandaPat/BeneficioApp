@@ -22,7 +22,8 @@ data class Establecimiento(
     val latitud: Double?,
     val longitud: Double?,
     val id_categoria: Int,
-    val nombre_categoria: String
+    val nombre_categoria: String,
+    val es_favorito: Boolean = false
 )
 
 /**

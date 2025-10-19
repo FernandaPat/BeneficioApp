@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +32,10 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
 
 /**
  * Pantalla que muestra resultados de búsqueda de establecimientos.
@@ -60,6 +64,14 @@ fun ResultadosPage(
     val categoriaSeleccionadaState by busquedaViewModel.categoriaSeleccionada.collectAsState()
     val isLoading by busquedaViewModel.isLoading.collectAsState()
     val error by busquedaViewModel.error.collectAsState()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
+    val favoritosViewModel = remember {
+        FavoritosViewModel(sessionManager)
+    }
+
+    val mensajeFavoritos by favoritosViewModel.mensaje.collectAsState()
 
     LaunchedEffect(categoriaSeleccionada) {
         categoriaSeleccionada?.let {
@@ -67,8 +79,18 @@ fun ResultadosPage(
         }
     }
 
+    LaunchedEffect(mensajeFavoritos) {
+        mensajeFavoritos?.let { mensaje ->
+            Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
+            favoritosViewModel.clearMensaje()
+            busquedaViewModel.refrescarEstablecimientosConFavoritos(context)
+        }
+    }
+
+    val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
+
     Scaffold(
-        topBar = { HomeTopBar(navController) }
+        topBar = { HomeTopBar(nombreJoven,navController) }
     ) { paddingValues ->
         when {
             isLoading -> {
@@ -101,7 +123,17 @@ fun ResultadosPage(
                     searchText = searchText,
                     onCategoriaSeleccionada = busquedaViewModel::seleccionarCategoria,
                     onEstablecimientoClick = { id -> navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id") },
-                    onToggleFavorito = { /* TODO: lógica favoritos */ },
+                    onToggleFavorito = { idEstablecimiento ->
+                        val establecimiento = establecimientos.find {
+                            it.id_establecimiento == idEstablecimiento
+                        }
+                        establecimiento?.let {
+                            favoritosViewModel.toggleFavorito(
+                                idEstablecimiento = idEstablecimiento,
+                                esFavoritoActual = it.es_favorito
+                            )
+                        }
+                    },
                     modifier = Modifier.padding(paddingValues)
                 )
             }
@@ -296,7 +328,7 @@ fun ItemEstablecimiento(
     onToggleFavorito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var esFavorito by remember { mutableStateOf(false) }
+    val esFavorito= establecimiento.es_favorito
 
     Column(
         modifier = modifier
@@ -342,10 +374,7 @@ fun ItemEstablecimiento(
             }
 
             IconButton(
-                onClick = {
-                    esFavorito = !esFavorito
-                    onToggleFavorito()
-                },
+                onClick = onToggleFavorito,
                 modifier = Modifier.size(36.dp)
             ) {
                 Icon(

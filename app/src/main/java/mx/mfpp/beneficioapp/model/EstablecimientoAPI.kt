@@ -8,6 +8,7 @@ interface EstablecimientoAPI {
     @GET("establecimientos")
     suspend fun obtenerEstablecimientos(
         @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 50
+        @Query("limit") limit: Int = 50,
+        @Query("id_usuario") idUsuario: Int? = null
     ): EstablecimientosResponse
 }

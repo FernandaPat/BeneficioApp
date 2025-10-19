@@ -1,6 +1,7 @@
 // mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimientos
 package mx.mfpp.beneficioapp.model
 
+import android.content.Context
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import kotlinx.coroutines.delay
@@ -20,23 +21,24 @@ object ServicioRemotoEstablecimiento {
         retrofit.create(EstablecimientoAPI::class.java)
     }
 
-    suspend fun obtenerEstablecimientos(): List<Establecimiento> {
+    suspend fun obtenerEstablecimientos(context: Context? = null): List<Establecimiento> {
         return try {
-            descargarTodasLasPaginas()
+            val idUsuario = context?.let { SessionManager(it).getJovenId() }
+            descargarTodasLasPaginas(idUsuario)
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
         }
     }
 
-    private suspend fun descargarTodasLasPaginas(): List<Establecimiento> {
+    private suspend fun descargarTodasLasPaginas(idUsuario: Int?): List<Establecimiento> {
         val todosLosEstablecimientos = mutableListOf<Establecimiento>()
         var paginaActual = 1
         var tieneMasPaginas = true
 
         while (tieneMasPaginas) {
             try {
-                val response = obtenerPaginaConReintentos(paginaActual, 50)
+                val response = obtenerPaginaConReintentos(paginaActual, 50, idUsuario)
 
                 // Verificar si hay datos
                 if (response.data.isNotEmpty()) {
@@ -78,13 +80,14 @@ object ServicioRemotoEstablecimiento {
     private suspend fun obtenerPaginaConReintentos(
         pagina: Int,
         limite: Int,
+        idUsuario: Int? = null,
         reintentos: Int = MAX_REINTENTOS
     ): EstablecimientosResponse {
         var ultimoError: Exception? = null
 
         repeat(reintentos) { intento ->
             try {
-                val response = servicio.obtenerEstablecimientos(pagina, limite)
+                val response = servicio.obtenerEstablecimientos(pagina, limite, idUsuario)
                 return response
             } catch (e: Exception) {
                 ultimoError = e
