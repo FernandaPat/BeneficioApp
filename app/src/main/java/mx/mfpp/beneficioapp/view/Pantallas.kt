@@ -49,6 +49,10 @@ sealed class Pantalla(
         const val RUTA_PERFIL_APP = "PerfilPage"
         const val RUTA_LOGIN_APP = "LoginPage"
         const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
+        const val RUTA_ACERCADE_APP = "Acerca_De_Page"
+        const val RUTA_AYUDA_APP = "Ayuda_Page"
+        const val RUTA_CAMBIARCONTRASENA_APP = "CambiarContrasena_Page"
+        const val RUTA_DATOSPERSONALES_APP = "VerDatosPersonales_Page"
         const val RUTA_INICIO_APP = "InicioPage" //Joven
         const val RUTA_MAPA_APP = "MapaPage"
         const val RUTA_TARJETA_APP = "TarjetaPage"

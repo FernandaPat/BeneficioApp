@@ -124,7 +124,11 @@ fun AppPrincipal(
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
         Pantalla.RUTA_EDITAR_PROMOCIONES,
         Pantalla.RUTA_SCANER_NEGOCIO,
-        Pantalla.RUTA_QR_PROMOCION
+        Pantalla.RUTA_QR_PROMOCION,
+        Pantalla.RUTA_ACERCADE_APP,
+        Pantalla.RUTA_AYUDA_APP,
+        Pantalla.RUTA_CAMBIARCONTRASENA_APP,
+        Pantalla.RUTA_DATOSPERSONALES_APP
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -215,6 +219,18 @@ fun AppNavHost(
         ) { backStackEntry ->
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             Editar_Promociones(navController = navController, idPromocion = id)
+        }
+        composable(Pantalla.RUTA_ACERCADE_APP) {
+            AcercaDePage(navController)
+        }
+        composable(Pantalla.RUTA_AYUDA_APP) {
+            AyudaPage(navController)
+        }
+        composable(Pantalla.RUTA_CAMBIARCONTRASENA_APP) {
+            CambiarContrasenaPage(navController)
+        }
+        composable(Pantalla.RUTA_DATOSPERSONALES_APP) {
+            VerDatosPersonalesPage(navController)
         }
 
         composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {

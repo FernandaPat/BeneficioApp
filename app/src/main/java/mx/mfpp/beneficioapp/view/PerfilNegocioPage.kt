@@ -180,12 +180,15 @@ fun PerfilNegocioPage(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(25.dp))
 
-            // Sección: Ajustes de cuenta
             SeccionNOpciones(
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
-                    OpcionData(R.drawable.lock, "Cambiar Contraseña"),
-                    OpcionData(R.drawable.user, "Editar datos personales"),
+                    OpcionData(R.drawable.lock, "Cambiar Contraseña") {
+                        navController.navigate(Pantalla.RUTA_CAMBIARCONTRASENA_APP)
+                    },
+                    OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
+                        navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
+                    },
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )
             )
@@ -196,8 +199,12 @@ fun PerfilNegocioPage(navController: NavController) {
             SeccionNOpciones(
                 titulo = "Más información",
                 opciones = listOf(
-                    OpcionData(R.drawable.help, "Ayuda"),
-                    OpcionData(R.drawable.info, "Acerca de Dirección de Juventud")
+                    OpcionData(R.drawable.help, "Ayuda") {
+                        navController.navigate(Pantalla.RUTA_AYUDA_APP)
+                    },
+                    OpcionData(R.drawable.info, "Acerca de Dirección de Juventud") {
+                        navController.navigate(Pantalla.RUTA_ACERCADE_APP)
+                    }
                 )
             )
         }
