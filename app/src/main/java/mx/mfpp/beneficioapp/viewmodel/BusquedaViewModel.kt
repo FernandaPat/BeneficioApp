@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,5 +101,22 @@ class BusquedaViewModel : ViewModel() {
         }
 
         _establecimientos.value = filtrados
+    }
+
+    fun refrescarEstablecimientosConFavoritos(context: Context) {
+        _isLoading.value = true
+        _error.value = null
+
+        viewModelScope.launch {
+            try {
+                // CON context - para obtener es_favorito correctamente
+                todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos(context)
+                aplicarFiltros()
+            } catch (e: Exception) {
+                _error.value = "Error al cargar establecimientos: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 }
