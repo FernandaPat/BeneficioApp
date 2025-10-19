@@ -22,8 +22,8 @@ fun QRPromocionPage(
     viewModel: QRViewModel
 ) {
     val moradoQR = Color(0xFF9605F7) // Color morado para el QR
-    val rojoBoton = Color(0xFFFF5252) // Color rojo para el botón
-    val rojoTexto = Color(0xFFFFFFFF) // Texto blanco para el botón rojo
+    val rojoBoton = Color(0xFFE9d4ff) // Color rojo para el botón
+    val rojoTexto = Color(0xFF9605f7) // Texto blanco para el botón rojo
 
     // Observar los datos del ViewModel
     val promocionData by viewModel.promocionData

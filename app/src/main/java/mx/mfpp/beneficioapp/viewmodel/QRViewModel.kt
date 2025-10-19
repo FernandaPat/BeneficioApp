@@ -9,6 +9,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import mx.mfpp.beneficioapp.model.PromocionData
+import org.json.JSONObject
 import java.util.EnumMap
 
 class QRViewModel : ViewModel() {
@@ -41,42 +42,35 @@ class QRViewModel : ViewModel() {
 
     private fun generateQRCode(promocionData: PromocionData): Bitmap {
         return try {
-            val jsonData = """
-            {
-                "numeroTarjeta": "${promocionData.numeroTarjeta}",
-                "fecha": "${promocionData.fecha}",
-                "nombrePromocion": "${promocionData.nombrePromocion}"
-            }
-            """.trimIndent()
+            // Crear JSON válido
+            val jsonData = JSONObject().apply {
+                put("numeroTarjeta", promocionData.numeroTarjeta)
+                put("fecha", promocionData.fecha)
+                put("nombrePromocion", promocionData.nombrePromocion)
+            }.toString()
 
+            // Resto del código para generar el QR...
             val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java)
-            hints[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.L
-            hints[EncodeHintType.MARGIN] = 1
+            hints[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.Q
+            hints[EncodeHintType.MARGIN] = 2
 
             val writer = QRCodeWriter()
             val bitMatrix = writer.encode(jsonData, BarcodeFormat.QR_CODE, 512, 512, hints)
 
             val width = bitMatrix.width
             val height = bitMatrix.height
-            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888) // Cambiado a ARGB_8888 para soportar colores
-
-            // Color morado para el QR - #9605F7
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
             val moradoColor = 0xFF9605F7.toInt()
 
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    val color = if (bitMatrix[x, y]) {
-                        moradoColor // Morado en lugar de negro
-                    } else {
-                        0xFFFFFFFF.toInt() // Blanco
-                    }
+                    val color = if (bitMatrix[x, y]) moradoColor else 0xFFFFFFFF.toInt()
                     bitmap.setPixel(x, y, color)
                 }
             }
             bitmap
         } catch (e: Exception) {
             e.printStackTrace()
-            // Si falla ZXing, generar un QR simple morado
             generateSimpleQRCode()
         }
     }

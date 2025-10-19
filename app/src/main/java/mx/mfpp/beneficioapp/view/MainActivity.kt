@@ -30,10 +30,12 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
@@ -228,6 +230,16 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
+        }
+        composable(Pantalla.RUTA_QR_SCANNER_SCREEN) {
+            QrScannerScreen(navController)
+        }
+        composable(
+            route = "detallePromocion/{qrData}",
+            arguments = listOf(navArgument("qrData") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val qrData = backStackEntry.arguments?.getString("qrData") ?: ""
+            DetallePromocionScreen(navController, qrData)
         }
 
         composable(Pantalla.RUTA_NEGOCIODETALLE_APP) {

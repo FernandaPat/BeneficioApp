@@ -65,10 +65,11 @@ dependencies {
 
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
+    // Camara para el qr
+    implementation("androidx.camera:camera-camera2:1.3.4")
+    implementation("androidx.camera:camera-lifecycle:1.3.4")
+    implementation("androidx.camera:camera-view:1.3.4")
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
-    implementation("androidx.camera:camera-camera2:1.3.0")
-    implementation("androidx.camera:camera-lifecycle:1.3.0")
-    implementation("androidx.camera:camera-view:1.3.0")
 
     // Google Maps
     implementation("com.google.maps.android:maps-compose:4.3.3")

@@ -72,7 +72,7 @@ fun HistorialScannerScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.showScanner()
+                    navController.navigate("qrScannerScreen")
                 },
                 containerColor = Color(0xFF9605F7),
                 modifier = Modifier.padding(bottom = 16.dp)
