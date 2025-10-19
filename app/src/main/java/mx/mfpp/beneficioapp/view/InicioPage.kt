@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,7 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.model.PromocionJoven
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
@@ -75,8 +77,13 @@ fun InicioPage(
     val isLoading = categoriasLoading || promocionesLoading || establecimientosLoading
     val error = categoriasError ?: promocionesError ?: establecimientosError
 
+    val context= LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
+
+
     Scaffold(
-        topBar = { HomeTopBar(navController) }
+        topBar = { HomeTopBar(nombreJoven,navController) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -606,7 +613,10 @@ fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
  * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
-fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
+fun HomeTopBar(
+    nombreJoven: String,
+    navController: NavController,
+    modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -637,7 +647,7 @@ fun HomeTopBar(navController: NavController, modifier: Modifier = Modifier) {
                 }
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    text = "Nombre",
+                    text = "Hola, $nombreJoven",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
