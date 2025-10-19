@@ -36,10 +36,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
@@ -53,20 +55,29 @@ import kotlin.getValue
  */
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
-    private val promocionesViewModel: PromocionesViewModel by viewModels()
-    private val busquedaViewModel: BusquedaViewModel by viewModels()
+    private val promocionesViewModel: PromocionJovenViewModel by viewModels()
+    private val busquedaViewModel: BusquedaViewModel by viewModels() // Este es importante
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
-    /**
-     * Método llamado cuando se crea la actividad.
-     *
-     * Configura la interfaz full-screen y inicializa el contenido de Compose.
-     *
-     * @param savedInstanceState Estado guardado de la instancia anterior
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        //Configuracion para guardar la sesion
+        val sessionManager = SessionManager(applicationContext)
+        val accessToken = sessionManager.getAccessToken()
+        val userType = sessionManager.getUserType()
+
+        val startDestination = when {
+            // Si hay un token y el tipo es "joven", ve a su inicio.
+            accessToken != null && userType == "joven" -> Pantalla.RUTA_INICIO_APP
+
+            // Si hay un token y el tipo es "establecimiento", ve a su inicio.
+            accessToken != null && userType == "establecimiento" -> Pantalla.RUTA_INICIO_NEGOCIO
+
+            // manda al usuario a la pantalla de bienvenida para que elija su camino.
+            else -> Pantalla.RUTA_JN_APP
+        }
+
 
         // Configurar interfaz full-screen
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -79,9 +90,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             BeneficioAppTheme {
                 AppPrincipal(
+                    startDestination = startDestination,
                     categoriasViewModel = categoriasViewModel,
                     promocionesViewModel = promocionesViewModel,
-                    busquedaViewModel = busquedaViewModel,
+                    busquedaViewModel = busquedaViewModel, // Pasar este ViewModel
                     scannerViewModel = scannerViewModel,
                     qrViewModel = qrViewModel
                 )
@@ -90,22 +102,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 /**
  * Componente principal que orquesta toda la aplicación.
- *
- * Maneja la navegación, la barra inferior y el estado global de la app.
- *
- * @param categoriasViewModel ViewModel para categorías
- * @param promocionesViewModel ViewModel para promociones
- * @param busquedaViewModel ViewModel para búsqueda
- * @param scannerViewModel ViewModel para scanner
- * @param qrViewModel ViewModel para QR
- * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppPrincipal(
+    startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionesViewModel,
+    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -113,9 +118,6 @@ fun AppPrincipal(
 ) {
     val navController = rememberNavController()
 
-    /**
-     * Rutas donde la barra inferior debe estar oculta.
-     */
     val hiddenBottomBarRoutes = listOf(
         Pantalla.RUTA_SOLICITUD_APP,
         Pantalla.RUTA_ESTATUS_SOLICITUD_APP,
@@ -130,17 +132,25 @@ fun AppPrincipal(
         Pantalla.RUTA_SCANER_NEGOCIO
     )
 
-    val currentRoute = navController
-        .currentBackStackEntryAsState()
-        .value
-        ?.destination
-        ?.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val destination = navBackStackEntry?.destination
+    val arguments = navBackStackEntry?.arguments
 
-    val showBottomBar = currentRoute !in hiddenBottomBarRoutes
+// Detecta la ruta actual real (incluyendo parámetros)
+    val currentRoute = buildString {
+        append(destination?.route ?: "")
+        arguments?.keySet()?.forEach { key ->
+            append("/${arguments?.get(key)}")
+        }
+    }
 
-    /**
-     * Determina si la ruta actual pertenece al flujo de negocio.
-     */
+// Oculta la bottom bar si la ruta coincide o comienza con una ruta oculta
+    val showBottomBar = hiddenBottomBarRoutes.none { route ->
+        val baseRoute = route.substringBefore("/{")
+        currentRoute.startsWith(baseRoute)
+    }
+
+
     val isNegocioRoute = currentRoute in listOf(
         Pantalla.RUTA_INICIO_NEGOCIO,
         Pantalla.RUTA_PROMOCIONES_NEGOCIO,
@@ -161,8 +171,9 @@ fun AppPrincipal(
         },
     ) { innerPadding ->
         AppNavHost(
+            startDestination = startDestination,
             categoriasViewModel = categoriasViewModel,
-            promocionesViewModel = promocionesViewModel,
+            promocionesViewModel = promocionesViewModel, // YA CORRECTO
             busquedaViewModel = busquedaViewModel,
             scannerViewModel = scannerViewModel,
             qrViewModel = qrViewModel,
@@ -174,21 +185,12 @@ fun AppPrincipal(
 
 /**
  * Host de navegación principal que define todas las rutas de la aplicación.
- *
- * Contiene el grafo de navegación completo con todas las pantallas disponibles.
- *
- * @param categoriasViewModel ViewModel para categorías
- * @param promocionesViewModel ViewModel para promociones
- * @param busquedaViewModel ViewModel para búsqueda
- * @param scannerViewModel ViewModel para scanner
- * @param qrViewModel ViewModel para QR
- * @param navController Controlador de navegación principal
- * @param modifier Modificador de Composable para personalizar el layout
  */
 @Composable
 fun AppNavHost(
+    startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionesViewModel,
+    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -197,7 +199,7 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Pantalla.RUTA_JN_APP,
+        startDestination = startDestination,
         modifier = modifier.fillMaxSize()
     ) {
         // Rutas de autenticación y negocio
@@ -222,28 +224,18 @@ fun AppNavHost(
         composable(Pantalla.RUTA_AGREGAR_PROMOCIONES) {
             AgregarPromocion(navController)
         }
-        composable(Pantalla.RUTA_EDITAR_PROMOCIONES) {
-            Editar_Promociones(navController)
+        composable(
+            route = "editarPromocion/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            Editar_Promociones(navController = navController, idPromocion = id)
         }
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
-        }
-        composable(Pantalla.RUTA_QR_SCANNER_SCREEN) {
-            QrScannerScreen(navController)
-        }
-        composable(
-            route = "detallePromocion/{qrData}",
-            arguments = listOf(navArgument("qrData") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val qrData = backStackEntry.arguments?.getString("qrData") ?: ""
-            DetallePromocionScreen(navController, qrData)
-        }
-
-        composable(Pantalla.RUTA_NEGOCIODETALLE_APP) {
-            NegocioDetallePage(navController, qrViewModel)
         }
 
         composable(Pantalla.RUTA_QR_PROMOCION) {
@@ -255,7 +247,7 @@ fun AppNavHost(
             InicioPage(
                 navController = navController,
                 categoriasViewModel = categoriasViewModel,
-                promocionesViewModel = promocionesViewModel
+                promocionesViewModel = promocionesViewModel // YA CORRECTO
             )
         }
         composable(Pantalla.RUTA_MAPA_APP) {
@@ -284,6 +276,23 @@ fun AppNavHost(
                 categoriasViewModel = categoriasViewModel,
                 busquedaViewModel = busquedaViewModel
             )
+        }
+
+        composable(
+            route = "${Pantalla.RUTA_RESULTADOS_APP}/{categoriaSeleccionada}",
+            arguments = listOf(navArgument("categoriaSeleccionada") { type = NavType.StringType })
+        ) { backStackEntry ->
+            ResultadosPage(
+                navController = navController,
+                categoriaSeleccionada = backStackEntry.arguments?.getString("categoriaSeleccionada"),
+                categoriasViewModel = categoriasViewModel,
+                busquedaViewModel = busquedaViewModel
+            )
+        }
+
+        composable("NegocioDetallePage/{id}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")
+            NegocioDetallePage(id = id, navController = navController)
         }
 
         // Ruta simple para resultados sin categoría

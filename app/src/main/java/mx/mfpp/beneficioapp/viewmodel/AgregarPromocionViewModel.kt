@@ -1,20 +1,20 @@
 package mx.mfpp.beneficioapp.viewmodel
 
+import android.app.Application
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import mx.mfpp.beneficioapp.model.Promocion
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.model.PromocionRequest
+import mx.mfpp.beneficioapp.model.SessionManager
+import mx.mfpp.beneficioapp.network.RetrofitClient
 
-/**
- * ViewModel encargado de manejar el estado y lógica
- * de la pantalla de "Agregar Promociones".
- */
-class AgregarPromocionViewModel : ViewModel() {
+class AgregarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // 📸 Imagen seleccionada
+    // Campos de la UI
     val uri = mutableStateOf<Uri?>(null)
-
-    // 📝 Campos de texto
     val nombre = mutableStateOf("")
     val descripcion = mutableStateOf("")
     val descuento = mutableStateOf("")
@@ -22,53 +22,55 @@ class AgregarPromocionViewModel : ViewModel() {
     val desde = mutableStateOf("")
     val hasta = mutableStateOf("")
     val expiraEn = mutableStateOf<Int?>(null)
+    val categorias = listOf("Alimentos", "Ropa", "Entretenimiento", "Servicios", "Salud")
 
-    // 🔽 Lista de categorías disponibles
-    val categorias = listOf(
-        "Belleza", "Comida", "Educación",
-        "Salud", "Entretenimiento", "Moda", "Servicios"
-    )
+    private val sessionManager = SessionManager(application)
 
-    // ✅ Simulación de guardar promoción (puedes conectar al backend después)
+    /**
+     * Envía la promoción a la API con ID dinámico del negocio logueado.
+     */
     fun guardarPromocion(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        if (nombre.value.isBlank() || descripcion.value.isBlank() || categoria.value.isBlank()) {
-            onError("Por favor completa todos los campos obligatorios.")
-            return
+        viewModelScope.launch {
+            try {
+                val idNegocio = sessionManager.getNegocioId()
+                if (idNegocio == null || idNegocio <= 0) {
+                    onError("No se encontró el ID del negocio en la sesión.")
+                    return@launch
+                }
+
+                // ⚠️ En producción deberías convertir la imagen URI a Base64 real
+                val imagenBase64 =
+                    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/..." // temporal
+
+                val promocion = PromocionRequest(
+                    id_negocio = idNegocio,
+                    titulo = nombre.value.ifBlank { "" },
+                    descripcion = descripcion.value.ifBlank { "" },
+                    descuento = descuento.value.ifBlank { null }, // este puede ser null
+                    disponible_desde = desde.value.ifBlank { "" },
+                    hasta = hasta.value.ifBlank { "" },
+                    imagen = imagenBase64.ifBlank { "" }
+                )
+
+                Log.d("API_REQUEST", "Enviando promoción: $promocion")
+
+                val response = RetrofitClient.api.registrarPromocion(promocion)
+                if (response.isSuccessful) {
+                    Log.d("API_SUCCESS", "Promoción agregada correctamente")
+                    onSuccess()
+                } else {
+                    val errorMsg = "Error al registrar promoción: ${response.code()} ${response.message()}"
+                    Log.e("API_ERROR", errorMsg)
+                    onError(errorMsg)
+                }
+
+            } catch (e: Exception) {
+                Log.e("API_EXCEPTION", e.message ?: "Error desconocido")
+                onError("Error de conexión: ${e.message}")
+            }
         }
-
-        val nuevaPromo = Promocion(
-            id = (0..10000).random(),
-            nombre = nombre.value,
-            imagenUrl = uri.value?.toString(),
-            descuento = descuento.value,
-            categoria = categoria.value,
-            expiraEn = expiraEn.value,
-            ubicacion = "Atizapán",
-            esFavorito = false,
-            rating = null,
-            descripcion = descripcion.value
-        )
-
-        // Simula guardado exitoso (aquí podrías hacer tu POST al backend)
-        println("✅ Promoción agregada: $nuevaPromo")
-
-        // Limpiar campos tras guardar
-        limpiarCampos()
-        onSuccess()
-    }
-
-    // 🧹 Limpia los campos después de guardar
-    private fun limpiarCampos() {
-        uri.value = null
-        nombre.value = ""
-        descripcion.value = ""
-        descuento.value = ""
-        categoria.value = ""
-        desde.value = ""
-        hasta.value = ""
-        expiraEn.value = null
     }
 }

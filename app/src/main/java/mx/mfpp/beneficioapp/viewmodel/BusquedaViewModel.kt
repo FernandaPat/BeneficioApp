@@ -1,10 +1,13 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimiento
 
 /**
  * ViewModel para manejar búsqueda y filtrado de establecimientos
@@ -20,62 +23,82 @@ class BusquedaViewModel : ViewModel() {
     private val _textoBusqueda = MutableStateFlow("")
     val textoBusqueda: StateFlow<String> = _textoBusqueda.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    // Lista original completa (sin filtrar)
+    private var todosEstablecimientos: List<Establecimiento> = emptyList()
+
     init {
-        _establecimientos.value = generarEstablecimientosMock()
+        cargarEstablecimientos()
     }
 
-    fun seleccionarCategoria(categoria: String) {
-        _categoriaSeleccionada.value = categoria
-        _textoBusqueda.value = ""
-        filtrarEstablecimientos(categoria, "")
-    }
+    fun cargarEstablecimientos() {
+        _isLoading.value = true
+        _error.value = null
 
-    fun actualizarTextoBusqueda(texto: String) {
-        _textoBusqueda.value = texto
-        if (texto.isNotEmpty()) {
-            _categoriaSeleccionada.value = null
+        viewModelScope.launch {
+            try {
+                todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos()
+                aplicarFiltros()
+            } catch (e: Exception) {
+                _error.value = "Error al cargar establecimientos: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
         }
-        filtrarEstablecimientos(null, texto)
+    }
+
+    fun refrescarEstablecimientos() {
+        cargarEstablecimientos() // ya incluye aplicarFiltros()
     }
 
     fun limpiarBusqueda() {
         _categoriaSeleccionada.value = null
         _textoBusqueda.value = ""
-        _establecimientos.value = generarEstablecimientosMock()
+        aplicarFiltros()
     }
 
-    private fun filtrarEstablecimientos(categoria: String?, texto: String) {
-        val todosEstablecimientos = generarEstablecimientosMock()
+    fun clearError() {
+        _error.value = null
+    }
 
-        val establecimientosFiltrados = if (categoria != null && texto.isEmpty()) {
-            todosEstablecimientos.filter { establecimiento ->
-                establecimiento.categoria.equals(categoria, ignoreCase = true)
-            }
-        } else if (texto.isNotEmpty() && categoria == null) {
-            todosEstablecimientos.filter { establecimiento ->
-                establecimiento.nombre.contains(texto, ignoreCase = true) ||
-                        establecimiento.categoria.contains(texto, ignoreCase = true)
-            }
-        } else {
-            todosEstablecimientos
+    fun seleccionarCategoria(categoria: String) {
+        _categoriaSeleccionada.value = categoria
+        _textoBusqueda.value = "" // opcional: limpia el texto si seleccionas categoría
+        aplicarFiltros()
+    }
+
+    fun actualizarTextoBusqueda(texto: String) {
+        _textoBusqueda.value = texto
+
+        // Si estás escribiendo texto, elimina la categoría
+        if (texto.isNotEmpty()) {
+            _categoriaSeleccionada.value = null
         }
 
-        _establecimientos.value = establecimientosFiltrados
+        aplicarFiltros()
     }
 
-    private fun generarEstablecimientosMock(): List<Establecimiento> {
-        return listOf(
-            Establecimiento("1", "Spa Relajante", "Belleza", "10 min", "1.6 km", "https://picsum.photos/200/300?random=1", 4.8, false),
-            Establecimiento("2", "Salón de Belleza Glam", "Belleza", "15 min", "2.1 km", "https://picsum.photos/200/300?random=2", 4.5, true),
-            Establecimiento("3", "Pizzería Italiana", "Comida", "8 min", "1.2 km", "https://picsum.photos/200/300?random=3", 4.7, false),
-            Establecimiento("4", "Restaurante Sushi Tokyo", "Comida", "12 min", "1.8 km", "https://picsum.photos/200/300?random=4", 4.4, false),
-            Establecimiento("5", "Academia de Inglés", "Educación", "20 min", "3.2 km", "https://picsum.photos/200/300?random=5", 4.6, false),
-            Establecimiento("6", "Cine Premium", "Entretenimiento", "5 min", "0.8 km", "https://picsum.photos/200/300?random=6", 4.3, true),
-            Establecimiento("7", "Boutique Moda", "Moda", "18 min", "2.5 km", "https://picsum.photos/200/300?random=7", 4.2, false),
-            Establecimiento("8", "Clínica Dental", "Salud", "25 min", "3.8 km", "https://picsum.photos/200/300?random=8", 4.9, false),
-            Establecimiento("9", "Taller Mecánico", "Servicios", "30 min", "4.2 km", "https://picsum.photos/200/300?random=9", 4.1, false),
-            Establecimiento("10", "Sushi Bar Premium", "Comida", "7 min", "1.0 km", "https://picsum.photos/200/300?random=10", 4.8, false),
-            Establecimiento("11", "Centro de Estética", "Belleza", "12 min", "1.9 km", "https://picsum.photos/200/300?random=11", 4.6, false)
-        )
+    private fun aplicarFiltros() {
+        val categoria = _categoriaSeleccionada.value
+        val texto = _textoBusqueda.value
+
+        val filtrados = todosEstablecimientos.filter { establecimiento ->
+            val coincideCategoria = categoria?.let {
+                establecimiento.nombre_categoria.equals(it, ignoreCase = true)
+            } ?: true
+
+            val coincideTexto = texto.isEmpty() || establecimiento.nombre.contains(texto, ignoreCase = true)
+                    || establecimiento.colonia.contains(texto, ignoreCase = true)
+                    || establecimiento.nombre_categoria.contains(texto, ignoreCase = true)
+
+            coincideCategoria && coincideTexto
+        }
+
+        _establecimientos.value = filtrados
     }
 }

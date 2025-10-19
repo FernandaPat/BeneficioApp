@@ -76,9 +76,16 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.google.android.gms:play-services-maps:19.0.0")
 
+    // corutinas
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
 
     //Libreria para auth0
     implementation("com.auth0.android:auth0:2.10.2")
+    implementation("com.auth0.android:jwtdecode:2.+")
+
+    //Libreria para seguridad
+    implementation("androidx.security:security-crypto:1.0.0")
 
     implementation(libs.zxing.core)
     implementation(libs.play.services.location)

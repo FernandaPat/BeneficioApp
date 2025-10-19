@@ -1,5 +1,7 @@
 package mx.mfpp.beneficioapp.model
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * Representa una promoción o oferta disponible en la aplicación.
  *
@@ -19,15 +21,30 @@ package mx.mfpp.beneficioapp.model
  */
 data class Promocion(
     val id: Int,
+    @SerializedName("titulo_promocion")
     val nombre: String,
-    val imagenUrl: String?,
+
+
     val descuento: String?,
     val categoria: String,
     val expiraEn: Int?,
     val ubicacion: String?,
     val esFavorito: Boolean,
     val rating: Double?,
-    val descripcion: String?
+    val descripcion: String,
+    val fecha_creacion: String,
+
+    @SerializedName("fecha_expiracion")
+    val fechaExpiracion: String? = null,
+
+    @SerializedName("foto")
+    val imagenUrl: String? = null,
+
+    val estado: String,
+    @SerializedName("id_establecimiento")
+    val idNegocio: Int,
+
+    val nombre_establecimiento: String
 
 ) {
     /**

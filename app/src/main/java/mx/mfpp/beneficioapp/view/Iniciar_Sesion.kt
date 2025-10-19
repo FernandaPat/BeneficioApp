@@ -68,7 +68,7 @@ fun Iniciar_Sesion(
                 .padding(top = 3.dp)
         ) {
             // === CORREO ===
-            Etiqueta("Correo o número de teléfono", true)
+            Etiqueta("Correo", true)
             CapturaTexto(
                 placeholder = "Escribe aquí",
                 value = login.correo,
@@ -104,6 +104,14 @@ fun Iniciar_Sesion(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                if (loginState is LoginState.Error) {
+                    Text(
+                        text = (loginState as LoginState.Error).message,
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
                 BotonMorado(
                     texto = "Iniciar Sesión",
                     // Aquí le dices al botón qué hacer: llamar al ViewModel

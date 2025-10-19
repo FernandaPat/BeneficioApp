@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
@@ -15,61 +18,85 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 
-/**
- * Pantalla principal para la gestión de promociones de los negocios afiliados.
- *
- * Muestra un listado de promociones con imagen, descripción y opciones para
- * editar o eliminar cada una. Incluye un botón flotante para agregar nuevas
- * promociones y un cuadro de confirmación al eliminar.
- *
- * @param navController Controlador de navegación para manejar el flujo entre pantallas.
- * @param modifier Modificador opcional para ajustar el diseño del contenedor principal.
- */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Promociones(
     navController: NavController,
     viewModel: PromocionesViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
+    val scope = rememberCoroutineScope()
+    val promociones by viewModel.promociones.collectAsState()
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        val idNegocio = sessionManager.getNegocioId() ?: 0
+        if (idNegocio != 0) {
+            viewModel.cargarPromociones(idNegocio)
+        }
+    }
+
 
     Scaffold(
-        topBar = {
-            ArrowTopBarNegocio(
-                navController = navController,
-                text = "Promociones",
-                showAdd = true,
-                onAddClick = { navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES) }
-            )
-        }
+        topBar = { ArrowTopBar(navController, "Promociones") },
+        snackbarHost = { SnackbarHost(snackbarHostState)
+        },
+
+        // 💜 Botón flotante para agregar nuevas promociones
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES) },
+                containerColor = Color(0xFF9605F7),
+                contentColor = Color.White,
+                shape = RoundedCornerShape(50.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Agregar promoción"
+                )
+            }
+        },
+        floatingActionButtonPosition = FabPosition.End,
+        containerColor = Color.White
     ) { paddingValues ->
+
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
                 .background(Color.White)
                 .padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            itemsIndexed(viewModel.promos, key = { _, p -> p.id }) { index, promo ->
+            itemsIndexed(promociones, key = { _, p -> p.id }) { index, promo ->
                 PromoListItem(
                     promo = promo,
-                    onEdit = { navController.navigate(Pantalla.RUTA_EDITAR_PROMOCIONES) },
+                    onEdit = { navController.navigate("editarPromocion/${promo.id}") },
                     onDelete = { id -> pendingDeleteId = id }
                 )
-                if (index < viewModel.promos.lastIndex) {
-                    Divider(
+
+                if (index < promociones.lastIndex) {
+                    HorizontalDivider(
                         color = Color(0xFFEAEAEA),
                         thickness = 1.dp,
                         modifier = Modifier.padding(horizontal = 20.dp)
@@ -78,30 +105,22 @@ fun Promociones(
             }
         }
 
-        // Mostrar diálogo de confirmación al eliminar
-        val toDelete = viewModel.promos.firstOrNull { it.id == pendingDeleteId }
+        // 🔹 Diálogo de confirmación para eliminar
+        val toDelete = promociones.firstOrNull { it.id == pendingDeleteId }
         ConfirmacionEliminarDialog(
             visible = toDelete != null,
             mensaje = toDelete?.let { "¿Seguro que deseas eliminar \"${it.nombre}\"?" } ?: "",
             onDismiss = { pendingDeleteId = null },
             onConfirm = {
-                toDelete?.let { viewModel.eliminarPromocion(it.id) } // Eliminar desde la API
+                toDelete?.let {
+                    scope.launch { viewModel.eliminarPromocion(it.id) }
+                }
                 pendingDeleteId = null
             }
         )
-
     }
 }
-/**
- * Elemento individual del listado de promociones.
- *
- * Contiene la imagen, el título, la descripción y los botones de acción
- * para editar o eliminar una promoción.
- *
- * @param promo Objeto de tipo [Promocion] que contiene los datos a mostrar.
- * @param onEdit Callback que se ejecuta al presionar el botón de edición.
- * @param onDelete Callback que se ejecuta al presionar el botón de eliminación.
- */
+
 @Composable
 private fun PromoListItem(
     promo: Promocion,
@@ -115,11 +134,12 @@ private fun PromoListItem(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // 🖼️ Imagen de promoción (o contenedor vacío si no hay)
         Box(
             modifier = Modifier
-                .size(100.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFEFF3FF)),
+                .size(80.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF4F4F4)),
             contentAlignment = Alignment.Center
         ) {
             if (!promo.imagenUrl.isNullOrBlank()) {
@@ -131,6 +151,7 @@ private fun PromoListItem(
                 )
             }
         }
+
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -146,11 +167,12 @@ private fun PromoListItem(
             Text(
                 text = promo.descripcion ?: "Descripción",
                 style = MaterialTheme.typography.bodyMedium.copy(
-                    color = Color(0xFF9E9E9E),
-                    fontSize = 15.sp
+                    color = Color.Gray,
+                    fontSize = 14.sp
                 )
             )
         }
+
         IconButton(onClick = { onEdit(promo.id) }) {
             Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Editar", tint = Color.Black)
         }
@@ -159,17 +181,8 @@ private fun PromoListItem(
         }
     }
 }
-/**
- * Diálogo de confirmación para eliminar una promoción.
- *
- * Se muestra cuando el usuario selecciona la opción de eliminar.
- * Contiene botones para confirmar o cancelar la acción.
- *
- * @param visible Indica si el diálogo está visible.
- * @param mensaje Texto del mensaje de confirmación.
- * @param onConfirm Acción a ejecutar al confirmar la eliminación.
- * @param onDismiss Acción a ejecutar al cerrar el diálogo sin confirmar.
- */
+
+
 @Composable
 fun ConfirmacionEliminarDialog(
     visible: Boolean,
@@ -179,7 +192,7 @@ fun ConfirmacionEliminarDialog(
 ) {
     if (!visible) return
 
-    val accent = Color(0xFF9605f7)
+    val moradoTexto = Color(0xFF9605F7)
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -193,16 +206,18 @@ fun ConfirmacionEliminarDialog(
                     .widthIn(min = 280.dp, max = 360.dp)
                     .padding(bottom = 16.dp)
             ) {
+                // 🔹 Encabezado decorativo morado (igual que el de cerrar sesión)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp)
                         .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                        .background(accent.copy(alpha = 0.25f))
+                        .background(moradoTexto.copy(alpha = 0.25f))
                 )
 
                 Spacer(Modifier.height(16.dp))
 
+                // 🔹 Texto principal
                 Text(
                     text = mensaje,
                     color = Color.Black,
@@ -215,6 +230,7 @@ fun ConfirmacionEliminarDialog(
 
                 Spacer(Modifier.height(24.dp))
 
+                // 🔹 Botones de acción
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -225,7 +241,7 @@ fun ConfirmacionEliminarDialog(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(999.dp),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = accent
+                            contentColor = moradoTexto
                         ),
                         border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
                         modifier = Modifier.weight(1f)
@@ -233,11 +249,14 @@ fun ConfirmacionEliminarDialog(
                         Text("No")
                     }
                     Button(
-                        onClick = onConfirm,
+                        onClick = {
+                            onConfirm()
+                            onDismiss()
+                        },
                         shape = RoundedCornerShape(999.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = accent.copy(alpha = 0.25f),
-                            contentColor = accent
+                            containerColor = moradoTexto.copy(alpha = 0.25f),
+                            contentColor = moradoTexto
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
@@ -248,17 +267,4 @@ fun ConfirmacionEliminarDialog(
         }
     }
 }
-/**
- * Vista previa de la pantalla de promociones.
- *
- * Permite visualizar el listado y el estilo de los elementos
- * directamente en el editor de Jetpack Compose.
- */
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PromocionesPreview() {
-    MaterialTheme {
-        val navController = rememberNavController()
-        Promociones(navController)
-    }
-}
+
