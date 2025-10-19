@@ -46,7 +46,7 @@ fun Iniciar_Sesion_Negocio(
     LaunchedEffect(loginState) {
         when (val state: LoginStateNegocio = loginState){
             is LoginStateNegocio.Success -> {
-                navController.navigate(Pantalla.RUTA_INICIONEGOCIO_APP){
+                navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO){
                     popUpTo(Pantalla.RUTA_INICIAR_SESION){inclusive = true}
                 }
                 viewModel.resetState()

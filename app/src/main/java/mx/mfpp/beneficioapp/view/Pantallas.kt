@@ -47,7 +47,6 @@ sealed class Pantalla(
         const val RUTA_QR_PROMOCION = "QRPromocionPage"
         const val RUTA_PERFIL_APP = "PerfilPage"
         const val RUTA_LOGIN_APP = "LoginPage"
-        const val RUTA_INICIONEGOCIO_APP = "InicioNegocioPage" //Negocio
         const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
         const val RUTA_INICIO_APP = "InicioPage" //Joven
         const val RUTA_MAPA_APP = "MapaPage"
@@ -64,6 +63,8 @@ sealed class Pantalla(
         const val RUTA_EDITAR_PROMOCIONES = "editarPromocion/{id}s"
         const val RUTA_RESULTADOS_APP = "resultados_app"
         const val RUTA_NEGOCIODETALLE_APP = "NegocioDetallePage"
+
+        const val RUTA_NOTIFICACIONES_NEGOCIO = "notificaciones_negocio"
 
         /**
          * Ruta parametrizada para resultados con categoría específica.
@@ -130,4 +131,6 @@ sealed class Pantalla(
      * Pantalla de perfil del negocio.
      */
     object NegocioPERFIL: Pantalla(RUTA_PERFIL_NEGOCIO, "Perfil", R.drawable.user)
+
+    object NegocioNOTIFICACIONES: Pantalla(RUTA_NOTIFICACIONES_NEGOCIO, "Notificaciones", R.drawable.bell)
 }
