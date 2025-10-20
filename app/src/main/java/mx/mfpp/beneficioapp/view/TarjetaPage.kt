@@ -38,6 +38,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
     val sessionManager = remember { SessionManager(context) }
 
     val folioTarjeta = sessionManager.getFolioTarjeta().toString()
+    val nombreJoven = sessionManager.getNombreJoven().toString()
 
 
     Scaffold { paddingValues ->
@@ -54,17 +55,9 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(55.dp))
             TextoMedioGrande(folioTarjeta , modifier)
             Spacer(modifier = Modifier.height(50.dp))
+            TextoMedioGrande(nombreJoven , modifier)
+            Spacer(modifier = Modifier.height(50.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                BotonMorado(navController, "Solicitar tarjeta física", Pantalla.RUTA_SOLICITUD_APP)
-                BotonBlanco(navController, "Ver estatus de la solicitud", Pantalla.RUTA_ESTATUS_SOLICITUD_APP)
-            }
         }
     }
 }
