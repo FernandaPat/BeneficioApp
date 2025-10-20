@@ -50,6 +50,8 @@ import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
  * @param modifier Modificador de Composable para personalizar el layout
  */
 // En mx.mfpp.beneficioapp.view.ResultadosPage
+// ResultadosPage.kt - VERSIÓN CORREGIDA
+// En ResultadosPage.kt - asegúrate de pasar el contexto
 @Composable
 fun ResultadosPage(
     navController: NavController,
@@ -64,83 +66,82 @@ fun ResultadosPage(
     val categoriaSeleccionadaState by busquedaViewModel.categoriaSeleccionada.collectAsState()
     val isLoading by busquedaViewModel.isLoading.collectAsState()
     val error by busquedaViewModel.error.collectAsState()
-    val context = LocalContext.current
+
+    val context = LocalContext.current // 🔹 Obtener contexto aquí
     val sessionManager = remember { SessionManager(context) }
-
-    val favoritosViewModel = remember {
-        FavoritosViewModel(sessionManager)
-    }
-
+    val favoritosViewModel = remember { FavoritosViewModel(sessionManager) }
     val mensajeFavoritos by favoritosViewModel.mensaje.collectAsState()
 
+    // 🔹 CORRECCIÓN: Recargar favoritos al entrar a la pantalla
+    LaunchedEffect(Unit) {
+        busquedaViewModel.recargarFavoritos(context) // 🔹 Pasar contexto
+    }
+
     LaunchedEffect(categoriaSeleccionada) {
-        categoriaSeleccionada?.let {
-            busquedaViewModel.seleccionarCategoria(it)
-        }
+        categoriaSeleccionada?.let { busquedaViewModel.seleccionarCategoria(it) }
     }
 
     LaunchedEffect(mensajeFavoritos) {
         mensajeFavoritos?.let { mensaje ->
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             favoritosViewModel.clearMensaje()
-            busquedaViewModel.refrescarEstablecimientosConFavoritos(context)
+
+            if (mensaje.contains("Error de conexión") || mensaje.contains("Sesión inválida")) {
+                busquedaViewModel.recargarFavoritos(context)
+            }
         }
     }
 
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
-    Scaffold(
-        topBar = { HomeTopBar(nombreJoven,navController) }
-    ) { paddingValues ->
+    Scaffold(topBar = { HomeTopBar(nombreJoven, navController) }) { paddingValues ->
         when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
+            isLoading -> Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
-            error != null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Error al cargar establecimientos", color = Color.Red, fontSize = 16.sp)
-                        Text(error ?: "Error desconocido", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
-                        Button(onClick = { busquedaViewModel.refrescarEstablecimientos() }, modifier = Modifier.padding(top = 16.dp)) {
-                            Text("Reintentar")
-                        }
+            error != null -> Box(
+                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Error al cargar establecimientos", color = Color.Red, fontSize = 16.sp)
+                    Text(error ?: "Error desconocido", color = Color.Gray, fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 8.dp))
+                    Button(
+                        onClick = { busquedaViewModel.recargarFavoritos(context) }, // 🔹 Pasar contexto
+                        modifier = Modifier.padding(top = 16.dp)
+                    ) {
+                        Text("Reintentar")
                     }
                 }
             }
-            else -> {
-                ResultadosPageContent(
-                    establecimientos = establecimientos,
-                    categorias = categorias,
-                    categoriaSeleccionada = categoriaSeleccionadaState,
-                    searchText = searchText,
-                    onCategoriaSeleccionada = busquedaViewModel::seleccionarCategoria,
-                    onEstablecimientoClick = { id -> navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id") },
-                    onToggleFavorito = { idEstablecimiento ->
-                        val establecimiento = establecimientos.find {
-                            it.id_establecimiento == idEstablecimiento
-                        }
-                        establecimiento?.let {
-                            favoritosViewModel.toggleFavorito(
-                                idEstablecimiento = idEstablecimiento,
-                                esFavoritoActual = it.es_favorito
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(paddingValues)
-                )
-            }
+            else -> ResultadosPageContent(
+                establecimientos = establecimientos,
+                categorias = categorias,
+                categoriaSeleccionada = categoriaSeleccionadaState,
+                searchText = searchText,
+                onCategoriaSeleccionada = busquedaViewModel::seleccionarCategoria,
+                onEstablecimientoClick = { id ->
+                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/$id")
+                },
+                onToggleFavorito = { idEstablecimiento ->
+                    val establecimiento = establecimientos.find { it.id_establecimiento == idEstablecimiento }
+                    establecimiento?.let {
+                        favoritosViewModel.toggleFavorito(
+                            idEstablecimiento = idEstablecimiento,
+                            esFavoritoActual = it.es_favorito,
+                            busquedaViewModel = busquedaViewModel
+                        )
+                    }
+                },
+                modifier = Modifier.padding(paddingValues)
+            )
         }
     }
 }
-
 
 @Composable
 fun ResultadosPageContent(
@@ -320,7 +321,7 @@ fun CategoriasResultados(
     }
 }
 
-// ItemEstablecimiento se mantiene igual
+// ItemEstablecimiento.kt - VERSIÓN MEJORADA
 @Composable
 fun ItemEstablecimiento(
     establecimiento: Establecimiento,
@@ -328,7 +329,10 @@ fun ItemEstablecimiento(
     onToggleFavorito: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val esFavorito= establecimiento.es_favorito
+    // 🔹 MEJORADO: Estado local para feedback inmediato
+    var esFavorito by remember(establecimiento.es_favorito) {
+        mutableStateOf(establecimiento.es_favorito)
+    }
 
     Column(
         modifier = modifier
@@ -374,7 +378,11 @@ fun ItemEstablecimiento(
             }
 
             IconButton(
-                onClick = onToggleFavorito,
+                onClick = {
+                    // 🔹 FEEDBACK INMEDIATO
+                    esFavorito = !esFavorito
+                    onToggleFavorito()
+                },
                 modifier = Modifier.size(36.dp)
             ) {
                 Icon(
@@ -387,6 +395,7 @@ fun ItemEstablecimiento(
         }
     }
 }
+
 
 /**
  * Item individual de categoría en forma circular.
