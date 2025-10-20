@@ -10,7 +10,6 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.ServicioRemotoFavoritos
 import mx.mfpp.beneficioapp.model.SessionManager
 
-/// FavoritosViewModel.kt - VERSIÓN CORREGIDA (sin contexto)
 class FavoritosViewModel(
     private val sessionManager: SessionManager
 ) : ViewModel() {
@@ -30,7 +29,6 @@ class FavoritosViewModel(
         onUpdateDetalle: ((Boolean) -> Unit)? = null
     ) {
         if (_operacionesEnProgreso.contains(idEstablecimiento)) {
-            Log.d("FAVORITOS_VM", "⏳ Operación ya en progreso para $idEstablecimiento")
             return
         }
 
@@ -47,30 +45,21 @@ class FavoritosViewModel(
             }
 
             try {
-                Log.d("FAVORITOS_VM", "🔄 Iniciando toggle: $idEstablecimiento - Estado actual: $esFavoritoActual")
-
                 val resultado = if (esFavoritoActual) {
-                    Log.d("FAVORITOS_VM", "🗑️ Eliminando favorito: $idEstablecimiento")
                     ServicioRemotoFavoritos.eliminarFavorito(idUsuario, idEstablecimiento)
                 } else {
-                    Log.d("FAVORITOS_VM", "❤️ Agregando favorito: $idEstablecimiento")
                     ServicioRemotoFavoritos.agregarFavorito(idUsuario, idEstablecimiento)
                 }
 
                 resultado.onSuccess { mensaje ->
                     _mensaje.value = mensaje
-                    Log.d("FAVORITOS_VM", "✅ $mensaje")
 
                     val nuevoEstado = !esFavoritoActual
-                    Log.d("FAVORITOS_VM", "🎯 Nuevo estado: $nuevoEstado")
 
-                    // 🔹 ACTUALIZAR ESTADO LOCAL INMEDIATAMENTE
                     busquedaViewModel?.actualizarFavoritoLocal(idEstablecimiento, nuevoEstado)
                     onUpdateDetalle?.invoke(nuevoEstado)
 
                 }.onFailure { error ->
-                    Log.e("FAVORITOS_VM", "❌ Error en toggle: ${error.message}", error)
-
                     val mensajeError = when {
                         error.message?.contains("Ya está en favoritos", ignoreCase = true) == true ->
                             "Este establecimiento ya está en favoritos"
@@ -83,22 +72,17 @@ class FavoritosViewModel(
                     }
                     _mensaje.value = mensajeError
 
-                    // 🔹 MEJOR MANEJO DE ERROR 409
+                    // 🔹 REVERTIR ESTADO EN CASO DE ERROR
                     if (error.message?.contains("409") == true ||
                         error.message?.contains("Ya está en favoritos", ignoreCase = true) == true) {
-                        // Si intentamos agregar y ya existe, forzar estado a true
                         if (!esFavoritoActual) {
-                            Log.d("FAVORITOS_VM", "🔄 Forzando estado a TRUE por error 409")
                             busquedaViewModel?.actualizarFavoritoLocal(idEstablecimiento, true)
                             onUpdateDetalle?.invoke(true)
                         }
-                        // 🔹 CORRECCIÓN: No podemos recargar aquí sin contexto,
-                        // la recarga se hace desde la UI
                     }
                 }
             } catch (e: Exception) {
                 _mensaje.value = "Error de conexión: ${e.message}"
-                Log.e("FAVORITOS_VM", "❌ Exception: ${e.message}", e)
             } finally {
                 _isLoading.value = false
                 _operacionesEnProgreso.remove(idEstablecimiento)

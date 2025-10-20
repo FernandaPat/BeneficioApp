@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.model.PromocionJoven
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
@@ -41,28 +42,23 @@ fun NegocioDetallePage(
     val establecimientoId = id?.toIntOrNull() ?: 0
     val context = LocalContext.current
 
-    // 🔹 NUEVO: Recargar favoritos al entrar a la pantalla
     LaunchedEffect(establecimientoId) {
-        busquedaViewModel.recargarFavoritos(context) // Pasar context explícitamente
+        busquedaViewModel.recargarFavoritos(context)
     }
 
-    // 🔹 MEJORADO: Usar derivedStateOf para reactividad
     val establecimientoOriginal by remember(establecimientos, establecimientoId) {
         derivedStateOf {
             establecimientos.find { it.id_establecimiento == establecimientoId }
         }
     }
 
-    // 🔹 CORRECCIÓN: Estado local sincronizado con el ViewModel
     var esFavorito by remember(establecimientoOriginal) {
         mutableStateOf(establecimientoOriginal?.es_favorito ?: false)
     }
 
-    // 🔹 ACTUALIZAR cuando cambie el establecimiento original
     LaunchedEffect(establecimientoOriginal) {
         establecimientoOriginal?.let {
             esFavorito = it.es_favorito
-            Log.d("NEGOCIO_DETALLE", "🔄 Establecimiento actualizado: ${it.nombre} - Favorito: ${it.es_favorito}")
         }
     }
 
@@ -74,7 +70,7 @@ fun NegocioDetallePage(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Establecimiento no encontrado", color = Color.Red, fontSize = 18.sp)
                 Button(
-                    onClick = { busquedaViewModel.recargarFavoritos(context) }, // Pasar context
+                    onClick = { busquedaViewModel.recargarFavoritos(context) },
                     modifier = Modifier.padding(top = 16.dp)
                 ) {
                     Text("Reintentar carga")
@@ -93,11 +89,8 @@ fun NegocioDetallePage(
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             favoritosViewModel.clearMensaje()
 
-            // 🔹 NUEVO: Recargar favoritos después de cualquier operación
-            if (mensaje.contains("Error") || mensaje.contains("ya está") ||
-                mensaje.contains("Agregado") || mensaje.contains("Eliminado")) {
-                busquedaViewModel.recargarFavoritos(context) // Pasar context
-            }
+            // 🔹 CAMBIO CRÍTICO: NO recargar favoritos después de operaciones
+            // Solo actualizamos el estado local, no recargamos toda la lista
         }
     }
 
@@ -122,43 +115,21 @@ fun NegocioDetallePage(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
-                    AsyncImage(
-                        model = establecimientoOriginal!!.foto ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
-                        contentDescription = "Imagen del negocio",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    IconButton(
-                        onClick = {
-                            Log.d("NEGOCIO_DETALLE", "❤️ Toggle favorito: $establecimientoId - Estado actual: $esFavorito")
-                            favoritosViewModel.toggleFavorito(
-                                idEstablecimiento = establecimientoOriginal!!.id_establecimiento,
-                                esFavoritoActual = esFavorito,
-                                busquedaViewModel = busquedaViewModel,
-                                onUpdateDetalle = { nuevoEstado ->
-                                    // 🔹 CORRECCIÓN: Actualizar estado local inmediatamente
-                                    esFavorito = nuevoEstado
-                                    Log.d("NEGOCIO_DETALLE", "✅ Estado actualizado localmente: $nuevoEstado")
-                                }
-                            )
-                        },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(16.dp)
-                            .size(54.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color.White.copy(alpha = 0.8f))
-                    ) {
-                        Icon(
-                            imageVector = if (esFavorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (esFavorito) "Quitar de favoritos" else "Agregar a favoritos",
-                            tint = if (esFavorito) Color.Red else Color.Gray,
-                            modifier = Modifier.size(32.dp)
+                // 🔹 MOVER la imagen fuera del bloque que podría recargarse
+                NegocioDetalleHeader(
+                    establecimiento = establecimientoOriginal!!,
+                    esFavorito = esFavorito,
+                    onToggleFavorito = {
+                        favoritosViewModel.toggleFavorito(
+                            idEstablecimiento = establecimientoOriginal!!.id_establecimiento,
+                            esFavoritoActual = esFavorito,
+                            busquedaViewModel = busquedaViewModel,
+                            onUpdateDetalle = { nuevoEstado ->
+                                esFavorito = nuevoEstado
+                            }
                         )
                     }
-                }
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -232,6 +203,40 @@ fun NegocioDetallePage(
             }
 
             item { Spacer(modifier = Modifier.height(80.dp)) }
+        }
+    }
+}
+
+// 🔹 NUEVO COMPONENTE: Header separado para evitar recargas
+@Composable
+fun NegocioDetalleHeader(
+    establecimiento: Establecimiento,
+    esFavorito: Boolean,
+    onToggleFavorito: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
+        AsyncImage(
+            model = establecimiento.foto ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+            contentDescription = "Imagen del negocio",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        IconButton(
+            onClick = onToggleFavorito,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .size(54.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.8f))
+        ) {
+            Icon(
+                imageVector = if (esFavorito) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = if (esFavorito) "Quitar de favoritos" else "Agregar a favoritos",
+                tint = if (esFavorito) Color.Red else Color.Gray,
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }

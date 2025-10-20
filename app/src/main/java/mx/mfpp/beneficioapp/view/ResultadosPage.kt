@@ -86,9 +86,8 @@ fun ResultadosPage(
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             favoritosViewModel.clearMensaje()
 
-            // 🔹 SOLO recargar si el mensaje indica que necesitamos sincronizar
-            if (mensaje.contains("Error") || mensaje.contains("ya está")) {
-                busquedaViewModel.recargarFavoritos(context) // 🔹 Pasar contexto
+            if (mensaje.contains("Error de conexión") || mensaje.contains("Sesión inválida")) {
+                busquedaViewModel.recargarFavoritos(context)
             }
         }
     }
