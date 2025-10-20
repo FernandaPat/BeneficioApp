@@ -72,8 +72,11 @@ class CrearCuentaViewModel : ViewModel() {
                     onResult(false, mensajeError)
                 }
             } catch (e: Exception) {
-                onResult(false, e.message ?: "Error desconocido")
+                e.printStackTrace()
+                val mensaje = mx.mfpp.beneficioapp.utils.ErrorHandler.obtenerMensajeError(e)
+                onResult(false, mensaje)
             }
+
         }
     }
 }

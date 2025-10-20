@@ -1,7 +1,10 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -10,6 +13,9 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.AgregarPromocionRequest
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.network.RetrofitClient
+import mx.mfpp.beneficioapp.utils.ErrorHandler
+import java.io.ByteArrayOutputStream
+import java.io.File
 
 class AgregarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -29,6 +35,75 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
     /**
      * Envía la promoción a la API con ID dinámico del negocio logueado.
      */
+    fun compressImageToBase64(imageFile: File, maxSizeKB: Int = 500): String {
+        try {
+            // 1. Leer imagen
+            val bitmap = BitmapFactory.decodeFile(imageFile.absolutePath)
+
+            if (bitmap == null) {
+                Log.e("PromocionService", "❌ No se pudo decodificar la imagen")
+                return ""
+            }
+
+            Log.d("PromocionService", "📸 Imagen original: ${bitmap.width}x${bitmap.height}")
+
+            // 2. Redimensionar si es muy grande
+            val maxWidth = 1200
+            val maxHeight = 1200
+            val scaledBitmap = if (bitmap.width > maxWidth || bitmap.height > maxHeight) {
+                val ratio = Math.min(
+                    maxWidth.toFloat() / bitmap.width,
+                    maxHeight.toFloat() / bitmap.height
+                )
+                val newWidth = (bitmap.width * ratio).toInt()
+                val newHeight = (bitmap.height * ratio).toInt()
+
+                Log.d("PromocionService", "🔄 Redimensionando a: ${newWidth}x${newHeight}")
+                Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+            } else {
+                bitmap
+            }
+
+            // 3. Comprimir con calidad variable hasta llegar al tamaño deseado
+            var quality = 90
+            var base64String = ""
+
+            do {
+                val outputStream = ByteArrayOutputStream()
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream)
+                val byteArray = outputStream.toByteArray()
+
+                base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+                val sizeKB = byteArray.size / 1024
+                Log.d("PromocionService", "📊 Calidad: $quality%, Tamaño: ${sizeKB}KB, Base64: ${base64String.length} chars")
+
+                if (sizeKB <= maxSizeKB || quality <= 10) {
+                    break
+                }
+
+                quality -= 10
+            } while (true)
+
+            // 4. Agregar prefijo data:image
+            val finalBase64 = "data:image/jpeg;base64,$base64String"
+
+            Log.d("PromocionService", "✅ Conversión completa: ${finalBase64.length} caracteres")
+
+            // Limpiar
+            if (scaledBitmap != bitmap) {
+                scaledBitmap.recycle()
+            }
+            bitmap.recycle()
+
+            return finalBase64
+
+        } catch (e: Exception) {
+            Log.e("PromocionService", "❌ Error comprimiendo imagen: ${e.message}", e)
+            return ""
+        }
+    }
+
     fun guardarPromocion(
         onSuccess: () -> Unit,
         onError: (String) -> Unit
@@ -69,8 +144,10 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
 
             } catch (e: Exception) {
                 Log.e("API_EXCEPTION", e.message ?: "Error desconocido")
-                onError("Error de conexión: ${e.message}")
+                val mensaje = ErrorHandler.obtenerMensajeError(e)
+                onError(mensaje)
             }
+
         }
     }
 }

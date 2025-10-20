@@ -8,8 +8,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.network.RetrofitClient
+import mx.mfpp.beneficioapp.utils.ErrorHandler
 import retrofit2.HttpException
-import java.io.IOException
 
 class EditarPromocionViewModel : ViewModel() {
 
@@ -28,9 +28,12 @@ class EditarPromocionViewModel : ViewModel() {
     var error = mutableStateOf<String?>(null)
         private set
 
+    var mensajeExito = mutableStateOf<String?>(null)
+        private set
+
 
     /**
-     * Obtiene la promoción desde la API por su ID
+     * 🔹 Cargar una promoción por ID
      */
     fun cargarPromocionPorId(idPromocion: Int) {
         viewModelScope.launch {
@@ -40,12 +43,9 @@ class EditarPromocionViewModel : ViewModel() {
                 Log.d("EDITAR_PROMO_DEBUG", "Cargando promoción con ID = $idPromocion")
                 val response = RetrofitClient.api.obtenerPromocionPorId(idPromocion)
                 promocion.value = response
-            } catch (e: HttpException) {
-                Log.e("EDITAR_PROMO_DEBUG", "Error HTTP ${e.code()}: ${e.message()}")
-                error.value = "Error HTTP: ${e.message()}"
             } catch (e: Exception) {
-                Log.e("EDITAR_PROMO_DEBUG", "Error inesperado: ${e.message}")
-                error.value = "Error: ${e.message}"
+                e.printStackTrace()
+                error.value = ErrorHandler.obtenerMensajeError(e)
             } finally {
                 isLoading.value = false
             }
@@ -54,24 +54,39 @@ class EditarPromocionViewModel : ViewModel() {
 
 
     /**
-     * Actualiza una promoción (PATCH o PUT en la API)
+     * 🔹 Guardar cambios (PUT)
      */
-    fun guardarCambios() {
+    fun guardarCambios(
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
         val promoActual = promocion.value ?: return
+
         viewModelScope.launch {
             isLoading.value = true
             error.value = null
+            mensajeExito.value = null
+
             try {
-                RetrofitClient.api.actualizarPromocion(
+                val response = RetrofitClient.api.actualizarPromocion(
                     promoActual.id,
                     promoActual
                 )
-            } catch (e: IOException) {
-                error.value = "Error de red: ${e.message}"
-            } catch (e: HttpException) {
-                error.value = "Error del servidor: ${e.message}"
+
+                if (response.isSuccessful) {
+                    mensajeExito.value = "Promoción actualizada con éxito 🎉"
+                    onSuccess()
+                } else {
+                    val mensaje = "Error al actualizar: ${response.code()} ${response.message()}"
+                    error.value = mensaje
+                    onError(mensaje)
+                }
+
             } catch (e: Exception) {
-                error.value = "Error desconocido: ${e.message}"
+                e.printStackTrace()
+                val mensaje = ErrorHandler.obtenerMensajeError(e)
+                error.value = mensaje
+                onError(mensaje)
             } finally {
                 isLoading.value = false
             }

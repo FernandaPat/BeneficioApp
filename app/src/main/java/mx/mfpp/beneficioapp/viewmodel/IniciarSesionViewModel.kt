@@ -16,6 +16,7 @@ import mx.mfpp.beneficioapp.model.LoginRequest
 import androidx.core.content.edit
 import mx.mfpp.beneficioapp.model.SessionManager
 import com.auth0.android.jwt.JWT
+import mx.mfpp.beneficioapp.utils.AuthErrorUtils
 
 sealed class LoginState {
     object Idle : LoginState()
@@ -112,16 +113,11 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
 
                 override fun onFailure(error: AuthenticationException) {
                     Log.e("AUTH0_ERROR", "${error.getCode()}: ${error.getDescription()}")
-
-                    val errorMessage = when (error.getCode()) {
-                        "invalid_grant", "invalid_user_password" -> "Email o contraseña incorrectos"
-                        "too_many_attempts" -> "Demasiados intentos"
-                        "unauthorized" -> "Acceso no autorizado"
-                        else -> error.getDescription()
-                    }
-
-                    _loginState.value = LoginState.Error(errorMessage)
+                    val mensaje = AuthErrorUtils.obtenerMensaje(error)
+                    _loginState.value = LoginState.Error(mensaje)
                 }
+
+
             })
     }
 
