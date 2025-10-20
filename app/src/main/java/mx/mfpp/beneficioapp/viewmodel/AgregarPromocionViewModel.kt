@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.PromocionRequest
+import mx.mfpp.beneficioapp.model.AgregarPromocionRequest
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.network.RetrofitClient
 import mx.mfpp.beneficioapp.utils.ErrorHandler
@@ -48,7 +48,7 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
                 // ✅ Convierte la imagen seleccionada (si existe) a Base64 real
                 val imagenBase64 = uri.value?.let { ImageUtils.uriToBase64(context, it) } ?: ""
 
-                val promocion = PromocionRequest(
+                val promocion = AgregarPromocionRequest(
                     id_negocio = idNegocio,
                     titulo = nombre.value.ifBlank { "" },
                     descripcion = descripcion.value.ifBlank { "" },

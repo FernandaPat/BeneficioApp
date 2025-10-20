@@ -1,5 +1,5 @@
 package mx.mfpp.beneficioapp.model
-data class PromocionRequest(
+data class AgregarPromocionRequest(
     val id_negocio: Int,
     val titulo: String?,
     val descripcion: String?,
