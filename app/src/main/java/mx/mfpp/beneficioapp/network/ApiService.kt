@@ -2,8 +2,8 @@ package mx.mfpp.beneficioapp.network
 
 import mx.mfpp.beneficioapp.model.CrearCuentaRequest
 import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.model.PromocionRequest
-import mx.mfpp.beneficioapp.model.PromocionesResponse
+import mx.mfpp.beneficioapp.model.AgregarPromocionRequest
+import mx.mfpp.beneficioapp.model.AgregarPromocionResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -21,13 +21,13 @@ interface ApiService {
     @Headers("Content-Type: application/json")
     @POST("registroPromocion")
     suspend fun registrarPromocion(
-        @Body promocion: PromocionRequest
+        @Body promocion: AgregarPromocionRequest
     ): Response<Unit>
 
     @GET("promociones")
     suspend fun obtenerPromociones(
         @Query("establecimiento_id") establecimientoId: Int
-    ): PromocionesResponse
+    ): AgregarPromocionResponse
     @DELETE("deletePromocion/{id}")
     suspend fun eliminarPromocion(@Path("id") id: Int): retrofit2.Response<Unit>
 

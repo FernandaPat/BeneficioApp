@@ -1,5 +1,5 @@
 package mx.mfpp.beneficioapp.model
 
-data class PromocionesResponse(
+data class AgregarPromocionResponse(
     val data: List<Promocion>
 )
