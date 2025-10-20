@@ -45,6 +45,7 @@ import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
+import java.net.URLDecoder
 import kotlin.getValue
 
 /**
@@ -124,7 +125,11 @@ fun AppPrincipal(
         Pantalla.RUTA_AGREGAR_PROMOCIONES,
         Pantalla.RUTA_EDITAR_PROMOCIONES,
         Pantalla.RUTA_SCANER_NEGOCIO,
-        Pantalla.RUTA_QR_PROMOCION
+        Pantalla.RUTA_QR_PROMOCION,
+        Pantalla.RUTA_ACERCADE_APP,
+        Pantalla.RUTA_AYUDA_APP,
+        Pantalla.RUTA_CAMBIARCONTRASENA_APP,
+        Pantalla.RUTA_DATOSPERSONALES_APP
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -216,6 +221,18 @@ fun AppNavHost(
             val id = backStackEntry.arguments?.getInt("id") ?: 0
             Editar_Promociones(navController = navController, idPromocion = id)
         }
+        composable(Pantalla.RUTA_ACERCADE_APP) {
+            AcercaDePage(navController)
+        }
+        composable(Pantalla.RUTA_AYUDA_APP) {
+            AyudaPage(navController)
+        }
+        composable(Pantalla.RUTA_CAMBIARCONTRASENA_APP) {
+            CambiarContrasenaPage(navController)
+        }
+        composable(Pantalla.RUTA_DATOSPERSONALES_APP) {
+            VerDatosPersonalesPage(navController)
+        }
 
         composable(Pantalla.RUTA_INICIAR_SESION_NEGOCIO) {
             Iniciar_Sesion_Negocio(navController)
@@ -261,6 +278,22 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             ActividadPage(navController)
+        }
+        composable(Pantalla.RUTA_QR_SCANNER_SCREEN) {
+            QrScannerScreen(navController)
+        }
+        composable(
+            route = "${Pantalla.RUTA_DETALLEPROMOCION_APP}/{qrData}",
+            arguments = listOf(navArgument("qrData") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val qrData = backStackEntry.arguments?.getString("qrData")?.let {
+                URLDecoder.decode(it, "UTF-8")
+            } ?: ""
+
+            DetallePromocionScreen(
+                navController = navController,
+                qrData = qrData
+            )
         }
 
         // Rutas de búsqueda y resultados

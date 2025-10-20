@@ -61,46 +61,35 @@ import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
-    val viewModel: PerfilViewModel = viewModel ()
+    val viewModel: PerfilViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvent.collect {
-            navController.navigate(Pantalla.RUTA_JN_APP){
+            navController.navigate(Pantalla.RUTA_JN_APP) {
                 popUpTo(0)
             }
         }
     }
 
-
     val moradoClaro = Color(0xFFE9D4FF)
-    val moradoBoton = Color(0xFFD5A8FF)
     val moradoTexto = Color(0xFF9605F7)
     var uri by rememberSaveable { mutableStateOf<Uri?>(null) }
 
-    val pickImage =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { result: Uri? ->
-            uri = result
-        }
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { result: Uri? ->
+        uri = result
+    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
+        modifier = Modifier.fillMaxSize().background(Color.White)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-            // Encabezado superior
+            // === ENCABEZADO ===
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(moradoClaro)
-                    .height(180.dp)
+                modifier = Modifier.fillMaxWidth().background(moradoClaro).height(180.dp)
             ) {
                 IconButton(
                     onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 16.dp)
+                    modifier = Modifier.align(Alignment.CenterStart).padding(start = 16.dp)
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.arrow_back),
@@ -111,81 +100,50 @@ fun PerfilPage(navController: NavController) {
                 }
 
                 Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 80.dp),
+                    modifier = Modifier.size(160.dp).align(Alignment.BottomCenter).offset(y = 80.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Fondo redondeado
                     Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clip(CircleShape)
+                        modifier = Modifier.matchParentSize().clip(CircleShape)
                             .background(Color(0xFFF5F5F5))
                     )
-
                     if (uri == null) {
                         IconButton(
                             onClick = { pickImage.launch("image/*") },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = Color(0xFF9605F7)
-                            ),
-                            modifier = Modifier
-                                .size(160.dp)
-                                .clip(CircleShape)
+                            modifier = Modifier.size(160.dp).clip(CircleShape)
                         ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Seleccionar imagen"
-                            )
+                            Icon(Icons.Filled.Add, contentDescription = "Seleccionar imagen")
                         }
                     } else {
                         AsyncImage(
                             model = uri,
                             contentDescription = "Imagen de perfil",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
+                            modifier = Modifier.matchParentSize().clip(CircleShape)
                         )
-
-                        IconButton(
-                            onClick = { pickImage.launch("image/*") },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.6f))
-                                .zIndex(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Cambiar imagen",
-                                tint = Color.White
-                            )
-                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(Modifier.height(100.dp))
             Text(
                 text = "Nombre completo",
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black,
-                fontSize = 20.sp,
+                fontSize = 20.sp
             )
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(Modifier.height(25.dp))
 
             // Sección: Ajustes de cuenta
             SeccionOpciones(
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
-                    OpcionData(R.drawable.lock, "Cambiar Contraseña"),
-                    OpcionData(R.drawable.user, "Editar datos personales"),
+                    OpcionData(R.drawable.lock, "Cambiar Contraseña") {
+                        navController.navigate(Pantalla.RUTA_CAMBIARCONTRASENA_APP)
+                    },
+                    OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
+                        navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
+                    },
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )
             )
@@ -196,26 +154,33 @@ fun PerfilPage(navController: NavController) {
             SeccionOpciones(
                 titulo = "Más información",
                 opciones = listOf(
-                    OpcionData(R.drawable.help, "Ayuda"),
-                    OpcionData(R.drawable.info, "Acerca de Dirección de Juventud")
+                    OpcionData(R.drawable.help, "Ayuda") {
+                        navController.navigate(Pantalla.RUTA_AYUDA_APP)
+                    },
+                    OpcionData(R.drawable.info, "Acerca de Dirección de Juventud") {
+                        navController.navigate(Pantalla.RUTA_ACERCADE_APP)
+                    }
                 )
             )
         }
 
-        // === Diálogo de confirmación ===
+        // === DIÁLOGO DE CIERRE DE SESIÓN ===
         if (mostrarDialogo) {
-            Dialog(onDismissRequest = { mostrarDialogo = false }) {
+            Dialog(
+                onDismissRequest = { mostrarDialogo = false }
+            ) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,
                     tonalElevation = 2.dp,
-                    shadowElevation = 6.dp,
+                    shadowElevation = 6.dp
                 ) {
                     Column(
                         modifier = Modifier
                             .widthIn(min = 280.dp, max = 360.dp)
                             .padding(bottom = 16.dp)
                     ) {
+                        // Parte superior decorativa
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -226,6 +191,7 @@ fun PerfilPage(navController: NavController) {
 
                         Spacer(Modifier.height(16.dp))
 
+                        // Texto de confirmación
                         Text(
                             text = "¿Quieres cerrar la sesión?",
                             color = Color.Black,
@@ -238,6 +204,7 @@ fun PerfilPage(navController: NavController) {
 
                         Spacer(Modifier.height(24.dp))
 
+                        // Botones
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -258,11 +225,11 @@ fun PerfilPage(navController: NavController) {
                             ) {
                                 Text("No")
                             }
+
                             Button(
                                 onClick = {
                                     mostrarDialogo = false
                                     viewModel.cerrarSesion()
-
                                 },
                                 shape = RoundedCornerShape(999.dp),
                                 colors = ButtonDefaults.buttonColors(

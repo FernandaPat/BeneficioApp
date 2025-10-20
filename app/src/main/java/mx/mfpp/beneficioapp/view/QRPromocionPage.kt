@@ -22,12 +22,17 @@ fun QRPromocionPage(
     viewModel: QRViewModel
 ) {
     val moradoQR = Color(0xFF9605F7) // Color morado para el QR
-    val rojoBoton = Color(0xFFFF5252) // Color rojo para el botón
-    val rojoTexto = Color(0xFFFFFFFF) // Texto blanco para el botón rojo
+    val rojoBoton = Color(0xFFE9d4ff) // Color de fondo del botón
+    val rojoTexto = Color(0xFF9605f7) // Color del texto del botón
 
     // Observar los datos del ViewModel
     val promocionData by viewModel.promocionData
     val qrBitmap by viewModel.qrBitmap
+
+    // Generar la promoción y QR al mostrar la pantalla
+    LaunchedEffect(Unit) {
+        viewModel.aplicarPromocion("Promoción Especial")
+    }
 
     Box(
         modifier = Modifier
@@ -41,42 +46,40 @@ fun QRPromocionPage(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Título - Más arriba con más espacio
+            // Título
             Text(
                 text = "Tu Cupón QR",
                 fontWeight = FontWeight.Bold,
-                fontSize = 28.sp, // Tamaño más grande
+                fontSize = 28.sp,
                 color = Color.Black,
-                modifier = Modifier.padding(bottom = 20.dp) // Más espacio abajo
+                modifier = Modifier.padding(bottom = 20.dp)
             )
 
             // Información de la promoción
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 20.dp), // Más espacio
-                shape = RoundedCornerShape(16.dp), // Bordes más redondeados
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF)) // Fondo morado claro
+                    .padding(bottom = 20.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF))
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp) // Más padding interno
-                ) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = promocionData?.nombrePromocion ?: "Promoción",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp, // Texto más grande
+                        fontSize = 20.sp,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Tarjeta: •••• ${promocionData?.numeroTarjeta?.takeLast(4) ?: "0000"}",
-                        fontSize = 16.sp, // Texto más grande
+                        fontSize = 16.sp,
                         color = Color.Gray
                     )
                     Text(
                         text = "Fecha: ${promocionData?.fecha ?: "15/10/2025"}",
-                        fontSize = 16.sp, // Texto más grande
+                        fontSize = 16.sp,
                         color = Color.Gray
                     )
                 }
@@ -86,10 +89,10 @@ fun QRPromocionPage(
             if (qrBitmap != null) {
                 Card(
                     modifier = Modifier
-                        .size(300.dp) // QR más grande
+                        .size(300.dp)
                         .padding(16.dp),
-                    shape = RoundedCornerShape(20.dp), // Bordes más redondeados
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp) // Más elevación
+                    shape = RoundedCornerShape(20.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -102,7 +105,7 @@ fun QRPromocionPage(
                             contentDescription = "Código QR de la promoción",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(8.dp) // Padding interno para el QR
+                                .padding(8.dp)
                         )
                     }
                 }
@@ -111,7 +114,8 @@ fun QRPromocionPage(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .size(300.dp)
-                        .padding(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = "Generando QR...",
@@ -120,7 +124,7 @@ fun QRPromocionPage(
                         modifier = Modifier.padding(16.dp)
                     )
                     CircularProgressIndicator(
-                        color = moradoQR, // Usar color morado para el loading
+                        color = moradoQR,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -129,34 +133,34 @@ fun QRPromocionPage(
             // Instrucciones
             Text(
                 text = "Muestra este código QR en el establecimiento",
-                fontSize = 16.sp, // Texto más grande
+                fontSize = 16.sp,
                 color = Color.Gray,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(32.dp)) // Más espacio
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón para regresar - Ahora es rojo y dice "Cancelar"
+            // Botón Cancelar
             Button(
                 onClick = {
                     viewModel.clearPromocionData()
                     navController.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = rojoBoton, // Fondo rojo
-                    contentColor = rojoTexto // Texto blanco
+                    containerColor = rojoBoton,
+                    contentColor = rojoTexto
                 ),
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .height(56.dp) // Botón más alto
+                    .height(56.dp)
             ) {
                 Text(
-                    text = "Cancelar", // Texto cambiado a "Cancelar"
+                    text = "Cancelar",
                     color = rojoTexto,
-                    fontWeight = FontWeight.Bold, // Texto en negrita
-                    fontSize = 18.sp // Texto más grande
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
                 )
             }
         }
