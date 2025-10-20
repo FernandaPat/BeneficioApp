@@ -184,7 +184,7 @@ fun PerfilPage(navController: NavController) {
             SeccionOpciones(
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
-                    OpcionData(R.drawable.lock, "Cambiar Contraseña"),
+                    OpcionData(R.drawable.lock, "Cambiar Contraseña", onClick = {/*navController.navigate(RUTA_RECUPERAR_CONTRASENA)*/}),
                     OpcionData(R.drawable.user, "Editar datos personales"),
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )

@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -53,10 +55,11 @@ fun InicioPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
     promocionesViewModel: PromocionJovenViewModel = viewModel(),
-    busquedaViewModel: BusquedaViewModel = viewModel(),
+    busquedaViewModel: BusquedaViewModel,
     modifier: Modifier = Modifier
 ) {
 
+    val context= LocalContext.current
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
     val categoriasError by categoriasViewModel.error.collectAsState()
@@ -77,7 +80,6 @@ fun InicioPage(
     val isLoading = categoriasLoading || promocionesLoading || establecimientosLoading
     val error = categoriasError ?: promocionesError ?: establecimientosError
 
-    val context= LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
@@ -678,6 +680,6 @@ fun HomeTopBar(
 fun InicioPagePreview() {
     MaterialTheme {
         val navController = rememberNavController()
-        InicioPage(navController)
+        //InicioPage(navController)
     }
 }

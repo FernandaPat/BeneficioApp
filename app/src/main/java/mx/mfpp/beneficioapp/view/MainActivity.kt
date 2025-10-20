@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +29,8 @@ import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -56,7 +59,6 @@ import kotlin.getValue
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
     private val promocionesViewModel: PromocionJovenViewModel by viewModels()
-    private val busquedaViewModel: BusquedaViewModel by viewModels() // Este es importante
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
@@ -89,6 +91,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BeneficioAppTheme {
+                val context = LocalContext.current
+                val busquedaViewModel: BusquedaViewModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            @Suppress("UNCHECKED_CAST")
+                            return BusquedaViewModel(context) as T
+                        }
+                    }
+                )
+
                 AppPrincipal(
                     startDestination = startDestination,
                     categoriasViewModel = categoriasViewModel,
@@ -238,7 +250,8 @@ fun AppNavHost(
             InicioPage(
                 navController = navController,
                 categoriasViewModel = categoriasViewModel,
-                promocionesViewModel = promocionesViewModel // YA CORRECTO
+                promocionesViewModel = promocionesViewModel,
+                busquedaViewModel = busquedaViewModel
             )
         }
         composable(Pantalla.RUTA_MAPA_APP) {
