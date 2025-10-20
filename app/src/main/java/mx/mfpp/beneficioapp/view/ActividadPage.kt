@@ -22,29 +22,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.HistorialPromocionUsuario
 import mx.mfpp.beneficioapp.model.SessionManager
-import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
+import mx.mfpp.beneficioapp.viewmodel.HistorialViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActividadPage(
     navController: NavController,
-    promocionesViewModel: PromocionesViewModel = viewModel()
+    historialViewModel: HistorialViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-    // Estados observados desde el ViewModel
-    val promociones by promocionesViewModel.promociones.collectAsState()
-    val isLoading by promocionesViewModel.isLoading.collectAsState()
-    val error by promocionesViewModel.error.collectAsState()
+    // Estados observados desde el ViewModel de historial
+    val historial by historialViewModel.historial.collectAsState()
+    val isLoading by historialViewModel.isLoading.collectAsState()
+    val error by historialViewModel.error.collectAsState()
 
-    // 🔹 Cargar promociones del negocio al abrir la pantalla
+    // 🔹 Cargar historial del usuario al abrir la pantalla
     LaunchedEffect(Unit) {
-        val idNegocio = sessionManager.getNegocioId() ?: 0
-        if (idNegocio != 0) {
-            promocionesViewModel.cargarPromociones(idNegocio)
+        val idUsuario = sessionManager.getJovenId() ?: 0
+        if (idUsuario != 0) {
+            historialViewModel.cargarHistorialUsuario(idUsuario)
         }
     }
 
@@ -53,7 +53,7 @@ fun ActividadPage(
             TopAppBar(
                 title = {
                     Text(
-                        "Promociones registradas",
+                        "Promociones registradas", // 🔹 TÍTULO EXACTAMENTE IGUAL
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
@@ -75,7 +75,7 @@ fun ActividadPage(
                 isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF9605F7)
+                        color = Color(0xFF9605F7) // 🔹 COLOR EXACTAMENTE IGUAL
                     )
                 }
 
@@ -90,9 +90,9 @@ fun ActividadPage(
                     )
                 }
 
-                promociones.isEmpty() -> {
+                historial.isEmpty() -> {
                     Text(
-                        text = "No hay promociones registradas para este negocio.",
+                        text = "No hay promociones registradas para este negocio.", // 🔹 TEXTO EXACTAMENTE IGUAL
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
@@ -104,20 +104,20 @@ fun ActividadPage(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 10.dp)
+                        contentPadding = PaddingValues(vertical = 10.dp) // 🔹 PADDING EXACTAMENTE IGUAL
                     ) {
-                        items(promociones, key = { it.id }) { promo ->
-                            PromocionListItem(
-                                promo = promo,
-                                onEditClick = {
-                                    // 🔹 Navegar al editor con el ID de la promoción
-                                    navController.navigate("editarPromocion/${promo.id}")
+                        items(historial, key = { it.id }) { itemHistorial ->
+                            HistorialListItem(
+                                historialItem = itemHistorial,
+                                onItemClick = {
+                                    // 🔹 Navegar al detalle del establecimiento
+                                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${itemHistorial.id_establecimiento}")
                                 }
                             )
                             HorizontalDivider(
-                                color = Color(0xFFF3F3F3),
+                                color = Color(0xFFF3F3F3), // 🔹 COLOR EXACTAMENTE IGUAL
                                 thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 20.dp)
+                                modifier = Modifier.padding(horizontal = 20.dp) // 🔹 PADDING EXACTAMENTE IGUAL
                             )
                         }
                     }
@@ -128,66 +128,81 @@ fun ActividadPage(
 }
 
 /**
- * Elemento individual del listado de promociones
+ * Elemento individual del listado - DISEÑO IDÉNTICO AL ORIGINAL
  */
 @Composable
-private fun PromocionListItem(
-    promo: Promocion,
-    onEditClick: () -> Unit,
+private fun HistorialListItem(
+    historialItem: HistorialPromocionUsuario,
+    onItemClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
+            .padding(horizontal = 20.dp, vertical = 12.dp), // 🔹 PADDING EXACTAMENTE IGUAL
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // 🖼️ Imagen + texto principal
+        // 🖼️ Imagen + texto principal - ESTRUCTURA IDÉNTICA
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(65.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFF7F7F7)),
+                    .size(65.dp) // 🔹 TAMAÑO EXACTAMENTE IGUAL
+                    .clip(RoundedCornerShape(10.dp)) // 🔹 BORDER RADIUS EXACTAMENTE IGUAL
+                    .background(Color(0xFFF7F7F7)), // 🔹 COLOR EXACTAMENTE IGUAL
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = promo.imagenUrl ?: "https://picsum.photos/200",
-                    contentDescription = promo.nombre,
+                    model = historialItem.foto ?: "https://picsum.photos/200",
+                    contentDescription = historialItem.titulo_promocion,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(modifier = Modifier.padding(start = 12.dp)) { // 🔹 PADDING EXACTAMENTE IGUAL
                 Text(
-                    text = promo.nombre,
+                    text = historialItem.titulo_promocion, // 🔹 SOLO CAMBIO DE DATOS
                     style = MaterialTheme.typography.bodyLarge.copy(
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                        color = Color.Black, // 🔹 COLOR EXACTAMENTE IGUAL
+                        fontSize = 16.sp, // 🔹 TAMAÑO EXACTAMENTE IGUAL
+                        fontWeight = FontWeight.Bold // 🔹 FONT WEIGHT EXACTAMENTE IGUAL
                     )
                 )
                 Text(
-                    text = promo.descripcion ?: "",
+                    text = historialItem.descripcion ?: "", // 🔹 SOLO CAMBIO DE DATOS
                     style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Gray,
-                        fontSize = 14.sp
+                        color = Color.Gray, // 🔹 COLOR EXACTAMENTE IGUAL
+                        fontSize = 14.sp // 🔹 TAMAÑO EXACTAMENTE IGUAL
                     )
                 )
             }
         }
 
-        // 📅 Fecha de expiración o botón editar
-        TextButton(onClick = onEditClick) {
-            Text(
-                text = "Editar",
-                color = Color(0xFF9605F7),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+        // 📅 Mostrar fecha de uso en lugar del botón "Editar"
+        Text(
+            text = formatearFechaCorta(historialItem.fecha_uso),
+            color = Color(0xFF9605F7), // 🔹 COLOR EXACTAMENTE IGUAL AL BOTÓN "Editar"
+            fontSize = 14.sp, // 🔹 TAMAÑO EXACTAMENTE IGUAL
+            fontWeight = FontWeight.Medium // 🔹 FONT WEIGHT EXACTAMENTE IGUAL
+        )
+    }
+}
+
+/**
+ * Función auxiliar para formatear la fecha de manera corta
+ */
+private fun formatearFechaCorta(fecha: String): String {
+    return try {
+        // Formato: "2025-09-22T00:00:00" -> "22/09/25"
+        val partes = fecha.split("T")[0].split("-")
+        if (partes.size == 3) {
+            "${partes[2]}/${partes[1]}/${partes[0].takeLast(2)}"
+        } else {
+            fecha
         }
+    } catch (e: Exception) {
+        fecha
     }
 }
 
