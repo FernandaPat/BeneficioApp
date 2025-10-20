@@ -1,6 +1,7 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -36,19 +37,21 @@ class EditarPromocionViewModel : ViewModel() {
             isLoading.value = true
             error.value = null
             try {
+                Log.d("EDITAR_PROMO_DEBUG", "Cargando promoción con ID = $idPromocion")
                 val response = RetrofitClient.api.obtenerPromocionPorId(idPromocion)
                 promocion.value = response
-            } catch (e: IOException) {
-                error.value = "Error de conexión: ${e.message}"
             } catch (e: HttpException) {
-                error.value = "Error HTTP: ${e.message}"
+                Log.e("EDITAR_PROMO_DEBUG", "Error HTTP ${e.code()}: ${e.message()}")
+                error.value = "Error HTTP: ${e.message()}"
             } catch (e: Exception) {
-                error.value = "Error inesperado: ${e.message}"
+                Log.e("EDITAR_PROMO_DEBUG", "Error inesperado: ${e.message}")
+                error.value = "Error: ${e.message}"
             } finally {
                 isLoading.value = false
             }
         }
     }
+
 
     /**
      * Actualiza una promoción (PATCH o PUT en la API)

@@ -48,6 +48,7 @@ fun Promociones(
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         val idNegocio = sessionManager.getNegocioId() ?: 0
@@ -58,27 +59,8 @@ fun Promociones(
 
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Promociones",
-                        color = Color.Black,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.Black
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
+        topBar = { ArrowTopBar(navController, "Promociones") },
+        snackbarHost = { SnackbarHost(snackbarHostState)
         },
 
         // 💜 Botón flotante para agregar nuevas promociones

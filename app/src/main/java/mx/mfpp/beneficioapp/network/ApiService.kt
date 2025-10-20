@@ -42,4 +42,6 @@ interface ApiService {
         @Path("id") id: Int,
         @Body promocion: Promocion
     ): Response<Unit>
+
+
 }

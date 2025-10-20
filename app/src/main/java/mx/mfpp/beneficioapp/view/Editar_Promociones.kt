@@ -37,10 +37,6 @@ fun Editar_Promociones(
     modifier: Modifier = Modifier,
     viewModel: EditarPromocionViewModel = viewModel()
 ) {
-    // Cargar la promoción desde la API
-    LaunchedEffect(idPromocion) {
-        viewModel.cargarPromocionPorId(idPromocion)
-    }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -49,20 +45,14 @@ fun Editar_Promociones(
     val isLoading = viewModel.isLoading.value
     val error = viewModel.error.value
 
-    // 🔹 Obtener el ID de la promoción desde la ruta (si la ruta es algo como editarPromocion/{id})
-    val idPromocion = navController.currentBackStackEntry
-        ?.arguments?.getString("id")
-        ?.toIntOrNull()
-
-    // 🔹 Cargar datos de la promoción al abrir la pantalla
+    // 🔹 Cargar los datos desde la API una sola vez
     LaunchedEffect(idPromocion) {
-        idPromocion?.let { viewModel.cargarPromocionPorId(it) }
+        viewModel.cargarPromocionPorId(idPromocion)
     }
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Editar Promoción") }
     ) { paddingValues ->
-
         when {
             isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -83,13 +73,11 @@ fun Editar_Promociones(
                         .background(Color.White)
                         .verticalScroll(scrollState)
                         .padding(paddingValues)
-                        .padding(top = 8.dp)
+                        .padding(16.dp)
                 ) {
-
                     // 📸 Imagen
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
                             .fillMaxWidth()
                             .height(200.dp)
                             .clip(RoundedCornerShape(16.dp))
@@ -114,7 +102,7 @@ fun Editar_Promociones(
                         } else {
                             AsyncImage(
                                 model = uri ?: promo.imagenUrl,
-                                contentDescription = "Imagen de la promoción",
+                                contentDescription = "Imagen",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.matchParentSize()
                             )
@@ -131,6 +119,8 @@ fun Editar_Promociones(
                             }
                         }
                     }
+
+                    Spacer(Modifier.height(16.dp))
 
                     // 📝 Campos editables
                     Etiqueta("Título", false)
@@ -154,33 +144,18 @@ fun Editar_Promociones(
                         placeholder = "Ej. 10% o 2x1"
                     )
 
-
-                    // 📅 Rango de fechas (si lo usas)
-                    RangoFechasPicker(
-                        desde = "",
-                        hasta = "",
-                        onDesdeChange = {},
-                        onHastaChange = { _, dias -> viewModel.actualizarExpiraEn(dias) }
-                    )
-
                     // 💾 Botón Guardar
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 80.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        BotonMorado(
-                            texto = "Guardar cambios",
-                            habilitado = true,
-                            onClick = {
-                                scope.launch {
-                                    viewModel.guardarCambios()
-                                    navController.popBackStack()
-                                }
+                    Spacer(Modifier.height(24.dp))
+                    BotonMorado(
+                        texto = "Guardar cambios",
+                        habilitado = true,
+                        onClick = {
+                            scope.launch {
+                                viewModel.guardarCambios()
+                                navController.popBackStack()
                             }
-                        )
-                    }
+                        }
+                    )
                 }
             }
         }
