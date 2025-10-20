@@ -31,10 +31,14 @@ import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.FavoritoDetalle
 import mx.mfpp.beneficioapp.model.PromocionJoven
+import mx.mfpp.beneficioapp.model.ServicioRemotoFavoritos
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
+import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
+import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModelFactory
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 
 /**
@@ -82,6 +86,20 @@ fun InicioPage(
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
 
+    val favoritosViewModel: FavoritosViewModel = viewModel(
+        factory = FavoritosViewModelFactory(sessionManager)
+    )
+
+    val listaFavoritos by produceState<List<FavoritoDetalle>>(initialValue = emptyList()) {
+        val idUsuario = sessionManager.getJovenId() ?: -1
+        if (idUsuario != -1) {
+            val result = ServicioRemotoFavoritos.obtenerFavoritos(idUsuario)
+            value = result.getOrElse { emptyList() }
+        }
+    }
+
+
+
     Scaffold(
         topBar = { HomeTopBar(nombreJoven,navController) }
     ) { paddingValues ->
@@ -107,6 +125,14 @@ fun InicioPage(
                     Categorias(categorias = categorias, onCategoriaClick = { categoria ->
                         navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                     })
+
+                    SeccionHorizontalFavoritos(
+                        titulo = "Tus Favoritos",
+                        favoritos = listaFavoritos,
+                        onItemClick = { favorito ->
+                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${favorito.id_establecimiento}")
+                        }
+                    )
 
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
@@ -666,6 +692,92 @@ fun HomeTopBar(
                     tint = Color.Gray
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun SeccionHorizontalFavoritos(
+    titulo: String,
+    favoritos: List<FavoritoDetalle>,
+    onItemClick: (FavoritoDetalle) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        if (favoritos.isEmpty()) {
+            Text(
+                text = "No tienes favoritos aún",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(favoritos) { favorito ->
+                    CardFavoritoHorizontal(favorito, onItemClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CardFavoritoHorizontal(
+    favorito: FavoritoDetalle,
+    onItemClick: (FavoritoDetalle) -> Unit
+) {
+    Column(modifier = Modifier.width(176.dp)) {
+        Card(
+            onClick = { onItemClick(favorito) },
+            modifier = Modifier.size(width = 176.dp, height = 100.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = favorito.foto ?: "https://picsum.photos/200/150?random=${favorito.id_establecimiento}",
+                    contentDescription = "Imagen de ${favorito.nombre_establecimiento}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
+        ) {
+            Text(
+                text = favorito.nombre_establecimiento,
+                color = Color.Black,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "${favorito.nombre_categoria ?: "Sin categoría"} • ${favorito.colonia ?: ""}",
+                color = Color.Gray,
+                fontSize = 11.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

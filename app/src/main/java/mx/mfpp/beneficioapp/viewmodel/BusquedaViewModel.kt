@@ -1,11 +1,13 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimiento
@@ -117,6 +119,59 @@ class BusquedaViewModel : ViewModel() {
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    fun recargarFavoritos(context: Context) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                // Recargar establecimientos con información actualizada de favoritos
+                todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos(context)
+                aplicarFiltros()
+                Log.d("BUSQUEDA_VM", "✅ Favoritos recargados correctamente")
+            } catch (e: Exception) {
+                Log.e("BUSQUEDA_VM", "❌ Error recargando favoritos: ${e.message}")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun actualizarFavoritoLocal(idEstablecimiento: Int, esFavorito: Boolean) {
+        Log.d("BUSQUEDA_VM", "🔄 Actualizando favorito local: $idEstablecimiento -> $esFavorito")
+
+        // Log antes de la actualización
+        val establecimientoAntes = _establecimientos.value.find { it.id_establecimiento == idEstablecimiento }
+        Log.d("BUSQUEDA_VM", "📊 Antes: ${establecimientoAntes?.nombre} - Favorito: ${establecimientoAntes?.es_favorito}")
+
+        _establecimientos.update { list ->
+            list.map { est ->
+                if (est.id_establecimiento == idEstablecimiento) {
+                    est.copy(
+                        es_favorito = esFavorito,
+                        colonia = est.colonia ?: "",
+                        nombre_categoria = est.nombre_categoria ?: "",
+                        nombre = est.nombre ?: ""
+                    )
+                } else est
+            }
+        }
+
+        // Log después de la actualización
+        val establecimientoDespues = _establecimientos.value.find { it.id_establecimiento == idEstablecimiento }
+        Log.d("BUSQUEDA_VM", "📊 Después: ${establecimientoDespues?.nombre} - Favorito: ${establecimientoDespues?.es_favorito}")
+
+        // Actualizar la lista master también
+        todosEstablecimientos = todosEstablecimientos.map { est ->
+            if (est.id_establecimiento == idEstablecimiento) {
+                est.copy(
+                    es_favorito = esFavorito,
+                    colonia = est.colonia ?: "",
+                    nombre_categoria = est.nombre_categoria ?: "",
+                    nombre = est.nombre ?: ""
+                )
+            } else est
         }
     }
 }
