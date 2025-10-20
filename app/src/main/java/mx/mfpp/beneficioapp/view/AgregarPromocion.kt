@@ -40,6 +40,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import androidx.compose.ui.platform.LocalContext
 import java.time.temporal.ChronoUnit
 
 /**
@@ -52,6 +53,9 @@ import java.time.temporal.ChronoUnit
  * @param navController Controlador de navegación de la aplicación.
  * @param modifier Modificador opcional para ajustar la apariencia del contenedor principal.
  */
+
+
+
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AgregarPromocion(
@@ -62,6 +66,7 @@ fun AgregarPromocion(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         viewModel.uri.value = uri
@@ -79,7 +84,7 @@ fun AgregarPromocion(
                 .padding(paddingValues)
                 .padding(top = 8.dp)
         ) {
-            // Imagen
+            // 📸 Imagen
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -121,7 +126,7 @@ fun AgregarPromocion(
                 }
             }
 
-            // Campos de texto
+            // 🧾 Campos de texto
             Etiqueta("Título", true)
             BeneficioOutlinedTextField(
                 value = viewModel.nombre.value,
@@ -143,36 +148,52 @@ fun AgregarPromocion(
                 placeholder = "Ej. 10% o 2x1"
             )
 
+            // 📅 Fechas
             RangoFechasPicker(
                 desde = viewModel.desde.value,
                 hasta = viewModel.hasta.value,
                 onDesdeChange = { viewModel.desde.value = it },
-                onHastaChange = { f, d -> viewModel.hasta.value = f; viewModel.expiraEn.value = d }
+                onHastaChange = { f, d ->
+                    viewModel.hasta.value = f
+                    viewModel.expiraEn.value = d
+                }
             )
+
+
+
+            // 🟣 Botón de enviar
             Spacer(Modifier.height(40.dp))
-            Column ( modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 40.dp),
-                horizontalAlignment = Alignment.CenterHorizontally ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 BotonMorado(
-                    texto = "Agregar ",
+                    texto = "Agregar",
                     habilitado = true,
                     onClick = {
-                        scope.launch {
-                            viewModel.guardarPromocion(
-                                onSuccess = {
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar("Promoción agregada con éxito 🎉")
-                                        navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO)
-                                    }
-                                },
-                                onError = { msg ->
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(msg)
-                                    }
-                                }
-                            )
+                        if (viewModel.uri.value == null) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("Selecciona una imagen antes de continuar.")
+                            }
+                            return@BotonMorado
                         }
+
+                        viewModel.guardarPromocion(
+                            context = context,
+                            onSuccess = {
+                                scope.launch {
+                                        snackbarHostState.showSnackbar("Se esta agregando la promoción")
+                                    navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO)
+                                }
+                            },
+                            onError = { msg ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(msg)
+                                }
+                            }
+                        )
                     }
                 )
             }
@@ -180,6 +201,7 @@ fun AgregarPromocion(
         }
     }
 }
+
 
 
 @RequiresApi(Build.VERSION_CODES.O)

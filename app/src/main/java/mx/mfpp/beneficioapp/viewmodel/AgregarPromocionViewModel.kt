@@ -1,10 +1,8 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.app.Application
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Context
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -14,12 +12,11 @@ import mx.mfpp.beneficioapp.model.PromocionRequest
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.network.RetrofitClient
 import mx.mfpp.beneficioapp.utils.ErrorHandler
-import java.io.ByteArrayOutputStream
-import java.io.File
+import mx.mfpp.beneficioapp.utils.ImageUtils // ✅ importa tu util de conversión Base64
 
 class AgregarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Campos de la UI
+    // Campos del formulario
     val uri = mutableStateOf<Uri?>(null)
     val nombre = mutableStateOf("")
     val descripcion = mutableStateOf("")
@@ -33,11 +30,10 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
     private val sessionManager = SessionManager(application)
 
     /**
-     * Envía la promoción a la API con ID dinámico del negocio logueado.
+     * Envía la promoción a la API con el ID del negocio logueado y la imagen en Base64 real.
      */
-
-
     fun guardarPromocion(
+        context: Context,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
@@ -49,18 +45,17 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
                     return@launch
                 }
 
-                // ⚠️ En producción deberías convertir la imagen URI a Base64 real
-                val imagenBase64 =
-                    "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/..." // temporal
+                // ✅ Convierte la imagen seleccionada (si existe) a Base64 real
+                val imagenBase64 = uri.value?.let { ImageUtils.uriToBase64(context, it) } ?: ""
 
                 val promocion = PromocionRequest(
                     id_negocio = idNegocio,
                     titulo = nombre.value.ifBlank { "" },
                     descripcion = descripcion.value.ifBlank { "" },
-                    descuento = descuento.value.ifBlank { null }, // este puede ser null
+                    descuento = descuento.value.ifBlank { null },
                     disponible_desde = desde.value.ifBlank { "" },
                     hasta = hasta.value.ifBlank { "" },
-                    imagen = imagenBase64.ifBlank { "" }
+                    imagen = imagenBase64
                 )
 
                 Log.d("API_REQUEST", "Enviando promoción: $promocion")
@@ -80,7 +75,6 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
                 val mensaje = ErrorHandler.obtenerMensajeError(e)
                 onError(mensaje)
             }
-
         }
     }
 }
