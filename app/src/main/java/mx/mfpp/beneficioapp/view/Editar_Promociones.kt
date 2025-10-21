@@ -1,6 +1,8 @@
 package mx.mfpp.beneficioapp.view
 
+import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,15 +45,16 @@ fun EditarPromocion(
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Estados del ViewModel
-    val nombre = viewModel.nombre.value
-    val descripcion = viewModel.descripcion.value
-    val descuento = viewModel.descuento.value
-    val uri = viewModel.nuevaImagenUri.value
-    val imagenRemota = viewModel.imagenRemota.value
-    val isLoading = viewModel.isLoading.value
+    val nombre by viewModel.nombre.collectAsState()
+    val descripcion by viewModel.descripcion.collectAsState()
+    val descuento by viewModel.descuento.collectAsState()
+    val desde by viewModel.desde.collectAsState()
+    val hasta by viewModel.hasta.collectAsState()
+    val uri by viewModel.nuevaImagenUri.collectAsState()
+    val imagenRemota by viewModel.imagenRemota.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
-
-    // 🔹 Cargar datos desde la API
+    // 🔹 Cargar datos al abrir
     LaunchedEffect(idPromocion) {
         viewModel.cargarPromocionPorId(idPromocion)
     }
@@ -82,10 +85,14 @@ fun EditarPromocion(
                     .background(Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
-                val imagenActual = uri ?: imagenRemota
+                val imagenActual: Any? = uri ?: imagenRemota
+                val tieneImagen = when (imagenActual) {
+                    is Uri -> true
+                    is String -> imagenActual.isNotEmpty()
+                    else -> false
+                }
 
-                if (imagenActual == null || (imagenActual is String && imagenActual.isEmpty())) {
-
+                if (!tieneImagen) {
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -94,7 +101,7 @@ fun EditarPromocion(
                         ),
                         modifier = Modifier.size(56.dp)
                     ) {
-                        Icon(imageVector = Icons.Filled.Add, contentDescription = "Seleccionar imagen")
+                        Icon(Icons.Filled.Add, contentDescription = "Seleccionar imagen")
                     }
                 } else {
                     AsyncImage(
@@ -112,7 +119,7 @@ fun EditarPromocion(
                             .clip(CircleShape)
                             .background(Color.Black.copy(alpha = 0.6f))
                     ) {
-                        Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Cambiar imagen", tint = Color.White)
+                        Icon(Icons.Outlined.Edit, contentDescription = "Cambiar imagen", tint = Color.White)
                     }
                 }
             }
@@ -141,32 +148,53 @@ fun EditarPromocion(
                 placeholder = "Ej. 10% o 2x1"
             )
 
-            Spacer(Modifier.height(40.dp))
-
-            // 🟣 Botón de actualizar
-            ButtonAction(
-                textoNormal = "Actualizar",
-                textoCargando = "Actualizando...",
-                isLoading = isLoading,
-                habilitado = true,
-                onClick = {
-                    viewModel.actualizarPromocion(
-                        context = context,
-                        idPromocion = idPromocion,
-                        onSuccess = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar("✅ Promoción actualizada correctamente")
-                            }
-                            navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
-                                popUpTo(Pantalla.RUTA_EDITAR_PROMOCIONES) { inclusive = true }
-                            }
-                        },
-                        onError = { msg ->
-                            scope.launch { snackbarHostState.showSnackbar(msg) }
-                        }
-                    )
+            // 📅 Fechas
+            RangoFechasPicker(
+                desde = desde,
+                hasta = hasta,
+                onDesdeChange = { nuevaFechaDesde ->
+                    viewModel.actualizarDesde(nuevaFechaDesde)
+                    Log.d("FECHAS", "Desde seleccionada: $nuevaFechaDesde")
+                },
+                onHastaChange = { nuevaFechaHasta, _ ->
+                    viewModel.actualizarHasta(nuevaFechaHasta)
+                    Log.d("FECHAS", "Hasta seleccionada: $nuevaFechaHasta")
                 }
             )
+
+            Spacer(Modifier.height(40.dp))
+
+            // 🟣 Botón centrado
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                ButtonAction(
+                    textoNormal = "Actualizar",
+                    textoCargando = "Actualizando...",
+                    isLoading = isLoading,
+                    habilitado = true,
+                    onClick = {
+                        viewModel.actualizarPromocion(
+                            context = context,
+                            idPromocion = idPromocion,
+                            onSuccess = {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("✅ Promoción actualizada correctamente")
+                                }
+                                navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
+                                    popUpTo(Pantalla.RUTA_EDITAR_PROMOCIONES) { inclusive = true }
+                                }
+                            },
+                            onError = { msg ->
+                                scope.launch { snackbarHostState.showSnackbar(msg) }
+                            }
+                        )
+                    }
+                )
+            }
 
             Spacer(Modifier.height(80.dp))
         }

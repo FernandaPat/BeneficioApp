@@ -1,109 +1,67 @@
 package mx.mfpp.beneficioapp.viewmodel
 
-import android.app.Application
 import android.content.Context
 import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.ServicioRemotoPromociones
-import mx.mfpp.beneficioapp.model.SessionManager
-import mx.mfpp.beneficioapp.utils.ImageUtils
-import mx.mfpp.beneficioapp.utils.ErrorHandler
-import android.util.Log
-import android.view.PixelCopy.request
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import mx.mfpp.beneficioapp.model.ActualizarPromocionRequest
-import mx.mfpp.beneficioapp.model.Promocion
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
-
-class EditarPromocionViewModel(application: Application) : AndroidViewModel(application) {
-
-    val nombre = mutableStateOf("")
-    val descripcion = mutableStateOf("")
-    val descuento = mutableStateOf("")
-    val imagenRemota = mutableStateOf<String?>(null)
-    val nuevaImagenUri = mutableStateOf<Uri?>(null)
+import mx.mfpp.beneficioapp.model.ServicioRemotoPromocionPorId
+import mx.mfpp.beneficioapp.utils.convertirImagenABase64
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 
-    private val _promociones = MutableStateFlow<List<Promocion>>(emptyList())
-    val promociones: StateFlow<List<Promocion>> = _promociones
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+class EditarPromocionViewModel : ViewModel() {
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
-    private val sessionManager = SessionManager(application)
+    // 🧾 Campos editables
+    var nombre = MutableStateFlow("")
+    var descripcion = MutableStateFlow("")
+    var descuento = MutableStateFlow("")
+    var desde = MutableStateFlow("")
+    var hasta = MutableStateFlow("")
 
-    /**
-     * Carga los datos de la promoción seleccionada por ID desde la API
-     */
+    // 📸 Imagen
+    var nuevaImagenUri = MutableStateFlow<Uri?>(null)
+    var imagenRemota = MutableStateFlow<String?>(null)
+
+    // ⚙️ Estado general
+    var isLoading = MutableStateFlow(false)
+
+    // === ACTUALIZADORES ===
+    fun actualizarNombre(v: String) { nombre.value = v }
+    fun actualizarDescripcion(v: String) { descripcion.value = v }
+    fun actualizarDescuento(v: String) { descuento.value = v }
+    fun actualizarDesde(v: String) { desde.value = v }
+    fun actualizarHasta(v: String) { hasta.value = v }
+    fun actualizarImagen(uri: Uri?) { nuevaImagenUri.value = uri }
+
+    // === CARGAR PROMOCIÓN EXISTENTE ===
     fun cargarPromocionPorId(idPromocion: Int) {
         viewModelScope.launch {
+            isLoading.value = true
             try {
-                _isLoading.value = true
-                val idNegocio = sessionManager.getNegocioId() ?: 0
+                val promocion = ServicioRemotoPromocionPorId.obtenerPromocionPorId(idPromocion)
+                println("📡 Datos recibidos: $promocion")
 
-                val response = ServicioRemotoPromociones.api.getPromocionesPorNegocio(idNegocio)
-                if (response.isSuccessful) {
-                    val promociones = response.body()?.data ?: emptyList()
-                    val promo = promociones.find { it.id == idPromocion }
-
-                    promo?.let {
-                        nombre.value = it.titulo ?: ""
-                        descripcion.value = it.descripcion ?: ""
-                        descuento.value = it.descuento ?: ""
-                        imagenRemota.value = it.foto
-                    }
-
-                } else {
-                    _error.value = "Error ${response.code()}: ${response.message()}"
-                    Log.e("EditarPromocionVM", _error.value ?: "")
-                }
+                nombre.value = promocion.titulo ?: ""
+                descripcion.value = promocion.descripcion ?: ""
+                descuento.value = promocion.descuento ?: ""
+                desde.value = promocion.disponible_desde ?: ""
+                hasta.value = promocion.hasta ?: ""
+                imagenRemota.value = promocion.imagen ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
-                _error.value = ErrorHandler.obtenerMensajeError(e)
             } finally {
-                _isLoading.value = false
+                isLoading.value = false
             }
         }
     }
 
-
-    /**
-     * Actualiza el texto del nombre
-     */
-    fun actualizarNombre(nuevo: String) {
-        nombre.value = nuevo
-    }
-
-    /**
-     * Actualiza la descripción
-     */
-    fun actualizarDescripcion(nuevo: String) {
-        descripcion.value = nuevo
-    }
-
-    /**
-     * Actualiza el descuento
-     */
-    fun actualizarDescuento(nuevo: String) {
-        descuento.value = nuevo
-    }
-
-    /**
-     * Actualiza la imagen seleccionada
-     */
-    fun actualizarImagen(uri: Uri?) {
-        nuevaImagenUri.value = uri
-    }
-
-    /**
-     * Lógica para actualizar la promoción con el endpoint de Cloud Run
-     */
+    // === ACTUALIZAR PROMOCIÓN ===
     fun actualizarPromocion(
         context: Context,
         idPromocion: Int,
@@ -111,45 +69,43 @@ class EditarPromocionViewModel(application: Application) : AndroidViewModel(appl
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
+            isLoading.value = true
             try {
-                _isLoading.value = true
+                // 🔹 Convierte imagen nueva (si hay)
+                val imagenBase64 = nuevaImagenUri.value?.let { convertirImagenABase64(context, it) } ?: imagenRemota.value
 
-                val imagenBase64 = nuevaImagenUri.value?.let {
-                    ImageUtils.uriToBase64(context, it)
-                } ?: ""
+                val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
-                val requestBody = mapOf(
-                    "id_promocion" to idPromocion,
-                    "titulo" to nombre.value,
-                    "descripcion" to descripcion.value,
-                    "descuento" to descuento.value,
-                    "imagen" to imagenBase64
-                )
+                fun normalizarFecha(fecha: String): String {
+                    // Intenta convertir fechas tipo 2025-10-23 → 23/10/2025
+                    return try {
+                        if (fecha.contains("-")) {
+                            LocalDate.parse(fecha).format(formato)
+                        } else fecha // ya está en dd/MM/yyyy
+                    } catch (e: Exception) {
+                        fecha
+                    }
+                }
 
-                val request = ActualizarPromocionRequest(
-                    id_promocion = idPromocion,
+                val ok = ServicioRemotoActualizarPromocion.actualizarPromocion(
+                    idPromocion = idPromocion,
                     titulo = nombre.value,
                     descripcion = descripcion.value,
                     descuento = descuento.value,
-                    imagen = imagenBase64
+                    disponibleDesde = normalizarFecha(desde.value),
+                    hasta = normalizarFecha(hasta.value),
+                    imagenBase64 = imagenBase64
                 )
 
-                val response = ServicioRemotoActualizarPromocion.api.actualizarPromocion(request)
 
-
-                if (response.isSuccessful) {
-                    Log.d("ActualizarPromocion", "✅ Promoción actualizada correctamente")
-                    onSuccess()
-                } else {
-                    onError("❌ Error ${response.code()}: ${response.message()}")
-                }
+                if (ok) onSuccess()
+                else onError("Error al actualizar la promoción")
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                onError(ErrorHandler.obtenerMensajeError(e))
+                onError("Error al actualizar la promoción")
             } finally {
-                _isLoading.value = false
-
+                isLoading.value = false
             }
         }
     }

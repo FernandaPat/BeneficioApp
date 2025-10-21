@@ -216,14 +216,11 @@ fun AppNavHost(
         }
         composable(
             route = "editarPromocion/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val idPromocion = backStackEntry.arguments?.getInt("id") ?: 0
-            EditarPromocion(
-                navController = navController,
-                idPromocion = idPromocion
-            )
+            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
+            EditarPromocion(navController, idPromocion = id)
         }
+
 
         composable(Pantalla.RUTA_ACERCADE_APP) {
             AcercaDePage(navController)
