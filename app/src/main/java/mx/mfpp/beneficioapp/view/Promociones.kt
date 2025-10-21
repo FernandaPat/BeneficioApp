@@ -1,14 +1,13 @@
 package mx.mfpp.beneficioapp.view
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
@@ -19,15 +18,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -45,10 +40,11 @@ fun Promociones(
 ) {
     val scope = rememberCoroutineScope()
     val promociones by viewModel.promociones.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var pendingDeleteId by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val isDeleting by viewModel.isDeleting.collectAsState()
 
     LaunchedEffect(Unit) {
         val idNegocio = sessionManager.getNegocioId() ?: 0
@@ -60,10 +56,7 @@ fun Promociones(
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Promociones") },
-        snackbarHost = { SnackbarHost(snackbarHostState)
-        },
-
-        // 💜 Botón flotante para agregar nuevas promociones
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES) },
@@ -71,16 +64,12 @@ fun Promociones(
                 contentColor = Color.White,
                 shape = RoundedCornerShape(50.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Agregar promoción"
-                )
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Agregar promoción")
             }
         },
         floatingActionButtonPosition = FabPosition.End,
         containerColor = Color.White
     ) { paddingValues ->
-
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -110,14 +99,25 @@ fun Promociones(
         ConfirmacionEliminarDialog(
             visible = toDelete != null,
             mensaje = toDelete?.let { "¿Seguro que deseas eliminar \"${it.nombre}\"?" } ?: "",
+            isDeleting = isDeleting,
             onDismiss = { pendingDeleteId = null },
             onConfirm = {
-                toDelete?.let {
-                    scope.launch { viewModel.eliminarPromocion(it.id) }
+                toDelete?.let { promo ->
+                    scope.launch {
+                        viewModel.eliminarPromocion(promo.id) { _, mensaje ->
+                            // ✅ Snackbar también debe lanzarse dentro de un scope
+                            scope.launch {
+                                snackbarHostState.showSnackbar(message = mensaje)
+                            }
+                        }
+                    }
                 }
-                pendingDeleteId = null
             }
         )
+
+
+
+
     }
 }
 
@@ -134,7 +134,7 @@ private fun PromoListItem(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 🖼️ Imagen de promoción (o contenedor vacío si no hay)
+        // 🖼️ Imagen
         Box(
             modifier = Modifier
                 .size(80.dp)
@@ -165,7 +165,7 @@ private fun PromoListItem(
                 )
             )
             Text(
-                text = promo.descripcion ?: "Descripción",
+                text = promo.descripcion ?: "Sin descripción",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = Color.Gray,
                     fontSize = 14.sp
@@ -174,54 +174,59 @@ private fun PromoListItem(
         }
 
         IconButton(onClick = { onEdit(promo.id) }) {
-            Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Editar", tint = Color.Black)
+            Icon(Icons.Outlined.Edit, contentDescription = "Editar", tint = Color.Black)
         }
         IconButton(onClick = { onDelete(promo.id) }) {
-            Icon(imageVector = Icons.Outlined.DeleteOutline, contentDescription = "Eliminar", tint = Color.Black)
+            Icon(Icons.Outlined.DeleteOutline, contentDescription = "Eliminar", tint = Color.Black)
         }
     }
 }
-
-
 @Composable
 fun ConfirmacionEliminarDialog(
     visible: Boolean,
     mensaje: String,
+    isDeleting: Boolean,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     if (!visible) return
 
-    val moradoTexto = Color(0xFF9605F7)
+    // 🎨 Colores exactos del popup de cerrar sesión
+    val morado = Color(0xFF9605F7)         // Morado principal
+    val moradoFondo = Color(0xFFE7C6FF)    // Fondo pastel morado
+    val textoNegro = Color(0xFF000000)     // Texto principal
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(20.dp),
             color = Color.White,
-            tonalElevation = 2.dp,
-            shadowElevation = 6.dp,
+            tonalElevation = 4.dp,
+            shadowElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
                     .widthIn(min = 280.dp, max = 360.dp)
                     .padding(bottom = 16.dp)
             ) {
-                // 🔹 Encabezado decorativo morado (igual que el de cerrar sesión)
+                // 🔹 Franja superior (encabezado) morado pastel
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                        .background(moradoTexto.copy(alpha = 0.25f))
-                )
+                        .height(55.dp)
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .background(moradoFondo),
+                    contentAlignment = Alignment.Center
+                ) {
 
-                Spacer(Modifier.height(16.dp))
+                }
 
-                // 🔹 Texto principal
+                Spacer(Modifier.height(12.dp))
+
+                // 🔹 Texto del mensaje
                 Text(
-                    text = mensaje,
-                    color = Color.Black,
-                    fontSize = 18.sp,
+                    text = if (isDeleting) "Eliminando promoción..." else mensaje,
+                    color = textoNegro,
+                    fontSize = 17.sp,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
@@ -230,41 +235,64 @@ fun ConfirmacionEliminarDialog(
 
                 Spacer(Modifier.height(24.dp))
 
-                // 🔹 Botones de acción
+                // 🔹 Indicador de carga (si está eliminando)
+                if (isDeleting) {
+                    CircularProgressIndicator(
+                        color = morado,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .size(35.dp)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                // 🔹 Botones "No" y "Sí"
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally)
                 ) {
+                    // Botón "No" (bordeado)
                     OutlinedButton(
                         onClick = onDismiss,
-                        shape = RoundedCornerShape(999.dp),
+                        enabled = !isDeleting,
+                        shape = RoundedCornerShape(50.dp),
+                        border = BorderStroke(1.dp, morado),
                         colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = moradoTexto
+                            contentColor = morado
                         ),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("No")
+                        Text(
+                            "No",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
+
+                    // Botón "Sí" (relleno morado pastel)
                     Button(
                         onClick = {
-                            onConfirm()
-                            onDismiss()
+                            if (!isDeleting) onConfirm()
                         },
-                        shape = RoundedCornerShape(999.dp),
+                        enabled = !isDeleting,
+                        shape = RoundedCornerShape(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = moradoTexto.copy(alpha = 0.25f),
-                            contentColor = moradoTexto
+                            containerColor = moradoFondo,
+                            contentColor = morado
                         ),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Sí")
+                        Text(
+                            "Sí",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
         }
     }
 }
-

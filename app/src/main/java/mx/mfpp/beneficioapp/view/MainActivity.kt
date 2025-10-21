@@ -216,10 +216,15 @@ fun AppNavHost(
         }
         composable(
             route = "editarPromocion/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
         ) { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
-            Editar_Promociones(navController, id)
+            val idPromocion = backStackEntry.arguments?.getInt("id") ?: 0
+            EditarPromocion(
+                navController = navController,
+                idPromocion = idPromocion
+            )
         }
+
         composable(Pantalla.RUTA_ACERCADE_APP) {
             AcercaDePage(navController)
         }
@@ -375,9 +380,7 @@ fun AppNavHost(
         composable(Pantalla.RUTA_SOLICITUD_APP) {
             SolicitudPage(navController)
         }
-        composable(Pantalla.RUTA_ESTATUS_SOLICITUD_APP) {
-            EstatusSolicitudPage(navController)
-        }
+
         composable(Pantalla.RUTA_NOTIFICACIONES_APP) {
             NotificacionPage(navController)
         }

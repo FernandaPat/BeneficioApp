@@ -1,120 +1,156 @@
 package mx.mfpp.beneficioapp.viewmodel
 
+import android.app.Application
+import android.content.Context
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.network.RetrofitClient
+import mx.mfpp.beneficioapp.model.ServicioRemotoPromociones
+import mx.mfpp.beneficioapp.model.SessionManager
+import mx.mfpp.beneficioapp.utils.ImageUtils
 import mx.mfpp.beneficioapp.utils.ErrorHandler
-import retrofit2.HttpException
+import android.util.Log
+import android.view.PixelCopy.request
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import mx.mfpp.beneficioapp.model.ActualizarPromocionRequest
+import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
 
-class EditarPromocionViewModel : ViewModel() {
+class EditarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // 🔹 Estado de la promoción seleccionada
-    var promocion = mutableStateOf<Promocion?>(null)
-        private set
+    val nombre = mutableStateOf("")
+    val descripcion = mutableStateOf("")
+    val descuento = mutableStateOf("")
+    val imagenRemota = mutableStateOf<String?>(null)
+    val nuevaImagenUri = mutableStateOf<Uri?>(null)
 
-    // 🔹 Imagen seleccionada localmente (para mostrar previsualización)
-    var nuevaImagenUri = mutableStateOf<Uri?>(null)
-        private set
 
-    // 🔹 Estado de carga y errores
-    var isLoading = mutableStateOf(false)
-        private set
+    private val _promociones = MutableStateFlow<List<Promocion>>(emptyList())
+    val promociones: StateFlow<List<Promocion>> = _promociones
 
-    var error = mutableStateOf<String?>(null)
-        private set
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-    var mensajeExito = mutableStateOf<String?>(null)
-        private set
-
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+    private val sessionManager = SessionManager(application)
 
     /**
-     * 🔹 Cargar una promoción por ID
+     * Carga los datos de la promoción seleccionada por ID desde la API
      */
     fun cargarPromocionPorId(idPromocion: Int) {
         viewModelScope.launch {
-            isLoading.value = true
-            error.value = null
             try {
-                Log.d("EDITAR_PROMO_DEBUG", "Cargando promoción con ID = $idPromocion")
-                val response = RetrofitClient.api.obtenerPromocionPorId(idPromocion)
-                promocion.value = response
+                _isLoading.value = true
+                val idNegocio = sessionManager.getNegocioId() ?: 0
+
+                val response = ServicioRemotoPromociones.api.getPromocionesPorNegocio(idNegocio)
+                if (response.isSuccessful) {
+                    val promociones = response.body()?.data ?: emptyList()
+                    val promo = promociones.find { it.id == idPromocion }
+
+                    promo?.let {
+                        nombre.value = it.titulo ?: ""
+                        descripcion.value = it.descripcion ?: ""
+                        descuento.value = it.descuento ?: ""
+                        imagenRemota.value = it.foto
+                    }
+
+                } else {
+                    _error.value = "Error ${response.code()}: ${response.message()}"
+                    Log.e("EditarPromocionVM", _error.value ?: "")
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
-                error.value = ErrorHandler.obtenerMensajeError(e)
+                _error.value = ErrorHandler.obtenerMensajeError(e)
             } finally {
-                isLoading.value = false
+                _isLoading.value = false
             }
         }
     }
 
 
     /**
-     * 🔹 Guardar cambios (PUT)
+     * Actualiza el texto del nombre
      */
-    fun guardarCambios(
-        onSuccess: () -> Unit = {},
-        onError: (String) -> Unit = {}
+    fun actualizarNombre(nuevo: String) {
+        nombre.value = nuevo
+    }
+
+    /**
+     * Actualiza la descripción
+     */
+    fun actualizarDescripcion(nuevo: String) {
+        descripcion.value = nuevo
+    }
+
+    /**
+     * Actualiza el descuento
+     */
+    fun actualizarDescuento(nuevo: String) {
+        descuento.value = nuevo
+    }
+
+    /**
+     * Actualiza la imagen seleccionada
+     */
+    fun actualizarImagen(uri: Uri?) {
+        nuevaImagenUri.value = uri
+    }
+
+    /**
+     * Lógica para actualizar la promoción con el endpoint de Cloud Run
+     */
+    fun actualizarPromocion(
+        context: Context,
+        idPromocion: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
     ) {
-        val promoActual = promocion.value ?: return
-
         viewModelScope.launch {
-            isLoading.value = true
-            error.value = null
-            mensajeExito.value = null
-
             try {
-                val response = RetrofitClient.api.actualizarPromocion(
-                    promoActual.id,
-                    promoActual
+                _isLoading.value = true
+
+                val imagenBase64 = nuevaImagenUri.value?.let {
+                    ImageUtils.uriToBase64(context, it)
+                } ?: ""
+
+                val requestBody = mapOf(
+                    "id_promocion" to idPromocion,
+                    "titulo" to nombre.value,
+                    "descripcion" to descripcion.value,
+                    "descuento" to descuento.value,
+                    "imagen" to imagenBase64
                 )
 
+                val request = ActualizarPromocionRequest(
+                    id_promocion = idPromocion,
+                    titulo = nombre.value,
+                    descripcion = descripcion.value,
+                    descuento = descuento.value,
+                    imagen = imagenBase64
+                )
+
+                val response = ServicioRemotoActualizarPromocion.api.actualizarPromocion(request)
+
+
                 if (response.isSuccessful) {
-                    mensajeExito.value = "Promoción actualizada con éxito 🎉"
+                    Log.d("ActualizarPromocion", "✅ Promoción actualizada correctamente")
                     onSuccess()
                 } else {
-                    val mensaje = "Error al actualizar: ${response.code()} ${response.message()}"
-                    error.value = mensaje
-                    onError(mensaje)
+                    onError("❌ Error ${response.code()}: ${response.message()}")
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                val mensaje = ErrorHandler.obtenerMensajeError(e)
-                error.value = mensaje
-                onError(mensaje)
+                onError(ErrorHandler.obtenerMensajeError(e))
             } finally {
-                isLoading.value = false
+                _isLoading.value = false
+
             }
         }
-    }
-
-    // 🔹 Métodos para actualizar campos individuales
-    fun actualizarNombre(nuevo: String) {
-        promocion.value = promocion.value?.copy(nombre = nuevo)
-    }
-
-    fun actualizarDescripcion(nuevo: String) {
-        promocion.value = promocion.value?.copy(descripcion = nuevo)
-    }
-
-    fun actualizarDescuento(nuevo: String) {
-        promocion.value = promocion.value?.copy(descuento = nuevo)
-    }
-
-    fun actualizarCategoria(nueva: String) {
-        promocion.value = promocion.value?.copy(categoria = nueva)
-    }
-
-    fun actualizarExpiraEn(dias: Int?) {
-        promocion.value = promocion.value?.copy(expiraEn = dias)
-    }
-
-    fun actualizarImagen(uri: Uri?) {
-        nuevaImagenUri.value = uri
     }
 }

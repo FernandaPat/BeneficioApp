@@ -80,7 +80,9 @@ fun InicioPage(
 
     val context= LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-    val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
+    val nombreJovenCompleto = sessionManager.getNombreJoven() ?: "Joven"
+    val nombreJoven = nombreJovenCompleto.split(" ").firstOrNull() ?: "Joven"
+
 
     // COMENTAR TEMPORALMENTE LOS FAVORITOS
     /*
