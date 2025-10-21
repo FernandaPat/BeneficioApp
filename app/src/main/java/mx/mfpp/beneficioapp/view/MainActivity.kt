@@ -1,6 +1,8 @@
 package mx.mfpp.beneficioapp.view
 
+import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -25,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -36,6 +39,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
@@ -73,6 +78,63 @@ class MainActivity : ComponentActivity() {
             accessToken != null && userType == "establecimiento" -> Pantalla.RUTA_INICIO_NEGOCIO
             else -> Pantalla.RUTA_JN_APP
         }
+
+
+        // ✅ OBTENER TOKEN FCM CON LOGS DETALLADOS (VERSIÓN KTX)
+        Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        Log.d("FCM_DEBUG", "🔥 Iniciando proceso de Firebase Cloud Messaging")
+        Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.e("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                Log.e("FCM_DEBUG", "❌ ERROR: No se pudo obtener el token FCM")
+                Log.e("FCM_DEBUG", "❌ Excepción: ${task.exception?.javaClass?.simpleName}")
+                Log.e("FCM_DEBUG", "❌ Mensaje: ${task.exception?.message}")
+                Log.e("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                task.exception?.printStackTrace()
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Log.d("FCM_DEBUG", "✅ ¡TOKEN FCM OBTENIDO EXITOSAMENTE!")
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Log.d("FCM_DEBUG", "🔑 Token completo:")
+            Log.d("FCM_DEBUG", token)
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Log.d("FCM_DEBUG", "📏 Longitud: ${token.length} caracteres")
+            Log.d("FCM_DEBUG", "🔤 Preview: ${token.take(20)}...")
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+            // ✅ GUARDAR TOKEN CON KTX
+            try {
+                getSharedPreferences("fcm", Context.MODE_PRIVATE).edit {
+                    putString("token", token)
+                }
+
+                Log.d("FCM_DEBUG", "💾 Token guardado en SharedPreferences")
+
+                // Verificar
+                val savedToken = getSharedPreferences("fcm", Context.MODE_PRIVATE)
+                    .getString("token", null)
+
+                if (savedToken == token) {
+                    Log.d("FCM_DEBUG", "✅ Verificación exitosa")
+                } else {
+                    Log.e("FCM_DEBUG", "❌ ERROR: Token NO se guardó")
+                }
+
+            } catch (e: Exception) {
+                Log.e("FCM_DEBUG", "❌ ERROR guardando: ${e.message}")
+            }
+
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            Log.d("FCM_DEBUG", "📤 SIGUIENTE: Enviar al servidor")
+            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        }
+
 
 
         // Configurar interfaz full-screen

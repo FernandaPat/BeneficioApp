@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -86,6 +87,10 @@ dependencies {
 
     //Libreria para seguridad
     implementation("androidx.security:security-crypto:1.0.0")
+
+    //Librerias para notificaciones
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
     implementation(libs.zxing.core)
     implementation(libs.play.services.location)

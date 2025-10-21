@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "819994103285",
+    "project_id": "beneficio-ffa1f",
+    "storage_bucket": "beneficio-ffa1f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:819994103285:android:7f398b1b5e411b8322a4bc",
+        "android_client_info": {
+          "package_name": "mx.mfpp.beneficioapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIEWi1mXkE1APETcuU-TXboodahvahWZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

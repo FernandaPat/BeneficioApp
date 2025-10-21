@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="mx.mfpp.beneficioapp" />
+                  <option name="mobileSdkAppId" value="1:819994103285:android:7f398b1b5e411b8322a4bc" />
+                  <option name="projectId" value="beneficio-ffa1f" />
+                  <option name="projectNumber" value="819994103285" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
