@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Establecimiento
-import mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimiento
 import com.google.android.gms.maps.model.LatLng
+import mx.mfpp.beneficioapp.mode.ServicioRemotoEstablecimiento
 import kotlin.math.*
 
 class MapaViewModel : ViewModel() {

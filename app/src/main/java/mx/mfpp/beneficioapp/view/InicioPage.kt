@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -238,7 +237,7 @@ fun CardEstablecimientoHorizontal(
             Box(modifier = Modifier.fillMaxSize()) {
                 // Imagen del establecimiento
                 AsyncImage(
-                    model = establecimiento.foto ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
+                    model = establecimiento.imagen ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
                     contentDescription = "Imagen de ${establecimiento.nombre}",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -408,7 +407,6 @@ fun CardItemHorizontal(
     esNuevaSeccion: Boolean = false,
     onItemClick: () -> Unit
 ) {
-    val colorMorado = Color(0xFF6A5ACD)
 
     // Texto y color según la sección
     val (textoEstado, colorFondo, colorTexto) = if (esNuevaSeccion) {
@@ -491,9 +489,9 @@ fun CardItemHorizontal(
                 .fillMaxWidth()
                 .padding(top = 4.dp) // Mínimo espaciado
         ) {
-            // Nombre del establecimiento
+
             Text(
-                text = promocion.nombre_establecimiento,
+                text = promocion.titulo,
                 color = Color.Black,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -504,7 +502,7 @@ fun CardItemHorizontal(
 
             // Título de la promoción - CAMBIO: titulo_promocion -> titulo
             Text(
-                text = promocion.titulo, // CAMBIO AQUÍ
+                text = promocion.nombre_establecimiento, // CAMBIO AQUÍ
                 color = Color.Gray,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Normal,

@@ -216,7 +216,7 @@ fun NegocioDetalleHeader(
 ) {
     Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
         AsyncImage(
-            model = establecimiento.foto ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+            model = establecimiento.imagen ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
             contentDescription = "Imagen del negocio",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
