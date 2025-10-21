@@ -69,11 +69,9 @@ fun InicioPage(
     val promocionesExpiracion by promocionesViewModel.promocionesExpiracion.collectAsState()
     val todasPromociones by promocionesViewModel.todasPromociones.collectAsState()
 
-    // CORRECCIÓN: Obtener loading y error del ViewModel de promociones
     val promocionesLoading by promocionesViewModel.isLoading.collectAsState()
     val promocionesError by promocionesViewModel.error.collectAsState()
 
-    // Obtener establecimientos del ViewModel de búsqueda
     val todosEstablecimientos by busquedaViewModel.establecimientos.collectAsState()
     val establecimientosLoading by busquedaViewModel.isLoading.collectAsState()
     val establecimientosError by busquedaViewModel.error.collectAsState()
@@ -85,7 +83,8 @@ fun InicioPage(
     val sessionManager = remember { SessionManager(context) }
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
-
+    // COMENTAR TEMPORALMENTE LOS FAVORITOS
+    /*
     val favoritosViewModel: FavoritosViewModel = viewModel(
         factory = FavoritosViewModelFactory(sessionManager)
     )
@@ -97,8 +96,7 @@ fun InicioPage(
             value = result.getOrElse { emptyList() }
         }
     }
-
-
+    */
 
     Scaffold(
         topBar = { HomeTopBar(nombreJoven,navController) }
@@ -126,6 +124,8 @@ fun InicioPage(
                         navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                     })
 
+                    // COMENTAR LA SECCIÓN DE FAVORITOS
+                    /*
                     SeccionHorizontalFavoritos(
                         titulo = "Tus Favoritos",
                         favoritos = listaFavoritos,
@@ -133,6 +133,7 @@ fun InicioPage(
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${favorito.id_establecimiento}")
                         }
                     )
+                    */
 
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
@@ -399,6 +400,7 @@ fun SeccionHorizontal(
         }
     }
 }
+
 @Composable
 fun CardItemHorizontal(
     promocion: PromocionJoven,
@@ -450,7 +452,7 @@ fun CardItemHorizontal(
                 // Imagen rectangular
                 AsyncImage(
                     model = promocion.foto ?: "https://picsum.photos/200/150?random=${promocion.id}",
-                    contentDescription = "Imagen de ${promocion.titulo_promocion}",
+                    contentDescription = "Imagen de ${promocion.titulo}", // CAMBIO: titulo_promocion -> titulo
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -500,9 +502,9 @@ fun CardItemHorizontal(
                 lineHeight = 14.sp
             )
 
-            // Título de la promoción
+            // Título de la promoción - CAMBIO: titulo_promocion -> titulo
             Text(
-                text = promocion.titulo_promocion,
+                text = promocion.titulo, // CAMBIO AQUÍ
                 color = Color.Gray,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Normal,

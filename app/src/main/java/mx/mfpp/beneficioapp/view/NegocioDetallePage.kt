@@ -258,7 +258,7 @@ fun PromocionItem(
     ) {
         AsyncImage(
             model = promocion.foto ?: "https://via.placeholder.com/150",
-            contentDescription = promocion.titulo_promocion,
+            contentDescription = promocion.titulo,
             modifier = Modifier
                 .size(70.dp)
                 .clip(RoundedCornerShape(10.dp)),
@@ -271,7 +271,7 @@ fun PromocionItem(
             modifier = Modifier.weight(1f).padding(end = 8.dp)
         ) {
             Text(
-                text = promocion.titulo_promocion,
+                text = promocion.titulo,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Color.Black,
