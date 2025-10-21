@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ServicioRemotoFavoritos {
-    private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
+    private const val URL_BASE = "https://rs2xlkq5el.execute-api.us-east-1.amazonaws.com/default/"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()
@@ -52,25 +52,6 @@ object ServicioRemotoFavoritos {
                 val body = response.body()
                 Log.d("FAVORITOS_SERVICIO", "✅ ${body?.message}")
                 Result.success(body?.message ?: "Eliminado de favoritos")
-            } else {
-                val errorMsg = "Error ${response.code()}: ${response.message()}"
-                Log.e("FAVORITOS_SERVICIO", "❌ $errorMsg")
-                Result.failure(Exception(errorMsg))
-            }
-        } catch (e: Exception) {
-            Log.e("FAVORITOS_SERVICIO", "❌ Exception: ${e.message}", e)
-            Result.failure(e)
-        }
-    }
-
-    suspend fun obtenerFavoritos(idUsuario: Int): Result<List<FavoritoDetalle>> {
-        return try {
-            val response = servicio.obtenerFavoritos(idUsuario)
-
-            if (response.isSuccessful) {
-                val body = response.body()
-                Log.d("FAVORITOS_SERVICIO", "✅ ${body?.total} favoritos obtenidos")
-                Result.success(body?.favoritos ?: emptyList())
             } else {
                 val errorMsg = "Error ${response.code()}: ${response.message()}"
                 Log.e("FAVORITOS_SERVICIO", "❌ $errorMsg")

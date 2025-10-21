@@ -149,7 +149,16 @@ fun NegocioDetallePage(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Button(
-                    onClick = { navController.navigate(Pantalla.RUTA_MAPA_APP) },
+                    onClick = {
+                        val lat = establecimientoOriginal!!.latitud
+                        val lng = establecimientoOriginal!!.longitud
+                        if (lat != null && lng != null) {
+                            // Pasar como Float directamente
+                            navController.navigate("MapaPage?lat=${lat.toFloat()}&lng=${lng.toFloat()}")
+                        } else {
+                            Toast.makeText(context, "Ubicación no disponible", Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = moradoBoton),
                     shape = RoundedCornerShape(50.dp),
                     contentPadding = PaddingValues(horizontal = 25.dp, vertical = 6.dp)

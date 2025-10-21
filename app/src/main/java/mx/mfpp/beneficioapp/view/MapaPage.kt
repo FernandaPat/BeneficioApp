@@ -35,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.google.android.gms.location.*
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -45,22 +46,22 @@ import mx.mfpp.beneficioapp.viewmodel.MapaViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
+fun MapaPage(
+navController: NavController,
+lat: Double? = null,
+lng: Double? = null,
+modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val viewModel: MapaViewModel = viewModel()
 
     val establecimientos by viewModel.establecimientosFiltrados.collectAsState()
-    val establecimientosConCoordenadas by remember {
-        derivedStateOf { viewModel.establecimientosConCoordenadas }
-    }
-    val establecimientosOrdenados by remember {
-        derivedStateOf { viewModel.establecimientosOrdenadosPorDistancia }
-    }
+    val establecimientosConCoordenadas by remember { derivedStateOf { viewModel.establecimientosConCoordenadas } }
+    val establecimientosOrdenados by remember { derivedStateOf { viewModel.establecimientosOrdenadosPorDistancia } }
     val ubicacionActual by viewModel.ubicacionActual.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
 
-    // --- Permiso y ubicación ---
     var hasLocationPermission by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
 
@@ -68,7 +69,6 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         LocationServices.getFusedLocationProviderClient(context)
     }
 
-    // --- Configurar request y callback ---
     val locationRequest = remember {
         LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000).build()
     }
@@ -80,14 +80,12 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 if (loc != null) {
                     val nuevaUbicacion = LatLng(loc.latitude, loc.longitude)
                     currentLocation = nuevaUbicacion
-                    // Actualizar la ubicación en el ViewModel para calcular distancias
                     viewModel.actualizarUbicacionActual(nuevaUbicacion)
                 }
             }
         }
     }
 
-    // --- Estado del mapa y hoja ---
     val sheetState = rememberStandardBottomSheetState(
         initialValue = SheetValue.PartiallyExpanded,
         skipHiddenState = true
@@ -95,10 +93,29 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
     val scaffoldState = rememberBottomSheetScaffoldState(bottomSheetState = sheetState)
     val cameraPositionState = rememberCameraPositionState()
 
-    // --- Búsqueda ---
+    // ✅ CORRECCIÓN 1: Centrar cámara en el negocio si se pasan coordenadas
+    LaunchedEffect(lat, lng) {
+        if (lat != null && lng != null) {
+            val posicionNegocio = LatLng(lat, lng)
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(posicionNegocio, 17f),
+                durationMs = 1000
+            )
+        }
+    }
+
+    // ✅ CORRECCIÓN 2: Solo centrar en la ubicación actual si NO se abrió desde detalle
+    LaunchedEffect(currentLocation) {
+        if (currentLocation != null && lat == null && lng == null) {
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(currentLocation!!, 15f),
+                durationMs = 1000
+            )
+        }
+    }
+
     var query by remember { mutableStateOf("") }
 
-    // --- Permiso launcher ---
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             hasLocationPermission = isGranted
@@ -121,7 +138,6 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
             }
         }
 
-    // --- Verificar permiso al iniciar ---
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(
                 context,
@@ -146,30 +162,21 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         }
     }
 
-    // Cuando se obtiene ubicación, centramos el mapa automáticamente
-    LaunchedEffect(currentLocation) {
-        currentLocation?.let {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 15f)
-            viewModel.actualizarUbicacionActual(it)
-        }
-    }
-
-    // Filtrar establecimientos cuando cambia la query
+    // ✅ Filtrado y errores permanecen igual
     LaunchedEffect(query) {
         viewModel.filtrarEstablecimientos(query)
     }
 
-    // Manejar errores
     LaunchedEffect(error) {
-        error?.let { errorMessage ->
-            Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             viewModel.clearError()
         }
     }
 
     BottomSheetScaffold(
         scaffoldState = scaffoldState,
-        sheetPeekHeight = 230.dp,
+        sheetPeekHeight = 280.dp, // un poco más visible
         sheetShape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         sheetContainerColor = Color.White,
         sheetDragHandle = {
@@ -190,9 +197,7 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
         },
         sheetContent = {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
                 contentPadding = PaddingValues(bottom = 60.dp)
             ) {
@@ -209,26 +214,20 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 if (isLoading) {
                     item {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp),
+                            modifier = Modifier.fillMaxWidth().height(100.dp),
                             contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                        ) { CircularProgressIndicator() }
                     }
                 } else if (establecimientosOrdenados.isEmpty()) {
                     item {
                         Text(
                             text = "No hay establecimientos disponibles",
                             color = Color.Gray,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
+                            modifier = Modifier.fillMaxWidth().padding(16.dp)
                         )
                     }
                 } else {
-                    items(items = establecimientosOrdenados, key = { it.id_establecimiento }) { establecimiento ->
+                    items(establecimientosOrdenados, key = { it.id_establecimiento }) { establecimiento ->
                         EstablecimientoCard(
                             establecimiento = establecimiento,
                             ubicacionActual = ubicacionActual,
@@ -249,24 +248,32 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 cameraPositionState = cameraPositionState,
                 properties = MapProperties(isMyLocationEnabled = hasLocationPermission)
             ) {
-                // Marcador de ubicación actual
-                currentLocation?.let { location ->
+                // ✅ marcador del negocio si viene desde DetalleNegocio
+                if (lat != null && lng != null) {
                     Marker(
-                        state = MarkerState(position = location),
+                        state = MarkerState(position = LatLng(lat, lng)),
+                        title = "Ubicación del negocio",
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    )
+                }
+
+                // marcador de ubicación actual
+                currentLocation?.let {
+                    Marker(
+                        state = MarkerState(position = it),
                         title = "Mi ubicación actual",
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
                     )
                 }
 
-                // Marcadores de establecimientos con coordenadas
-                establecimientosConCoordenadas.forEach { establecimiento ->
-                    establecimiento.latitud?.let { lat ->
-                        establecimiento.longitud?.let { lng ->
-                            val coordenadas = LatLng(lat, lng)
+                // marcadores de todos los establecimientos
+                establecimientosConCoordenadas.forEach { est ->
+                    est.latitud?.let { la ->
+                        est.longitud?.let { lo ->
                             Marker(
-                                state = MarkerState(position = coordenadas),
-                                title = establecimiento.nombre,
-                                snippet = "${establecimiento.nombre_categoria} • ${establecimiento.colonia}",
+                                state = MarkerState(LatLng(la, lo)),
+                                title = est.nombre,
+                                snippet = "${est.nombre_categoria} • ${est.colonia}",
                                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
                             )
                         }
@@ -279,9 +286,8 @@ fun MapaPage(navController: NavController, modifier: Modifier = Modifier) {
                 onSearchTextChanged = { query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 24.dp)
                     .align(Alignment.TopCenter)
-                    .padding(top = 24.dp)
             )
         }
     }
