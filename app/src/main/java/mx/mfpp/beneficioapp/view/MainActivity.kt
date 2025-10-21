@@ -1,10 +1,14 @@
 package mx.mfpp.beneficioapp.view
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -66,6 +71,16 @@ class MainActivity : ComponentActivity() {
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("FCM_DEBUG", "Permiso concedido")
+        } else {
+            Log.w("FCM_DEBUG", "Permiso denegado")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Configuracion para guardar la sesion
@@ -79,34 +94,13 @@ class MainActivity : ComponentActivity() {
             else -> Pantalla.RUTA_JN_APP
         }
 
-
-        // ✅ OBTENER TOKEN FCM CON LOGS DETALLADOS (VERSIÓN KTX)
-        Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        Log.d("FCM_DEBUG", "🔥 Iniciando proceso de Firebase Cloud Messaging")
-        Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
             if (!task.isSuccessful) {
-                Log.e("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                Log.e("FCM_DEBUG", "❌ ERROR: No se pudo obtener el token FCM")
-                Log.e("FCM_DEBUG", "❌ Excepción: ${task.exception?.javaClass?.simpleName}")
-                Log.e("FCM_DEBUG", "❌ Mensaje: ${task.exception?.message}")
-                Log.e("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 task.exception?.printStackTrace()
                 return@addOnCompleteListener
             }
 
             val token = task.result
-
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d("FCM_DEBUG", "✅ ¡TOKEN FCM OBTENIDO EXITOSAMENTE!")
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d("FCM_DEBUG", "🔑 Token completo:")
-            Log.d("FCM_DEBUG", token)
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d("FCM_DEBUG", "📏 Longitud: ${token.length} caracteres")
-            Log.d("FCM_DEBUG", "🔤 Preview: ${token.take(20)}...")
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
             // ✅ GUARDAR TOKEN CON KTX
             try {
@@ -114,25 +108,20 @@ class MainActivity : ComponentActivity() {
                     putString("token", token)
                 }
 
-                Log.d("FCM_DEBUG", "💾 Token guardado en SharedPreferences")
-
-                // Verificar
-                val savedToken = getSharedPreferences("fcm", Context.MODE_PRIVATE)
-                    .getString("token", null)
-
-                if (savedToken == token) {
-                    Log.d("FCM_DEBUG", "✅ Verificación exitosa")
-                } else {
-                    Log.e("FCM_DEBUG", "❌ ERROR: Token NO se guardó")
-                }
 
             } catch (e: Exception) {
                 Log.e("FCM_DEBUG", "❌ ERROR guardando: ${e.message}")
             }
+        }
 
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            Log.d("FCM_DEBUG", "📤 SIGUIENTE: Enviar al servidor")
-            Log.d("FCM_DEBUG", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
         }
 
 

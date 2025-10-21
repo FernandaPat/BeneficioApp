@@ -66,19 +66,16 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun iniciarSesion() {
-        Log.d("AUTH0_LOGIN", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        Log.d("AUTH0_LOGIN", "🔐 iniciarSesion() llamado")
-        Log.d("AUTH0_LOGIN", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         if (!esFormularioValido()) {
-            Log.d("AUTH0_LOGIN", "❌ Formulario no válido")
+            Log.d("AUTH0_LOGIN", "Formulario no válido")
             _loginState.value = LoginState.Error("Correo y contraseña válidos requeridos")
             return
         }
 
-        Log.d("AUTH0_LOGIN", "✅ Formulario válido")
-        Log.d("AUTH0_LOGIN", "📧 Email: ${login.value.correo}")
-        Log.d("AUTH0_LOGIN", "🔄 Iniciando autenticación con Auth0...")
+        Log.d("AUTH0_LOGIN", "Formulario válido")
+        Log.d("AUTH0_LOGIN", "Email: ${login.value.correo}")
+        Log.d("AUTH0_LOGIN", "Iniciando autenticación con Auth0...")
 
         _loginState.value = LoginState.Loading
 
@@ -88,9 +85,6 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
-                    Log.d("AUTH0_SUCCESS", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                    Log.d("AUTH0_SUCCESS", "✅ AUTH0 LOGIN EXITOSO")
-                    Log.d("AUTH0_SUCCESS", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
                     val idToken = result.idToken
                     val accessToken = result.accessToken
@@ -104,40 +98,33 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
                     val nombreJoven = jwt.getClaim(namespace + "nombre_completo").asString() ?: "Joven"
                     val folioDigital = jwt.getClaim(namespace + "folio_digital").asString() ?: "0"
 
-                    Log.d("AUTH0_SUCCESS", "👤 Tipo de usuario: $userType")
-                    Log.d("AUTH0_SUCCESS", "🆔 ID joven: $idJoven")
-                    Log.d("AUTH0_SUCCESS", "📛 Nombre: $nombreJoven")
-                    Log.d("AUTH0_SUCCESS", "🎫 Folio: $folioDigital")
+                    Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
+                    Log.d("AUTH0_SUCCESS", "ID joven: $idJoven")
+                    Log.d("AUTH0_SUCCESS", "Nombre: $nombreJoven")
+                    Log.d("AUTH0_SUCCESS", "Folio: $folioDigital")
 
                     // Guardar sesión
                     val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
                     sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital)
 
-                    Log.d("AUTH0_SUCCESS", "💾 Sesión guardada en SessionManager")
+                    Log.d("AUTH0_SUCCESS", "Sesión guardada en SessionManager")
 
                     // ✅ REGISTRAR TOKEN FCM (SOLO PARA JÓVENES)
                     if (userType == "joven" && idJoven != -1) {
-                        Log.d("AUTH0_SUCCESS", "🔔 Usuario es JOVEN → Registrando token FCM")
+                        Log.d("AUTH0_SUCCESS", "Usuario es JOVEN → Registrando token FCM")
                         FcmHelper.registrarTokenEnServidor(idJoven)
                     } else {
-                        Log.d("AUTH0_SUCCESS", "⚠️ Usuario NO es joven o ID inválido → No se registra token FCM")
+                        Log.d("AUTH0_SUCCESS", "⚠Usuario NO es joven o ID inválido → No se registra token FCM")
                     }
 
                     _loginState.value = LoginState.Success(accessToken, idJoven)
-
-                    Log.d("AUTH0_SUCCESS", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                    Log.d("AUTH0_SUCCESS", "✅ PROCESO DE LOGIN COMPLETO")
-                    Log.d("AUTH0_SUCCESS", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 }
 
                 override fun onFailure(error: AuthenticationException) {
-                    Log.e("AUTH0_ERROR", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                    Log.e("AUTH0_ERROR", "❌ ERROR EN LOGIN")
-                    Log.e("AUTH0_ERROR", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    Log.e("AUTH0_ERROR", "ERROR EN LOGIN")
                     Log.e("AUTH0_ERROR", "Código: ${error.getCode()}")
                     Log.e("AUTH0_ERROR", "Descripción: ${error.getDescription()}")
-                    Log.e("AUTH0_ERROR", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
                     val mensaje = AuthErrorUtils.obtenerMensaje(error)
                     _loginState.value = LoginState.Error(mensaje)
