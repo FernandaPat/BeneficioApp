@@ -212,7 +212,7 @@ fun FechaDesdePicker(
     var showPicker by rememberSaveable { mutableStateOf(false) }
     val pickerState = rememberDatePickerState(initialSelectedDateMillis = null)
 
-    Etiqueta(label, modifier = Modifier.padding(start = 4.dp))
+    Etiqueta(label,true,  modifier = Modifier.padding(start = 4.dp))
     Box {
         BeneficioOutlinedTextField(
             value = value,
@@ -284,7 +284,7 @@ fun FechaHastaPicker(
         selectableDates = selectableDates
     )
 
-    Etiqueta(label, modifier = Modifier.padding(start = 4.dp))
+    Etiqueta(label,true, modifier = Modifier.padding(start = 4.dp))
     Box {
         BeneficioOutlinedTextField(
             value = value,
