@@ -318,10 +318,16 @@ fun AppNavHost(
             )
         }
 
-        composable("NegocioDetallePage/{id}") { backStackEntry ->
-            val id = backStackEntry.arguments?.getString("id")
-            NegocioDetallePage(id = id, navController = navController)
+        composable(
+            "NegocioDetallePage/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+            NegocioDetallePage(
+                id = backStackEntry.arguments?.getString("id"),
+                navController = navController
+            )
         }
+
 
         // Ruta simple para resultados sin categoría
         composable(Pantalla.RUTA_RESULTADOS_APP) {

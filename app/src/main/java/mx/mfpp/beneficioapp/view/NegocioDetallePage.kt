@@ -1,7 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,6 +29,7 @@ import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
 import mx.mfpp.beneficioapp.viewmodel.NegocioDetalleViewModel
+import java.net.URLDecoder
 
 @Composable
 fun NegocioDetallePage(
@@ -88,12 +87,10 @@ fun NegocioDetallePage(
         mensajeFavoritos?.let { mensaje ->
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             favoritosViewModel.clearMensaje()
-
-            // 🔹 CAMBIO CRÍTICO: NO recargar favoritos después de operaciones
-            // Solo actualizamos el estado local, no recargamos toda la lista
         }
     }
 
+    // Usamos tu ViewModel existente con factory
     val viewModel: NegocioDetalleViewModel = viewModel(
         factory = NegocioDetalleViewModel.NegocioDetalleViewModelFactory(establecimientoId)
     )
@@ -115,7 +112,6 @@ fun NegocioDetallePage(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                // 🔹 MOVER la imagen fuera del bloque que podría recargarse
                 NegocioDetalleHeader(
                     establecimiento = establecimientoOriginal!!,
                     esFavorito = esFavorito,
@@ -207,7 +203,6 @@ fun NegocioDetallePage(
     }
 }
 
-// 🔹 NUEVO COMPONENTE: Header separado para evitar recargas
 @Composable
 fun NegocioDetalleHeader(
     establecimiento: Establecimiento,
@@ -216,7 +211,7 @@ fun NegocioDetalleHeader(
 ) {
     Box(modifier = Modifier.fillMaxWidth().height(240.dp)) {
         AsyncImage(
-            model = establecimiento.foto ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
+            model = establecimiento.imagen ?: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267",
             contentDescription = "Imagen del negocio",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
@@ -258,7 +253,7 @@ fun PromocionItem(
     ) {
         AsyncImage(
             model = promocion.foto ?: "https://via.placeholder.com/150",
-            contentDescription = promocion.titulo_promocion,
+            contentDescription = promocion.titulo,
             modifier = Modifier
                 .size(70.dp)
                 .clip(RoundedCornerShape(10.dp)),
@@ -271,7 +266,7 @@ fun PromocionItem(
             modifier = Modifier.weight(1f).padding(end = 8.dp)
         ) {
             Text(
-                text = promocion.titulo_promocion,
+                text = promocion.titulo,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp,
                 color = Color.Black,
@@ -308,3 +303,4 @@ fun PromocionItem(
         }
     }
 }
+

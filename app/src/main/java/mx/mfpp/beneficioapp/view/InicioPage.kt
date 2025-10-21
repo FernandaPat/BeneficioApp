@@ -13,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -69,11 +68,9 @@ fun InicioPage(
     val promocionesExpiracion by promocionesViewModel.promocionesExpiracion.collectAsState()
     val todasPromociones by promocionesViewModel.todasPromociones.collectAsState()
 
-    // CORRECCIÓN: Obtener loading y error del ViewModel de promociones
     val promocionesLoading by promocionesViewModel.isLoading.collectAsState()
     val promocionesError by promocionesViewModel.error.collectAsState()
 
-    // Obtener establecimientos del ViewModel de búsqueda
     val todosEstablecimientos by busquedaViewModel.establecimientos.collectAsState()
     val establecimientosLoading by busquedaViewModel.isLoading.collectAsState()
     val establecimientosError by busquedaViewModel.error.collectAsState()
@@ -85,7 +82,8 @@ fun InicioPage(
     val sessionManager = remember { SessionManager(context) }
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
-
+    // COMENTAR TEMPORALMENTE LOS FAVORITOS
+    /*
     val favoritosViewModel: FavoritosViewModel = viewModel(
         factory = FavoritosViewModelFactory(sessionManager)
     )
@@ -97,8 +95,7 @@ fun InicioPage(
             value = result.getOrElse { emptyList() }
         }
     }
-
-
+    */
 
     Scaffold(
         topBar = { HomeTopBar(nombreJoven,navController) }
@@ -126,6 +123,8 @@ fun InicioPage(
                         navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                     })
 
+                    // COMENTAR LA SECCIÓN DE FAVORITOS
+                    /*
                     SeccionHorizontalFavoritos(
                         titulo = "Tus Favoritos",
                         favoritos = listaFavoritos,
@@ -133,6 +132,7 @@ fun InicioPage(
                             navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${favorito.id_establecimiento}")
                         }
                     )
+                    */
 
                     SeccionHorizontal(
                         titulo = "Nuevas Promociones",
@@ -237,7 +237,7 @@ fun CardEstablecimientoHorizontal(
             Box(modifier = Modifier.fillMaxSize()) {
                 // Imagen del establecimiento
                 AsyncImage(
-                    model = establecimiento.foto ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
+                    model = establecimiento.imagen ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
                     contentDescription = "Imagen de ${establecimiento.nombre}",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -399,6 +399,7 @@ fun SeccionHorizontal(
         }
     }
 }
+
 @Composable
 fun CardItemHorizontal(
     promocion: PromocionJoven,
@@ -406,7 +407,6 @@ fun CardItemHorizontal(
     esNuevaSeccion: Boolean = false,
     onItemClick: () -> Unit
 ) {
-    val colorMorado = Color(0xFF6A5ACD)
 
     // Texto y color según la sección
     val (textoEstado, colorFondo, colorTexto) = if (esNuevaSeccion) {
@@ -450,7 +450,7 @@ fun CardItemHorizontal(
                 // Imagen rectangular
                 AsyncImage(
                     model = promocion.foto ?: "https://picsum.photos/200/150?random=${promocion.id}",
-                    contentDescription = "Imagen de ${promocion.titulo_promocion}",
+                    contentDescription = "Imagen de ${promocion.titulo}", // CAMBIO: titulo_promocion -> titulo
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -489,9 +489,9 @@ fun CardItemHorizontal(
                 .fillMaxWidth()
                 .padding(top = 4.dp) // Mínimo espaciado
         ) {
-            // Nombre del establecimiento
+
             Text(
-                text = promocion.nombre_establecimiento,
+                text = promocion.titulo,
                 color = Color.Black,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -500,9 +500,9 @@ fun CardItemHorizontal(
                 lineHeight = 14.sp
             )
 
-            // Título de la promoción
+            // Título de la promoción - CAMBIO: titulo_promocion -> titulo
             Text(
-                text = promocion.titulo_promocion,
+                text = promocion.nombre_establecimiento, // CAMBIO AQUÍ
                 color = Color.Gray,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Normal,

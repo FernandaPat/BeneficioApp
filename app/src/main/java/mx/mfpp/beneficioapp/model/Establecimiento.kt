@@ -17,14 +17,16 @@ package mx.mfpp.beneficioapp.model
 data class Establecimiento(
     val id_establecimiento: Int,
     val nombre: String,
-    val foto: String?,
     val colonia: String,
-    val latitud: Double?,
-    val longitud: Double?,
-    val id_categoria: Int,
     val nombre_categoria: String,
+    val direccion: String? = null,
+    val telefono: String? = null,
+    val latitud: Double? = null,
+    val longitud: Double? = null,
+    val imagen: String? = null,
     val es_favorito: Boolean = false
 )
+
 
 /**
  * Respuesta de la API de establecimientos con paginación

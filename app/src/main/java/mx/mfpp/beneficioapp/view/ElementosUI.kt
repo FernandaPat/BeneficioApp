@@ -211,8 +211,8 @@ fun ArrowTopBar(
     navController: NavController,
     text: String,
     modifier: Modifier = Modifier,
-    barHeight: Dp = 72.dp,   // ajusta altura visual
-    topOffset: Dp = 6.dp      // baja un poco el título
+    barHeight: Dp = 72.dp,
+    topOffset: Dp = 6.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val (modifierAnimado, colorAnimado) = crearAnimacionIconosBotones(
@@ -224,7 +224,7 @@ fun ArrowTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .statusBarsPadding()
+            // 🔹 QUITA esta línea: .statusBarsPadding()
             .background(Color.White)
             .height(barHeight)
             .padding(bottom = 5.dp)
@@ -247,14 +247,13 @@ fun ArrowTopBar(
             )
         }
 
-        // Título centrado absoluto y un pelín más abajo
+        // Título centrado
         TextoMedioGrande(
             texto = text,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(top = topOffset)
         )
-
     }
 }
 
