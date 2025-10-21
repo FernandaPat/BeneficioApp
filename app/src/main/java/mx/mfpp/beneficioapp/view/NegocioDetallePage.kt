@@ -1,7 +1,5 @@
 package mx.mfpp.beneficioapp.view
 
-import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -31,6 +29,7 @@ import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
 import mx.mfpp.beneficioapp.viewmodel.NegocioDetalleViewModel
+import java.net.URLDecoder
 
 @Composable
 fun NegocioDetallePage(
@@ -88,12 +87,10 @@ fun NegocioDetallePage(
         mensajeFavoritos?.let { mensaje ->
             Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
             favoritosViewModel.clearMensaje()
-
-            // 🔹 CAMBIO CRÍTICO: NO recargar favoritos después de operaciones
-            // Solo actualizamos el estado local, no recargamos toda la lista
         }
     }
 
+    // Usamos tu ViewModel existente con factory
     val viewModel: NegocioDetalleViewModel = viewModel(
         factory = NegocioDetalleViewModel.NegocioDetalleViewModelFactory(establecimientoId)
     )
@@ -115,7 +112,6 @@ fun NegocioDetallePage(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                // 🔹 MOVER la imagen fuera del bloque que podría recargarse
                 NegocioDetalleHeader(
                     establecimiento = establecimientoOriginal!!,
                     esFavorito = esFavorito,
@@ -207,7 +203,6 @@ fun NegocioDetallePage(
     }
 }
 
-// 🔹 NUEVO COMPONENTE: Header separado para evitar recargas
 @Composable
 fun NegocioDetalleHeader(
     establecimiento: Establecimiento,
@@ -308,3 +303,4 @@ fun PromocionItem(
         }
     }
 }
+
