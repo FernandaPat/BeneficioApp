@@ -56,7 +56,7 @@ class HistorialViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                val historialData = ServicioRemotoHistorial.obtenerHistorialEstablecimiento(idEstablecimiento)
+                val historialData = ServicioRemotoHistorial.obtenerHistorialUsuario(idEstablecimiento)
                 _historial.value = historialData
 
                 if (historialData.isEmpty()) {

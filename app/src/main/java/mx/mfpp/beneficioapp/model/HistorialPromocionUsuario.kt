@@ -1,45 +1,37 @@
 package mx.mfpp.beneficioapp.model
 
+import com.google.gson.annotations.SerializedName
+
 /**
  * Representa una promoción usada en el historial del usuario.
- * Corresponde a la estructura del JSON de la API de historial.
- *
- * @property id Identificador único del registro de historial
- * @property titulo_promocion Título de la promoción usada
- * @property descripcion Descripción de la promoción
- * @property fecha_uso Fecha en que se usó la promoción
- * @property foto URL de la imagen de la promoción
- * @property estado Estado de la promoción ("usada", "activa", etc.)
- * @property id_establecimiento ID del establecimiento
- * @property nombre_establecimiento Nombre del establecimiento
+ * Corresponde a la estructura que usará la UI.
  */
 data class HistorialPromocionUsuario(
     val id: Int,
+    @SerializedName("id_promocion")
+    val idPromocion: Int,
+    @SerializedName("titulo_promocion")
     val titulo_promocion: String,
-    val descripcion: String,
-    val fecha_uso: String,
-    val foto: String?,
+    val descripcion: String?,
+    val descuento: Double,
+    @SerializedName("fecha_canje")
+    val fecha_canje: String,
+    @SerializedName("foto_url")
+    val foto_url: String?,
     val estado: String,
-    val id_establecimiento: Int,
-    val nombre_establecimiento: String
+    val establecimiento: EstablecimientoData
+) {
+    val id_establecimiento: Int get() = establecimiento.id
+    val nombre_establecimiento: String get() = establecimiento.nombre
+}
+
+data class EstablecimientoData(
+    val id: Int,
+    val nombre: String,
+    val categoria: String
 )
 
-/**
- * Respuesta de la API de historial con paginación
- */
-data class HistorialResponse(
-    val data: List<HistorialPromocionUsuario>,
-    val pagination: HistorialPagination
-)
-
-/**
- * Información de paginación para historial
- */
-data class HistorialPagination(
-    val page: Int,
-    val limit: Int,
-    val total: Int,
-    val total_pages: Int,
-    val has_next: Boolean,
-    val has_prev: Boolean
+data class HistorialJovenResponse(
+    val success: Boolean,
+    val data: List<HistorialPromocionUsuario>
 )
