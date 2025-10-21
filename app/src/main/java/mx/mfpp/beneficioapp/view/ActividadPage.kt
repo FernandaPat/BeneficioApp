@@ -35,12 +35,10 @@ fun ActividadPage(
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-    // Estados observados desde el ViewModel de historial
     val historial by historialViewModel.historial.collectAsState()
     val isLoading by historialViewModel.isLoading.collectAsState()
     val error by historialViewModel.error.collectAsState()
 
-    // 🔹 Cargar historial del usuario al abrir la pantalla
     LaunchedEffect(Unit) {
         val idUsuario = sessionManager.getJovenId() ?: 0
         if (idUsuario != 0) {
@@ -53,14 +51,14 @@ fun ActividadPage(
             TopAppBar(
                 title = {
                     Text(
-                        "Promociones registradas", // 🔹 TÍTULO EXACTAMENTE IGUAL
+                        "Promociones registradas",
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color.White
@@ -75,7 +73,7 @@ fun ActividadPage(
                 isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF9605F7) // 🔹 COLOR EXACTAMENTE IGUAL
+                        color = Color(0xFF9605F7)
                     )
                 }
 
@@ -92,7 +90,7 @@ fun ActividadPage(
 
                 historial.isEmpty() -> {
                     Text(
-                        text = "No hay promociones registradas para este negocio.", // 🔹 TEXTO EXACTAMENTE IGUAL
+                        text = "No hay promociones registradas para este negocio.",
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
@@ -104,20 +102,38 @@ fun ActividadPage(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 10.dp) // 🔹 PADDING EXACTAMENTE IGUAL
+                        contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
+                        // Encabezado
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Cupones Canjeados",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "Fecha",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
                         items(historial, key = { it.id }) { itemHistorial ->
                             HistorialListItem(
                                 historialItem = itemHistorial,
                                 onItemClick = {
-                                    // 🔹 Navegar al detalle del establecimiento
                                     navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${itemHistorial.id_establecimiento}")
                                 }
-                            )
-                            HorizontalDivider(
-                                color = Color(0xFFF3F3F3), // 🔹 COLOR EXACTAMENTE IGUAL
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 20.dp) // 🔹 PADDING EXACTAMENTE IGUAL
                             )
                         }
                     }
@@ -127,74 +143,101 @@ fun ActividadPage(
     }
 }
 
-/**
- * Elemento individual del listado - DISEÑO IDÉNTICO AL ORIGINAL
- */
 @Composable
 private fun HistorialListItem(
     historialItem: HistorialPromocionUsuario,
     onItemClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp), // 🔹 PADDING EXACTAMENTE IGUAL
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        // 🖼️ Imagen + texto principal - ESTRUCTURA IDÉNTICA
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Imagen de la promoción
             Box(
                 modifier = Modifier
-                    .size(65.dp) // 🔹 TAMAÑO EXACTAMENTE IGUAL
-                    .clip(RoundedCornerShape(10.dp)) // 🔹 BORDER RADIUS EXACTAMENTE IGUAL
-                    .background(Color(0xFFF7F7F7)), // 🔹 COLOR EXACTAMENTE IGUAL
+                    .size(65.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFF7F7F7)),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = historialItem.foto ?: "https://picsum.photos/200",
+                    model = historialItem.foto_url ?: "https://picsum.photos/200",
                     contentDescription = historialItem.titulo_promocion,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
-            Column(modifier = Modifier.padding(start = 12.dp)) { // 🔹 PADDING EXACTAMENTE IGUAL
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Columna de cupones canjeados
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = historialItem.titulo_promocion, // 🔹 SOLO CAMBIO DE DATOS
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = Color.Black, // 🔹 COLOR EXACTAMENTE IGUAL
-                        fontSize = 16.sp, // 🔹 TAMAÑO EXACTAMENTE IGUAL
-                        fontWeight = FontWeight.Bold // 🔹 FONT WEIGHT EXACTAMENTE IGUAL
-                    )
+                    text = historialItem.titulo_promocion,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = historialItem.descripcion ?: "", // 🔹 SOLO CAMBIO DE DATOS
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Gray, // 🔹 COLOR EXACTAMENTE IGUAL
-                        fontSize = 14.sp // 🔹 TAMAÑO EXACTAMENTE IGUAL
-                    )
+                    text = historialItem.descripcion ?: "",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 2
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Fecha a la derecha
+            Box(
+                modifier = Modifier
+                    .height(28.dp)
+                    .width(80.dp)
+                    .background(
+                        color = Color(0xFF9605F7).copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(6.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = formatearFechaCorta(historialItem.fecha_canje),
+                    color = Color(0xFF9605F7),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
         }
 
-        // 📅 Mostrar fecha de uso en lugar del botón "Editar"
-        Text(
-            text = formatearFechaCorta(historialItem.fecha_uso),
-            color = Color(0xFF9605F7), // 🔹 COLOR EXACTAMENTE IGUAL AL BOTÓN "Editar"
-            fontSize = 14.sp, // 🔹 TAMAÑO EXACTAMENTE IGUAL
-            fontWeight = FontWeight.Medium // 🔹 FONT WEIGHT EXACTAMENTE IGUAL
+        // Línea divisora plana
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFFF3F3F3))
         )
     }
 }
 
-/**
- * Función auxiliar para formatear la fecha de manera corta
- */
 private fun formatearFechaCorta(fecha: String): String {
     return try {
-        // Formato: "2025-09-22T00:00:00" -> "22/09/25"
         val partes = fecha.split("T")[0].split("-")
         if (partes.size == 3) {
             "${partes[2]}/${partes[1]}/${partes[0].takeLast(2)}"
@@ -206,9 +249,6 @@ private fun formatearFechaCorta(fecha: String): String {
     }
 }
 
-/**
- * Vista previa
- */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ActividadRecientePreview() {
