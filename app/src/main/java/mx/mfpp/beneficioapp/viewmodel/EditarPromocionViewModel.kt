@@ -124,10 +124,9 @@ class EditarPromocionViewModel : ViewModel() {
                 }
 
                 if (exito) {
-                    println("✅ Promoción actualizada correctamente.")
                     onSuccess()
                 } else {
-                    onError("⚠️ Error al actualizar la promoción.")
+                    onError("No has modificado ningun dato")
                 }
             } catch (e: Exception) {
                 onError("❌ Excepción al actualizar promoción: ${e.message}")

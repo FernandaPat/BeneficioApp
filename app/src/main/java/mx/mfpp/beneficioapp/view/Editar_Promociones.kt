@@ -146,7 +146,7 @@ fun Editar_Promociones(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 ButtonAction(
-                    textoNormal = "Guardar Cambios",
+                    textoNormal = "Actualizar",
                     textoCargando = "Actualizando...",
                     isLoading = viewModel.isLoading.collectAsState().value,
                     habilitado = true,
@@ -155,9 +155,6 @@ fun Editar_Promociones(
                             idPromocion = idPromocion,
                             context = context,
                             onSuccess = {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("✅ Promoción actualizada con éxito")
-                                }
                                 navController.popBackStack()
                             },
                             onError = { msg ->
