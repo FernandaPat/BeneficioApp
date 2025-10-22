@@ -34,11 +34,12 @@ class SessionManager(context: Context) {
         }
     }
 
-    fun saveJovenData(idJoven: Int, nombreJoven: String, folioDigital: String) {
+    fun saveJovenData(idJoven: Int, nombreJoven: String, folioDigital: String, apellidos: String) {
         sharedPreferences.edit {
             putInt("id_usuario", idJoven)
-            putString("nombre_completo", nombreJoven)
+            putString("nombre", nombreJoven)
             putString("folio_digital", folioDigital)
+            putString("apellidos", apellidos)
         }
     }
 
@@ -64,7 +65,11 @@ class SessionManager(context: Context) {
     }
 
     fun getNombreJoven(): String? {
-        return sharedPreferences.getString("nombre_completo", null)
+        return sharedPreferences.getString("nombre", null)
+    }
+
+    fun getApellidosJoven(): String? {
+        return sharedPreferences.getString("apellidos", null)
     }
 
     fun getFolioTarjeta(): String? {

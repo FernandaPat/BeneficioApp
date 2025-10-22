@@ -139,12 +139,11 @@ fun PerfilPage(navController: NavController) {
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
                     OpcionData(R.drawable.lock, "Cambiar Contraseña") {
-                        navController.navigate(Pantalla.RUTA_CAMBIARCONTRASENA_APP)
+                        navController.navigate(Pantalla.RUTA_RECUPERAR_CONTRASENA)
                     },
                     OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
                         navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
                     },
-                    OpcionData(R.drawable.lock, "Cambiar Contraseña", onClick = {/*navController.navigate(RUTA_RECUPERAR_CONTRASENA)*/}),
                     OpcionData(R.drawable.user, "Editar datos personales"),
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )

@@ -1,5 +1,3 @@
-package mx.mfpp.beneficioapp.view
-
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,10 +24,12 @@ import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.model.PromocionJoven
 import mx.mfpp.beneficioapp.model.SessionManager
+import mx.mfpp.beneficioapp.view.Pantalla
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
 import mx.mfpp.beneficioapp.viewmodel.NegocioDetalleViewModel
-import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun NegocioDetallePage(
@@ -46,9 +46,7 @@ fun NegocioDetallePage(
     }
 
     val establecimientoOriginal by remember(establecimientos, establecimientoId) {
-        derivedStateOf {
-            establecimientos.find { it.id_establecimiento == establecimientoId }
-        }
+        derivedStateOf { establecimientos.find { it.id_establecimiento == establecimientoId } }
     }
 
     var esFavorito by remember(establecimientoOriginal) {
@@ -56,9 +54,7 @@ fun NegocioDetallePage(
     }
 
     LaunchedEffect(establecimientoOriginal) {
-        establecimientoOriginal?.let {
-            esFavorito = it.es_favorito
-        }
+        establecimientoOriginal?.let { esFavorito = it.es_favorito }
     }
 
     if (establecimientoOriginal == null) {
@@ -68,10 +64,7 @@ fun NegocioDetallePage(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Establecimiento no encontrado", color = Color.Red, fontSize = 18.sp)
-                Button(
-                    onClick = { busquedaViewModel.recargarFavoritos(context) },
-                    modifier = Modifier.padding(top = 16.dp)
-                ) {
+                Button(onClick = { busquedaViewModel.recargarFavoritos(context) }, modifier = Modifier.padding(top = 16.dp)) {
                     Text("Reintentar carga")
                 }
             }
@@ -90,7 +83,6 @@ fun NegocioDetallePage(
         }
     }
 
-    // Usamos tu ViewModel existente con factory
     val viewModel: NegocioDetalleViewModel = viewModel(
         factory = NegocioDetalleViewModel.NegocioDetalleViewModelFactory(establecimientoId)
     )
@@ -102,9 +94,7 @@ fun NegocioDetallePage(
     val moradoBoton = Color(0xFFE2C8FF)
     val moradoTexto = Color(0xFF9605F7)
 
-    LaunchedEffect(establecimientoId) {
-        viewModel.cargarDatos()
-    }
+    LaunchedEffect(establecimientoId) { viewModel.cargarDatos() }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
         LazyColumn(
@@ -120,9 +110,7 @@ fun NegocioDetallePage(
                             idEstablecimiento = establecimientoOriginal!!.id_establecimiento,
                             esFavoritoActual = esFavorito,
                             busquedaViewModel = busquedaViewModel,
-                            onUpdateDetalle = { nuevoEstado ->
-                                esFavorito = nuevoEstado
-                            }
+                            onUpdateDetalle = { nuevoEstado -> esFavorito = nuevoEstado }
                         )
                     }
                 )
@@ -153,7 +141,6 @@ fun NegocioDetallePage(
                         val lat = establecimientoOriginal!!.latitud
                         val lng = establecimientoOriginal!!.longitud
                         if (lat != null && lng != null) {
-                            // Pasar como Float directamente
                             navController.navigate("MapaPage?lat=${lat.toFloat()}&lng=${lng.toFloat()}")
                         } else {
                             Toast.makeText(context, "Ubicación no disponible", Toast.LENGTH_SHORT).show()
@@ -202,7 +189,11 @@ fun NegocioDetallePage(
                 else -> items(promociones) { promocion ->
                     PromocionItem(
                         promocion = promocion,
-                        onAplicarClick = { navController.navigate(Pantalla.RUTA_QR_PROMOCION) }
+                        onAplicarClick = {
+                            // 🔹 CORRECCIÓN: codificar título antes de navegar
+                            val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
+                            navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
+                        }
                     )
                 }
             }
@@ -312,4 +303,5 @@ fun PromocionItem(
         }
     }
 }
+
 

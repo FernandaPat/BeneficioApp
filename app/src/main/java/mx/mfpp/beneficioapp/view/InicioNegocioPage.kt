@@ -194,7 +194,8 @@ fun InicioNegocioPage(navController: NavController) {
                             .fillMaxWidth()
                             .padding(horizontal = 25.dp, vertical = 10.dp)
                             .clickable {
-                                navController.navigate(Pantalla.RUTA_EDITAR_PROMOCIONES)
+                                println("🟣 Navegando a editarPromocion/${promo.id}")
+                                navController.navigate("editarPromocion/${promo.id}")
                             }
                     ) {
                         AsyncImage(

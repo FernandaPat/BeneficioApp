@@ -44,11 +44,11 @@ sealed class Pantalla(
 
         // Rutas constantes para la aplicación de jóvenes
         const val RUTA_JN_APP = "JNPage" //Bienvenida
-        const val RUTA_QR_PROMOCION = "QRPromocionPage"
         const val RUTA_QR_SCANNER_SCREEN = "QRScannerScreen"
         const val RUTA_PERFIL_APP = "PerfilPage"
         const val RUTA_LOGIN_APP = "LoginPage"
         const val RUTA_INICIAR_SESION = "Iniciar_Sesion"
+        const val RUTA_RECUPERAR_CONTRASENA = "Recuperar_Contrasena"
         const val RUTA_ACERCADE_APP = "Acerca_De_Page"
         const val RUTA_AYUDA_APP = "Ayuda_Page"
         const val RUTA_CAMBIARCONTRASENA_APP = "CambiarContrasena_Page"
@@ -56,6 +56,8 @@ sealed class Pantalla(
         const val RUTA_DETALLEPROMOCION_APP = "DetallePromocionScreen"
         const val RUTA_INICIO_APP = "InicioPage" //Joven
         const val RUTA_MAPA_APP = "MapaPage"
+
+        const val RUTA_QR_PROMOCION = "qrPromocion"
         const val RUTA_TARJETA_APP = "TarjetaPage"
         const val RUTA_BUSCAR_APP = "ExplorarPage"
         const val RUTA_ACTIVIDAD_APP = "ActividadPage"
@@ -66,7 +68,7 @@ sealed class Pantalla(
         const val RUTA_INICIAR_SESION_NEGOCIO = "Iniciar_Sesion_Negocio"
         const val RUTA_AGREGAR_PROMOCIONES = "AgregarPromocion"
         const val RUTA_PROMOCIONES = "Promociones"
-        const val RUTA_EDITAR_PROMOCIONES = "editarPromocion/{id}s"
+        const val RUTA_EDITAR_PROMOCIONES = "editarPromocion/{id}"
         const val RUTA_RESULTADOS_APP = "resultados_app"
         const val RUTA_NEGOCIODETALLE_APP = "NegocioDetallePage"
 

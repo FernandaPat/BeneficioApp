@@ -1,112 +1,157 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Base64
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
-import mx.mfpp.beneficioapp.model.ServicioRemotoPromocionPorId
-import mx.mfpp.beneficioapp.utils.convertirImagenABase64
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-
-
+import mx.mfpp.beneficioapp.model.ServicioRemotoObtenerPromocion
+import java.io.ByteArrayOutputStream
 
 class EditarPromocionViewModel : ViewModel() {
 
-    // 🧾 Campos editables
-    var nombre = MutableStateFlow("")
-    var descripcion = MutableStateFlow("")
-    var descuento = MutableStateFlow("")
-    var desde = MutableStateFlow("")
-    var hasta = MutableStateFlow("")
+    val nombre = MutableStateFlow("")
+    val descripcion = MutableStateFlow("")
+    val descuento = MutableStateFlow("")
+    val desde = MutableStateFlow("")
+    val hasta = MutableStateFlow("")
+    val imagenUrl = MutableStateFlow("")
+    val uri = MutableStateFlow<Uri?>(null)
+    val isLoading = MutableStateFlow(false)
 
-    // 📸 Imagen
-    var nuevaImagenUri = MutableStateFlow<Uri?>(null)
-    var imagenRemota = MutableStateFlow<String?>(null)
-
-    // ⚙️ Estado general
-    var isLoading = MutableStateFlow(false)
-
-    // === ACTUALIZADORES ===
-    fun actualizarNombre(v: String) { nombre.value = v }
-    fun actualizarDescripcion(v: String) { descripcion.value = v }
-    fun actualizarDescuento(v: String) { descuento.value = v }
-    fun actualizarDesde(v: String) { desde.value = v }
-    fun actualizarHasta(v: String) { hasta.value = v }
-    fun actualizarImagen(uri: Uri?) { nuevaImagenUri.value = uri }
-
-    // === CARGAR PROMOCIÓN EXISTENTE ===
-    fun cargarPromocionPorId(idPromocion: Int) {
+    /**
+     * Cargar datos de la promoción desde el servidor.
+     */
+    fun cargarPromocion(idPromocion: Int, onLoaded: (Promocion?) -> Unit) {
         viewModelScope.launch {
-            isLoading.value = true
             try {
-                val promocion = ServicioRemotoPromocionPorId.obtenerPromocionPorId(idPromocion)
-                println("📡 Datos recibidos: $promocion")
+                val promo = withContext(Dispatchers.IO) {
+                    ServicioRemotoObtenerPromocion.obtenerPromocionPorId(idPromocion)
+                }
 
-                nombre.value = promocion.titulo ?: ""
-                descripcion.value = promocion.descripcion ?: ""
-                descuento.value = promocion.descuento ?: ""
-                desde.value = promocion.disponible_desde ?: ""
-                hasta.value = promocion.hasta ?: ""
-                imagenRemota.value = promocion.imagen ?: ""
+                promo?.let {
+                    nombre.value = it.nombre
+                    descripcion.value = it.descripcion
+                    descuento.value = it.descuento
+
+                    // 🔹 Limpiamos y convertimos fechas si es necesario
+                    val fechaDesde = it.desde.trim()
+                    val fechaHasta = it.hasta.trim()
+                    desde.value = formatearFecha(fechaDesde)
+                    hasta.value = formatearFecha(fechaHasta)
+
+                    imagenUrl.value = it.imagenUrl
+                }
+
+                onLoaded(promo)
             } catch (e: Exception) {
-                e.printStackTrace()
+                println("❌ Error al cargar promoción: ${e.localizedMessage}")
+                onLoaded(null)
+            }
+        }
+    }
+
+    /**
+     * Convierte una imagen seleccionada a Base64 comprimido.
+     */
+    fun onNuevaImagen(uri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+
+                if (bitmap != null) {
+                    val outputStream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+                    val compressedBytes = outputStream.toByteArray()
+                    outputStream.close()
+
+                    val base64String = Base64.encodeToString(compressedBytes, Base64.NO_WRAP)
+                    val base64Final = "data:image/jpeg;base64,$base64String"
+
+                    imagenUrl.value = base64Final
+                    this@EditarPromocionViewModel.uri.value = uri
+
+                    println("✅ Imagen comprimida y convertida (${compressedBytes.size / 1024} KB)")
+                } else {
+                    println("⚠️ No se pudo decodificar la imagen seleccionada")
+                }
+            } catch (e: Exception) {
+                println("❌ Error al comprimir/convertir imagen: ${e.localizedMessage}")
+            }
+        }
+    }
+
+    /**
+     * Envía los cambios de la promoción al backend.
+     */
+    fun actualizarPromocion(
+        idPromocion: Int,
+        context: Context,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                isLoading.value = true
+                println("🟣 Actualizando promoción con ID: $idPromocion")
+
+                val promoActualizada = Promocion(
+                    id = idPromocion,
+                    nombre = nombre.value,
+                    descripcion = descripcion.value,
+                    descuento = descuento.value,
+                    // ✅ Ya no convertimos: el backend quiere "dd/MM/yyyy"
+                    desde = desde.value.trim(),
+                    hasta = hasta.value.trim(),
+                    imagenUrl = imagenUrl.value
+                )
+
+                val exito = withContext(Dispatchers.IO) {
+                    ServicioRemotoActualizarPromocion.actualizarPromocion(
+                        idPromocion = idPromocion,
+                        promocion = promoActualizada
+                    )
+                }
+
+                if (exito) {
+                    onSuccess()
+                } else {
+                    onError("No has modificado ningun dato")
+                }
+            } catch (e: Exception) {
+                onError("❌ Excepción al actualizar promoción: ${e.message}")
             } finally {
                 isLoading.value = false
             }
         }
     }
 
-    // === ACTUALIZAR PROMOCIÓN ===
-    fun actualizarPromocion(
-        context: Context,
-        idPromocion: Int,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
-    ) {
-        viewModelScope.launch {
-            isLoading.value = true
+    // 🔹 Convierte "2025-10-22" → "22/10/2025"
+    private fun formatearFecha(fecha: String): String {
+        if (fecha.isBlank() || fecha.equals("null", ignoreCase = true)) return ""
+        return if (fecha.contains("-")) {
             try {
-                // 🔹 Convierte imagen nueva (si hay)
-                val imagenBase64 = nuevaImagenUri.value?.let { convertirImagenABase64(context, it) } ?: imagenRemota.value
-
-                val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
-                fun normalizarFecha(fecha: String): String {
-                    // Intenta convertir fechas tipo 2025-10-23 → 23/10/2025
-                    return try {
-                        if (fecha.contains("-")) {
-                            LocalDate.parse(fecha).format(formato)
-                        } else fecha // ya está en dd/MM/yyyy
-                    } catch (e: Exception) {
-                        fecha
-                    }
-                }
-
-                val ok = ServicioRemotoActualizarPromocion.actualizarPromocion(
-                    idPromocion = idPromocion,
-                    titulo = nombre.value,
-                    descripcion = descripcion.value,
-                    descuento = descuento.value,
-                    disponibleDesde = normalizarFecha(desde.value),
-                    hasta = normalizarFecha(hasta.value),
-                    imagenBase64 = imagenBase64
-                )
-
-
-                if (ok) onSuccess()
-                else onError("Error al actualizar la promoción")
-
+                val partes = fecha.split("-")
+                "${partes[2]}/${partes[1]}/${partes[0]}"
             } catch (e: Exception) {
-                e.printStackTrace()
-                onError("Error al actualizar la promoción")
-            } finally {
-                isLoading.value = false
+                fecha
             }
-        }
+        } else fecha
+    }
+
+    // 🔹 Convierte "22/10/2025" → "2025-10-22" (para guardar en la BD)
+    private fun aIso(fecha: String): String {
+        val partes = fecha.split("/")
+        return if (partes.size == 3) "${partes[2]}-${partes[1]}-${partes[0]}" else fecha
     }
 }

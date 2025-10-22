@@ -19,7 +19,8 @@ import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 @Composable
 fun QRPromocionPage(
     navController: NavController,
-    viewModel: QRViewModel
+    viewModel: QRViewModel,
+    nombrePromocion: String
 ) {
     val moradoQR = Color(0xFF9605F7) // Color morado para el QR
     val rojoBoton = Color(0xFFE9d4ff) // Color de fondo del botón
@@ -33,6 +34,13 @@ fun QRPromocionPage(
     LaunchedEffect(Unit) {
         viewModel.aplicarPromocion("Promoción Especial")
     }
+
+    LaunchedEffect(nombrePromocion) {
+        if (nombrePromocion.isNotEmpty()) {
+            viewModel.aplicarPromocion(nombrePromocion)
+        }
+    }
+
 
     Box(
         modifier = Modifier

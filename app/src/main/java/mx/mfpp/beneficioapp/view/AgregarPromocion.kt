@@ -198,7 +198,7 @@ fun AgregarPromocion(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private val fmtDDMMYYYY: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+val fmtDDMMYYYY: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
