@@ -184,7 +184,7 @@ fun PerfilNegocioPage(navController: NavController) {
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
                     OpcionData(R.drawable.lock, "Cambiar Contraseña") {
-                        navController.navigate(Pantalla.RUTA_CAMBIARCONTRASENA_APP)
+                        navController.navigate(Pantalla.RUTA_RECUPERAR_CONTRASENA)
                     },
                     OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
                         navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
