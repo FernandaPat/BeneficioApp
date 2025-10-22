@@ -15,7 +15,7 @@ import mx.mfpp.beneficioapp.model.Establecimiento
 /**
  * ViewModel para manejar búsqueda y filtrado de establecimientos
  */
-class BusquedaViewModel : ViewModel() {
+class BusquedaViewModel(private val context: Context) : ViewModel() {
 
     private val _establecimientos = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientos: StateFlow<List<Establecimiento>> = _establecimientos.asStateFlow()
@@ -69,11 +69,19 @@ class BusquedaViewModel : ViewModel() {
     fun clearError() {
         _error.value = null
     }
+    fun refrescarEstablecimientos() {
+        cargarEstablecimientos()
+    }
 
     fun seleccionarCategoria(categoria: String) {
+
+        Log.d("BUSQUEDA_VM", "🔍 Categoría seleccionada: $categoria")
+        Log.d("BUSQUEDA_VM", "📦 Total establecimientos: ${todosEstablecimientos.size}")
         _categoriaSeleccionada.value = categoria
         _textoBusqueda.value = "" // limpia texto si seleccionas categoría
         aplicarFiltros()
+
+        Log.d("BUSQUEDA_VM", "✅ Después del filtro: ${_establecimientos.value.size} establecimientos")
     }
 
     fun actualizarTextoBusqueda(texto: String) {
@@ -91,6 +99,9 @@ class BusquedaViewModel : ViewModel() {
         val categoria = _categoriaSeleccionada.value
         val texto = _textoBusqueda.value
 
+        Log.d("BUSQUEDA_VM", "🎯 Aplicando filtros - Categoría: $categoria, Texto: $texto")
+
+
         val filtrados = todosEstablecimientos.filter { establecimiento ->
             val coincideCategoria = categoria?.let {
                 establecimiento.nombre_categoria.equals(it, ignoreCase = true)
@@ -103,6 +114,8 @@ class BusquedaViewModel : ViewModel() {
 
             coincideCategoria && coincideTexto
         }
+
+        Log.d("BUSQUEDA_VM", "📊 Filtrados: ${filtrados.size} de ${todosEstablecimientos.size}")
 
         _establecimientos.value = filtrados
     }
