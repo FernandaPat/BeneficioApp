@@ -33,6 +33,11 @@ fun RecuperarContrasena(
     modifier: Modifier = Modifier,
     viewModel: RecuperarContrasenaViewModel = viewModel()
 ) {
+    // Ocultar la navbar del sistema
+    DisposableEffect(Unit) {
+        onDispose { }
+    }
+
     val scrollState = rememberScrollState()
     val email = viewModel.email.value
     val recuperarState by viewModel.recuperarState.collectAsStateWithLifecycle()
@@ -102,10 +107,23 @@ fun RecuperarContrasena(
             // Campo de correo
             Etiqueta("Correo Electrónico", true)
             CapturaTexto(
-                placeholder = "ejemplo@correo.com",
+                placeholder = if (email.isEmpty()) "ejemplo@correo.com" else "",
                 value = email,
                 onValueChange = viewModel::onEmailChange
             )
+
+            // 🆕 Mensaje informativo si el email viene pre-llenado
+            if (email.isNotEmpty()) {
+                Text(
+                    text = "Este es el correo asociado a tu cuenta",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                    textAlign = TextAlign.Start
+                )
+            }
 
             Spacer(Modifier.height(40.dp))
 
@@ -170,17 +188,6 @@ fun RecuperarContrasena(
             )
 
             Spacer(Modifier.height(20.dp))
-
-            // Botón para regresar
-            TextButton(
-                onClick = { navController.popBackStack() }
-            ) {
-                Text(
-                    text = "Volver al inicio de sesión",
-                    color = moradoTexto,
-                    fontSize = 14.sp
-                )
-            }
         }
     }
 }
