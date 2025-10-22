@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -15,18 +16,27 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.EditarPromocionViewModel
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -131,7 +141,7 @@ fun Editar_Promociones(
             )
 
             // 🗓️ Rango de fechas
-            RangoFechasPicker(
+            RangoFechasPickerE(
                 desde = viewModel.desde.collectAsState().value.ifBlank { "dd/MM/yyyy" },
                 hasta = viewModel.hasta.collectAsState().value.ifBlank { "dd/MM/yyyy" },
                 onDesdeChange = { viewModel.desde.value = it },
@@ -170,4 +180,197 @@ fun Editar_Promociones(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FechaDesdePickerE(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String = "Disponible desde",
+    modifier: Modifier = Modifier
+) {
+    var showPicker by rememberSaveable { mutableStateOf(false) }
+    val pickerState = rememberDatePickerState(initialSelectedDateMillis = null)
+
+    Etiqueta(label,false,  modifier = Modifier.padding(start = 4.dp))
+    Box {
+        BeneficioOutlinedTextField(
+            value = value,
+            onValueChange = {},
+            placeholder = "dd/MM/yyyy",
+            readOnly = true,
+            modifier = modifier
+                .padding(top = 4.dp)
+                .fillMaxWidth()
+        )
+        Box(
+            Modifier
+                .matchParentSize()
+                .clickable { showPicker = true }
+        )
+    }
+
+    if (showPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        val selected = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onChange(selected.format(fmtDDMMYYYY))
+                    }
+                    showPicker = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+}
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FechaHastaPickerE(
+    value: String,
+    onChange: (fechaStr: String, expiraEnDias: Int?) -> Unit,
+    label: String = "Hasta",
+    minDesde: String? = null,
+    modifier: Modifier = Modifier,
+) {
+    val fmt = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy") }
+    fun parseUtcOrNull(s: String?): LocalDate? =
+        try { if (s.isNullOrBlank()) null else LocalDate.parse(s, fmt) } catch (_: Exception) { null }
+
+    val minDate = remember(minDesde) { parseUtcOrNull(minDesde) }
+
+    val selectableDates = remember(minDate) {
+        object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val d = Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate()
+                return minDate?.let { !d.isBefore(it) } ?: true
+            }
+        }
+    }
+
+    var showPicker by rememberSaveable { mutableStateOf(false) }
+    val pickerState = rememberDatePickerState(
+        initialSelectedDateMillis = null,
+        selectableDates = selectableDates
+    )
+
+    Etiqueta(label,false, modifier = Modifier.padding(start = 4.dp))
+    Box {
+        BeneficioOutlinedTextField(
+            value = value,
+            onValueChange = {},
+            placeholder = "dd/MM/yyyy",
+            readOnly = true,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
+        )
+        Box(
+            Modifier
+                .matchParentSize()
+                .clickable { showPicker = true }
+        )
+    }
+
+    if (showPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    pickerState.selectedDateMillis?.let { millis ->
+                        val selected = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        val fechaStr = selected.format(fmt)
+                        val dias = ChronoUnit.DAYS
+                            .between(LocalDate.now(ZoneOffset.UTC), selected)
+                            .toInt()
+                            .coerceAtLeast(0)
+                        onChange(fechaStr, dias)
+                    }
+                    showPicker = false
+                }) { Text("Aceptar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = pickerState)
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun RangoFechasPickerE(
+    desde: String,
+    hasta: String,
+    onDesdeChange: (String) -> Unit,
+    onHastaChange: (String, Int?) -> Unit,
+) {
+    val fmt = remember { DateTimeFormatter.ofPattern("dd/MM/yyyy") }
+    fun parseUtcOrNull(s: String?): LocalDate? =
+        try { if (s.isNullOrBlank()) null else LocalDate.parse(s, fmt) } catch (_: Exception) { null }
+
+    var errorHastaMsg by rememberSaveable { mutableStateOf<String?>(null) }
+
+
+
+    Column(horizontalAlignment = Alignment.Start, // 👈 Esto alinea a la izquierda
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        FechaDesdePickerE(
+            value = desde,
+            onChange = { nuevaDesde ->
+                onDesdeChange(nuevaDesde)
+                val dDesde = parseUtcOrNull(nuevaDesde)
+                val dHasta = parseUtcOrNull(hasta)
+                if (dDesde != null && dHasta != null && dHasta.isBefore(dDesde)) {
+                    onHastaChange("", null)
+                    errorHastaMsg = "La fecha 'Hasta' no puede ser anterior a 'Disponible desde'."
+                } else errorHastaMsg = null
+            }
+        )
+    }
+    Column (horizontalAlignment = Alignment.Start, // 👈 Esto alinea a la izquierda
+        modifier = Modifier.fillMaxWidth()
+    ){
+        FechaHastaPickerE(
+            value = hasta,
+            minDesde = desde,
+            onChange = { fecha, dias ->
+                val dDesde = parseUtcOrNull(desde)
+                val dHasta = parseUtcOrNull(fecha)
+                if (dDesde != null && dHasta != null && dHasta.isBefore(dDesde)) {
+                    errorHastaMsg = "La fecha 'Hasta' no puede ser anterior a 'Disponible desde'."
+                    return@FechaHastaPickerE
+                }
+                errorHastaMsg = null
+                onHastaChange(fecha, dias)
+            }
+        )
+    }
+
+    if (!errorHastaMsg.isNullOrEmpty()) {
+        Text(
+            text = errorHastaMsg!!,
+            color = MaterialTheme.colorScheme.error,
+            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 4.dp),
+            textAlign = TextAlign.Center
+        )
+    }
+
 }
