@@ -16,7 +16,8 @@ import mx.mfpp.beneficioapp.model.Establecimiento
 /**
  * ViewModel para manejar búsqueda y filtrado de establecimientos
  */
-class BusquedaViewModel(private val context: Context) : ViewModel() {
+
+class BusquedaViewModel : ViewModel() {
 
     private val _establecimientos = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientos: StateFlow<List<Establecimiento>> = _establecimientos.asStateFlow()
@@ -154,14 +155,14 @@ class BusquedaViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    class BusquedaViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(BusquedaViewModel::class.java)) {
-                return BusquedaViewModel(context) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-        }
-    }
+//    class BusquedaViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+//        @Suppress("UNCHECKED_CAST")
+//        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+//            if (modelClass.isAssignableFrom(BusquedaViewModel::class.java)) {
+//                return BusquedaViewModel(context) as T
+//            }
+//            throw IllegalArgumentException("Unknown ViewModel class")
+//        }
+//    }
 }
 
