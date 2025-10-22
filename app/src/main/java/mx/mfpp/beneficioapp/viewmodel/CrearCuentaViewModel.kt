@@ -29,7 +29,10 @@ class CrearCuentaViewModel : ViewModel() {
     fun onFolioChange(v: String) { usuario.value = usuario.value.copy(folio_antiguo = v) }
     fun onTieneTarjetaChange(v: Boolean) { usuario.value = usuario.value.copy(tieneTarjeta = v) }
     fun onDireccionChange(v: Direccion) { usuario.value = usuario.value.copy(direccion = v) }
-    fun onConsentimientoChange(v: Boolean) { usuario.value = usuario.value.copy(consentimientoAceptado = v) }
+    fun onConsentimientoChange(checked: Boolean) {
+        usuario.value = usuario.value.copy(consentimientoAceptado = checked)
+    }
+
 
     fun onFechaChange(d: Int?, m: Int?, a: Int?) {
         if (d != null && m != null && a != null)

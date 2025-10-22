@@ -91,6 +91,8 @@ fun Crear_Cuenta(
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+    var aceptado by remember { mutableStateOf(false) }
+
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
@@ -168,26 +170,48 @@ fun Crear_Cuenta(
             }
             // === CONSENTIMIENTO ===
             Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, top = 20.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 30.dp)
             ) {
                 Checkbox(
-                    checked = usuario.consentimientoAceptado,
-                    onCheckedChange = viewModel::onConsentimientoChange
+                    checked = aceptado,
+                    onCheckedChange = { isChecked ->
+                        aceptado = isChecked
+                        if (isChecked) {
+                            // 🔹 Navega automáticamente a Términos al marcar el checkbox
+                            navController.navigate(Pantalla.RUTA_TERMINOS_CONDICIONES)
+                        }
+                    }
                 )
+
                 Text(
                     buildAnnotatedString {
-                        append("Acepto los términos y condiciones")
+                        append("He leído y acepto los ")
+                        withStyle(
+                            style = SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        ) {
+                            append("Términos y Condiciones")
+                        }
                         withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
                             append(" *")
                         }
                     },
                     fontSize = 13.sp,
-                    color = Color.Black
+                    color = Color.Black,
+                    modifier = Modifier
+                        .clickable {
+                            // 🔹 También puede navegar si toca el texto
+                            navController.navigate(Pantalla.RUTA_TERMINOS_CONDICIONES)
+                        }
                 )
             }
+
+
 
             Spacer(Modifier.height(5.dp))
             Box(
