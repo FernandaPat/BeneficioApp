@@ -62,10 +62,11 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
                 val response = ServicioRemotoAgregarPromocion.api.agregarPromocion(promocion)
 
                 if (response.isSuccessful) {
+                    Log.d("API_SUCCESS", "✅ Promoción agregada correctamente")
                     onSuccess()
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    val errorMsg = " Error al registrar promoción: ${response.code()} → ${errorBody ?: "sin detalle"}"
+                    val errorMsg = "❌ Error al registrar promoción: ${response.code()} → ${errorBody ?: "sin detalle"}"
                     Log.e("API_ERROR", errorMsg)
                     onError(errorMsg)
                 }

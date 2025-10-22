@@ -3,54 +3,74 @@ package mx.mfpp.beneficioapp.model
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 object ServicioRemotoActualizarPromocion {
 
-    suspend fun actualizarPromocion(idPromocion: Int, promocion: Promocion): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val urlString = "https://actualizar-promocion-819994103285.us-central1.run.app/$idPromocion"
-            val url = URL(urlString)
+    suspend fun actualizarPromocion(
+        idPromocion: Int,
+        titulo: String,
+        descripcion: String,
+        descuento: String,
+        disponibleDesde: String?,
+        hasta: String?,
+        imagenBase64: String?
+    ): Boolean {
+        return withContext(Dispatchers.IO) {
+            val endpoint = "https://actualizar-promocion-819994103285.us-central1.run.app/$idPromocion"
+            val url = URL(endpoint)
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "PUT"
-            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8")
+            connection.setRequestProperty("Content-Type", "application/json")
             connection.doOutput = true
-            connection.doInput = true
 
-            // 🟣 JSON exactamente como lo espera tu API
-            val json = JSONObject().apply {
-                put("titulo", promocion.nombre)
-                put("descripcion", promocion.descripcion)
-                put("descuento", promocion.descuento)
-                put("disponible_desde", promocion.desde)
-                put("hasta", promocion.hasta)
-                put("imagen", promocion.imagenUrl)
+            // 🧠 Aseguramos formato dd/MM/yyyy
+            val formatoApi = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+            fun normalizarFecha(fecha: String?): String? {
+                if (fecha.isNullOrBlank()) return null
+                return try {
+                    // Si viene en formato ISO (yyyy-MM-dd), la convertimos
+                    if (fecha.contains("-")) {
+                        LocalDate.parse(fecha).format(formatoApi)
+                    } else fecha // ya está en dd/MM/yyyy
+                } catch (e: Exception) {
+                    println("⚠️ Error al formatear fecha: ${e.message}")
+                    fecha
+                }
             }
 
-            println("📤 JSON enviado → $json")
-
-            // Enviar cuerpo al servidor
-            OutputStreamWriter(connection.outputStream, Charsets.UTF_8).use {
-                it.write(json.toString())
-                it.flush()
+            val jsonBody = JSONObject().apply {
+                put("titulo", titulo)
+                put("descripcion", descripcion)
+                put("descuento", descuento)
+                normalizarFecha(disponibleDesde)?.let { put("disponible_desde", it) }
+                normalizarFecha(hasta)?.let { put("hasta", it) }
+                imagenBase64?.let { put("imagen", it) }
             }
 
-            val code = connection.responseCode
+            println("📦 JSON enviado: $jsonBody")
+
+            connection.outputStream.use { os ->
+                val input = jsonBody.toString().toByteArray(Charsets.UTF_8)
+                os.write(input, 0, input.size)
+            }
+
+            val responseCode = connection.responseCode
             val responseText = try {
-                BufferedReader(connection.inputStream.reader()).use { it.readText() }
+                connection.inputStream.bufferedReader().use { it.readText() }
             } catch (e: Exception) {
-                BufferedReader(connection.errorStream?.reader() ?: return@withContext false).use { it.readText() }
+                connection.errorStream?.bufferedReader()?.use { it.readText() } ?: e.message
             }
 
-            println("📡 Respuesta HTTP $code → $responseText")
+            println("🔁 PUT $endpoint")
+            println("📡 Código HTTP: $responseCode")
+            println("📡 Respuesta servidor: $responseText")
 
-            code == HttpURLConnection.HTTP_OK || code == HttpURLConnection.HTTP_CREATED
-        } catch (e: Exception) {
-            println("❌ Excepción al actualizar promoción: ${e.localizedMessage}")
-            false
+            responseCode in 200..299
         }
     }
 }

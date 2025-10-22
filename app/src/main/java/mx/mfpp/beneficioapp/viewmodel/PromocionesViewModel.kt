@@ -47,7 +47,7 @@ class PromocionesViewModel : ViewModel() {
                             imagenUrl = p.foto ?: "",
                             expiraEn = p.fechaExpiracion ?: "Sin fecha",
                             esFavorito = false,
-
+                            rating = null
                         )
                     }
 

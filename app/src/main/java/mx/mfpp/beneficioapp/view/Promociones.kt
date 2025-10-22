@@ -80,13 +80,10 @@ fun Promociones(
             itemsIndexed(promociones, key = { _, p -> p.id }) { index, promo ->
                 PromoListItem(
                     promo = promo,
-                    onEdit = {
-                        println("🟣 Navegando a editarPromocion/${promo.id}")
-                        navController.navigate("editarPromocion/${promo.id}")
+                    onEdit = { navController.navigate("editarPromocion/${promo.id}")
                     },
                     onDelete = { id -> pendingDeleteId = id }
                 )
-
 
                 if (index < promociones.lastIndex) {
                     HorizontalDivider(

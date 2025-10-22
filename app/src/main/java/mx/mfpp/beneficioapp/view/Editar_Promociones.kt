@@ -2,9 +2,10 @@ package mx.mfpp.beneficioapp.view
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -22,66 +23,76 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.EditarPromocionViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Editar_Promociones(
+fun EditarPromocion(
     navController: NavController,
     idPromocion: Int,
     viewModel: EditarPromocionViewModel = viewModel()
 ) {
-    val scroll = rememberScrollState()
     val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // 🟣 Cargar promoción al abrir la pantalla
+    // Estados del ViewModel
+    val nombre by viewModel.nombre.collectAsState()
+    val descripcion by viewModel.descripcion.collectAsState()
+    val descuento by viewModel.descuento.collectAsState()
+    val desde by viewModel.desde.collectAsState()
+    val hasta by viewModel.hasta.collectAsState()
+    val uri by viewModel.nuevaImagenUri.collectAsState()
+    val imagenRemota by viewModel.imagenRemota.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    // 🔹 Cargar datos al abrir
     LaunchedEffect(idPromocion) {
-        viewModel.cargarPromocion(idPromocion) {}
+        viewModel.cargarPromocionPorId(idPromocion)
     }
 
-    // 📸 Selector de imagen
-    val pickImage = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            // 🟣 Llamas aquí al ViewModel para procesar la imagen
-            viewModel.onNuevaImagen(it, context)
-        }
+    // 🔹 Selector de imagen
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        viewModel.actualizarImagen(it)
     }
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Editar Promoción") },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color.White
-    ) { padding ->
-
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .verticalScroll(scroll)
-                .padding(padding)
+                .verticalScroll(scrollState)
+                .padding(paddingValues)
+                .padding(16.dp)
         ) {
-
+            // 📸 Imagen
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
                     .fillMaxWidth()
                     .height(200.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
-                val imagenUri = viewModel.uri.collectAsState().value
+                val imagenActual: Any? = uri ?: imagenRemota
+                val tieneImagen = when (imagenActual) {
+                    is Uri -> true
+                    is String -> imagenActual.isNotEmpty()
+                    else -> false
+                }
 
-                if (imagenUri == null) {
+                if (!tieneImagen) {
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -94,12 +105,11 @@ fun Editar_Promociones(
                     }
                 } else {
                     AsyncImage(
-                        model = imagenUri,
+                        model = imagenActual,
                         contentDescription = "Imagen de la promoción",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
                     )
-
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         modifier = Modifier
@@ -114,72 +124,89 @@ fun Editar_Promociones(
                 }
             }
 
+            Spacer(Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // === CAMPOS ===
+            // 🧾 Campos editables
             Etiqueta("Título", true)
             BeneficioOutlinedTextField(
-                value = viewModel.nombre.collectAsState().value,
-                onValueChange = { viewModel.nombre.value = it },
-                placeholder = "Título de la promoción"
+                value = nombre,
+                onValueChange = { viewModel.actualizarNombre(it) },
+                placeholder = "Escribe aquí"
             )
 
             Etiqueta("Descripción", true)
             BeneficioOutlinedTextField(
-                value = viewModel.descripcion.collectAsState().value,
-                onValueChange = { viewModel.descripcion.value = it },
-                placeholder = "Descripción breve"
+                value = descripcion,
+                onValueChange = { viewModel.actualizarDescripcion(it) },
+                placeholder = "Escribe aquí"
             )
 
             Etiqueta("Descuento", false)
             BeneficioOutlinedTextField(
-                value = viewModel.descuento.collectAsState().value,
-                onValueChange = { viewModel.descuento.value = it },
-                placeholder = "Ej. 20% o 2x1"
+                value = descuento,
+                onValueChange = { viewModel.actualizarDescuento(it) },
+                placeholder = "Ej. 10% o 2x1"
             )
 
-            // === 📅 FECHAS ===
+            // 📅 Fechas
             RangoFechasPicker(
-                desde = viewModel.desde.collectAsState().value,
-                hasta = viewModel.hasta.collectAsState().value,
-                onDesdeChange = { viewModel.desde.value = it },
-                onHastaChange = { fecha, _ -> viewModel.hasta.value = fecha }
+                desde = desde,
+                hasta = hasta,
+                onDesdeChange = { nuevaFechaDesde ->
+                    viewModel.actualizarDesde(nuevaFechaDesde)
+                    Log.d("FECHAS", "Desde seleccionada: $nuevaFechaDesde")
+                },
+                onHastaChange = { nuevaFechaHasta, _ ->
+                    viewModel.actualizarHasta(nuevaFechaHasta)
+                    Log.d("FECHAS", "Hasta seleccionada: $nuevaFechaHasta")
+                }
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(Modifier.height(40.dp))
 
-            // === BOTÓN GUARDAR ===
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // 🟣 Botón centrado
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                contentAlignment = Alignment.Center
             ) {
                 ButtonAction(
-                    textoNormal = "Guardar Cambios",
+                    textoNormal = "Actualizar",
                     textoCargando = "Actualizando...",
-                    isLoading = viewModel.isLoading.collectAsState().value,
+                    isLoading = isLoading,
                     habilitado = true,
                     onClick = {
                         viewModel.actualizarPromocion(
-                            idPromocion = idPromocion,
                             context = context,
+                            idPromocion = idPromocion,
                             onSuccess = {
                                 scope.launch {
-                                    snackbarHostState.showSnackbar("✅ Promoción actualizada con éxito")
+                                    snackbarHostState.showSnackbar("✅ Promoción actualizada correctamente")
                                 }
-                                navController.popBackStack()
+                                navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
+                                    popUpTo(Pantalla.RUTA_EDITAR_PROMOCIONES) { inclusive = true }
+                                }
                             },
                             onError = { msg ->
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(msg)
-                                }
+                                scope.launch { snackbarHostState.showSnackbar(msg) }
                             }
                         )
                     }
                 )
             }
 
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(Modifier.height(80.dp))
         }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun EditarPromocionPreview() {
+    MaterialTheme {
+        val navController = rememberNavController()
+        EditarPromocion(navController = navController, idPromocion = 1)
     }
 }
