@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,23 +24,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
-import mx.mfpp.beneficioapp.model.FavoritoDetalle
 import mx.mfpp.beneficioapp.model.PromocionJoven
-import mx.mfpp.beneficioapp.model.ServicioRemotoFavoritos
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
-import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
-import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModelFactory
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 
 /**
@@ -58,11 +54,13 @@ fun InicioPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
     promocionesViewModel: PromocionJovenViewModel = viewModel(),
-    busquedaViewModel: BusquedaViewModel,
+    busquedaViewModel: BusquedaViewModel = viewModel(),
     modifier: Modifier = Modifier
 ) {
 
-    val context= LocalContext.current
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
     val categoriasError by categoriasViewModel.error.collectAsState()
@@ -85,94 +83,150 @@ fun InicioPage(
     val nombreJovenCompleto = sessionManager.getNombreJoven() ?: "Joven"
     val nombreJoven = nombreJovenCompleto.split(" ").firstOrNull() ?: "Joven"
 
+    // Estado para controlar el refresh manual
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    var canTriggerRefresh by remember { mutableStateOf(true) }
 
-    // COMENTAR TEMPORALMENTE LOS FAVORITOS
-    /*
-    val favoritosViewModel: FavoritosViewModel = viewModel(
-        factory = FavoritosViewModelFactory(sessionManager)
-    )
-
-    val listaFavoritos by produceState<List<FavoritoDetalle>>(initialValue = emptyList()) {
-        val idUsuario = sessionManager.getJovenId() ?: -1
-        if (idUsuario != -1) {
-            val result = ServicioRemotoFavoritos.obtenerFavoritos(idUsuario)
-            value = result.getOrElse { emptyList() }
+    // Función para recargar todos los datos
+    fun recargarTodosLosDatos() {
+        coroutineScope.launch {
+            Log.d("INICIO_PAGE", "🔄 Recargando todos los datos...")
+            busquedaViewModel.refrescarEstablecimientos(context)
+            promocionesViewModel.refrescarPromociones()
+            categoriasViewModel.refrescarCategorias()
         }
     }
-    */
+
+    // Detectar cuando el usuario hace scroll hasta el top y luego baja para refrescar
+    LaunchedEffect(scrollState.value) {
+        val currentPosition = scrollState.value
+
+        // Si está en el top (posición 0) y puede activar refresh
+        if (currentPosition == 0 && canTriggerRefresh && !isRefreshing && !isLoading) {
+            isRefreshing = true
+            canTriggerRefresh = false // Prevenir múltiples triggers
+            Log.d("INICIO_PAGE", "🔄 Activando refresh por scroll (en top)")
+
+            // Ejecutar la recarga
+            recargarTodosLosDatos()
+
+            // Resetear después de un tiempo
+            kotlinx.coroutines.delay(2000)
+            canTriggerRefresh = true
+            isRefreshing = false
+            Log.d("INICIO_PAGE", "✅ Refresh completado")
+        }
+    }
+
+    // Recargar cuando la pantalla se enfoca por primera vez
+    LaunchedEffect(Unit) {
+        Log.d("INICIO_PAGE", "🔄 Cargando datos iniciales...")
+        busquedaViewModel.cargarEstablecimientos(context)
+        promocionesViewModel.refrescarPromociones()
+        categoriasViewModel.refrescarCategorias()
+    }
 
     Scaffold(
-        topBar = { HomeTopBar(nombreJoven,navController) }
+        topBar = { HomeTopBar(nombreJoven, navController) }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
         ) {
-            when {
-                isLoading -> { EstadoCargando() }
-                error != null -> {
-                    EstadoError(
-                        mensajeError = error,
-                        onReintentar = {
-                            categoriasViewModel.refrescarCategorias()
-                            promocionesViewModel.refrescarPromociones()
-                            busquedaViewModel.refrescarEstablecimientos()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+            ) {
+                // Mostrar indicador de refresh manual SOLO cuando se activa por scroll
+                if (isRefreshing) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(30.dp),
+                                strokeWidth = 3.dp
+                            )
+                            Text(
+                                text = "Actualizando...",
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
                         }
-                    )
+                    }
                 }
-                else -> {
-                    Categorias(categorias = categorias, onCategoriaClick = { categoria ->
-                        navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
-                    })
 
-                    // COMENTAR LA SECCIÓN DE FAVORITOS
-                    /*
-                    SeccionHorizontalFavoritos(
-                        titulo = "Tus Favoritos",
-                        favoritos = listaFavoritos,
-                        onItemClick = { favorito ->
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${favorito.id_establecimiento}")
-                        }
-                    )
-                    */
+                when {
+                    isLoading && !isRefreshing -> {
+                        Log.d("INICIO_PAGE", "⏳ Mostrando estado de carga")
+                        EstadoCargando()
+                    }
+                    error != null -> {
+                        Log.e("INICIO_PAGE", "❌ Mostrando error: $error")
+                        EstadoError(
+                            mensajeError = error,
+                            onReintentar = {
+                                recargarTodosLosDatos()
+                            }
+                        )
+                    }
+                    else -> {
+                        Log.d("INICIO_PAGE", "✅ Mostrando datos - Categorías: ${categorias.size}, " +
+                                "Nuevas Promos: ${nuevasPromociones.size}, " +
+                                "Expiran: ${promocionesExpiracion.size}, " +
+                                "Todas: ${todasPromociones.size}, " +
+                                "Establecimientos: ${todosEstablecimientos.size}")
 
-                    SeccionHorizontal(
-                        titulo = "Nuevas Promociones",
-                        items = nuevasPromociones,
-                        promocionesViewModel = promocionesViewModel,
-                        onItemClick = { promocion ->
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
-                        }
-                    )
+                        Categorias(categorias = categorias, onCategoriaClick = { categoria ->
+                            navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
+                        })
 
-                    SeccionHorizontal(
-                        titulo = "Expiran pronto",
-                        items = promocionesExpiracion,
-                        promocionesViewModel = promocionesViewModel,
-                        onItemClick = { promocion ->
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
-                        }
-                    )
+                        SeccionHorizontal(
+                            titulo = "Nuevas Promociones",
+                            items = nuevasPromociones,
+                            promocionesViewModel = promocionesViewModel,
+                            onItemClick = { promocion ->
+                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                            }
+                        )
 
-                    SeccionHorizontal(
-                        titulo = "Todas las promociones",
-                        items = todasPromociones,
-                        promocionesViewModel = promocionesViewModel,
-                        onItemClick = { promocion ->
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
-                        }
-                    )
-                    SeccionHorizontalEstablecimientos(
-                        titulo = "Todos los establecimientos",
-                        establecimientos = todosEstablecimientos,
-                        onItemClick = { establecimiento ->
-                            navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${establecimiento.id_establecimiento}")
-                        }
-                    )
+                        SeccionHorizontal(
+                            titulo = "Expiran pronto",
+                            items = promocionesExpiracion,
+                            promocionesViewModel = promocionesViewModel,
+                            onItemClick = { promocion ->
+                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                            }
+                        )
+
+                        SeccionHorizontal(
+                            titulo = "Todas las promociones",
+                            items = todasPromociones,
+                            promocionesViewModel = promocionesViewModel,
+                            onItemClick = { promocion ->
+                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                            }
+                        )
+
+                        SeccionHorizontalEstablecimientos(
+                            titulo = "Todos los establecimientos",
+                            establecimientos = todosEstablecimientos,
+                            onItemClick = { establecimiento ->
+                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${establecimiento.id_establecimiento}")
+                            }
+                        )
+                    }
                 }
             }
+
+            // REMOVÍ el indicador de carga general que causaba el doble círculo
         }
     }
 }
@@ -184,6 +238,8 @@ fun SeccionHorizontalEstablecimientos(
     onItemClick: (Establecimiento) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Log.d("UI_DEBUG", "🏪 Renderizando sección: $titulo con ${establecimientos.size} establecimientos")
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -281,7 +337,6 @@ fun CardEstablecimientoHorizontal(
     }
 }
 
-
 /**
  * Componente que muestra un estado de carga.
  *
@@ -365,6 +420,8 @@ fun SeccionHorizontal(
     onItemClick: (PromocionJoven) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Log.d("UI_DEBUG", "🔄 Renderizando sección: $titulo con ${items.size} items")
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -531,6 +588,8 @@ fun Categorias(
     categorias: List<Categoria>,
     onCategoriaClick: (Categoria) -> Unit
 ) {
+    Log.d("UI_DEBUG", "📊 Renderizando categorías: ${categorias.size} categorías")
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -696,92 +755,6 @@ fun HomeTopBar(
                     tint = Color.Gray
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun SeccionHorizontalFavoritos(
-    titulo: String,
-    favoritos: List<FavoritoDetalle>,
-    onItemClick: (FavoritoDetalle) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
-    ) {
-        Text(
-            text = titulo,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                color = Color.Black
-            ),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-
-        if (favoritos.isEmpty()) {
-            Text(
-                text = "No tienes favoritos aún",
-                color = Color.Gray,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(vertical = 16.dp)
-            )
-        } else {
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(favoritos) { favorito ->
-                    CardFavoritoHorizontal(favorito, onItemClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CardFavoritoHorizontal(
-    favorito: FavoritoDetalle,
-    onItemClick: (FavoritoDetalle) -> Unit
-) {
-    Column(modifier = Modifier.width(176.dp)) {
-        Card(
-            onClick = { onItemClick(favorito) },
-            modifier = Modifier.size(width = 176.dp, height = 100.dp),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = favorito.foto ?: "https://picsum.photos/200/150?random=${favorito.id_establecimiento}",
-                    contentDescription = "Imagen de ${favorito.nombre_establecimiento}",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp)
-        ) {
-            Text(
-                text = favorito.nombre_establecimiento,
-                color = Color.Black,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "${favorito.nombre_categoria ?: "Sin categoría"} • ${favorito.colonia ?: ""}",
-                color = Color.Gray,
-                fontSize = 11.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
         }
     }
 }

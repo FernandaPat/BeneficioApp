@@ -3,7 +3,6 @@ package mx.mfpp.beneficioapp.viewmodel
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,10 +47,19 @@ class BusquedaViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos(context)
+                val nuevosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos(context)
+
+                // Actualizar la lista completa
+                todosEstablecimientos = nuevosEstablecimientos
+
+                // Aplicar filtros actuales
                 aplicarFiltros()
+
+                Log.d("BUSQUEDA_VM", "✅ Establecimientos cargados: ${nuevosEstablecimientos.size}")
+
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
+                Log.e("BUSQUEDA_VM", "❌ Error: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -59,6 +67,7 @@ class BusquedaViewModel : ViewModel() {
     }
 
     fun refrescarEstablecimientos(context: Context? = null) {
+        Log.d("BUSQUEDA_VM", "🔄 Refrescando establecimientos")
         cargarEstablecimientos(context)
     }
 
@@ -71,12 +80,8 @@ class BusquedaViewModel : ViewModel() {
     fun clearError() {
         _error.value = null
     }
-    fun refrescarEstablecimientos() {
-        cargarEstablecimientos()
-    }
 
     fun seleccionarCategoria(categoria: String) {
-
         Log.d("BUSQUEDA_VM", "🔍 Categoría seleccionada: $categoria")
         Log.d("BUSQUEDA_VM", "📦 Total establecimientos: ${todosEstablecimientos.size}")
         _categoriaSeleccionada.value = categoria
@@ -102,7 +107,7 @@ class BusquedaViewModel : ViewModel() {
         val texto = _textoBusqueda.value
 
         Log.d("BUSQUEDA_VM", "🎯 Aplicando filtros - Categoría: $categoria, Texto: $texto")
-
+        Log.d("BUSQUEDA_VM", "📦 Base de datos: ${todosEstablecimientos.size} establecimientos")
 
         val filtrados = todosEstablecimientos.filter { establecimiento ->
             val coincideCategoria = categoria?.let {
@@ -117,8 +122,9 @@ class BusquedaViewModel : ViewModel() {
             coincideCategoria && coincideTexto
         }
 
-        Log.d("BUSQUEDA_VM", "📊 Filtrados: ${filtrados.size} de ${todosEstablecimientos.size}")
+        Log.d("BUSQUEDA_VM", "📊 Resultado filtro: ${filtrados.size} establecimientos")
 
+        // Forzar actualización
         _establecimientos.value = filtrados
     }
 
@@ -154,15 +160,4 @@ class BusquedaViewModel : ViewModel() {
             else est
         }
     }
-
-//    class BusquedaViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-//        @Suppress("UNCHECKED_CAST")
-//        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-//            if (modelClass.isAssignableFrom(BusquedaViewModel::class.java)) {
-//                return BusquedaViewModel(context) as T
-//            }
-//            throw IllegalArgumentException("Unknown ViewModel class")
-//        }
-//    }
 }
-
