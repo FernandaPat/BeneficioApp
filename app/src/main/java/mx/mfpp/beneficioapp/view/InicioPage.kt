@@ -32,8 +32,11 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.FavoritoDetalle
 import mx.mfpp.beneficioapp.model.PromocionJoven
+import mx.mfpp.beneficioapp.model.ServicioRemotoFavoritos
 import mx.mfpp.beneficioapp.model.SessionManager
+import mx.mfpp.beneficioapp.utils.normalizarUrlImagen
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
@@ -76,6 +79,7 @@ fun InicioPage(
     val establecimientosLoading by busquedaViewModel.isLoading.collectAsState()
     val establecimientosError by busquedaViewModel.error.collectAsState()
 
+    // CORREGIDO: Solo considerar loading de los ViewModels principales, no de favoritos
     val isLoading = categoriasLoading || promocionesLoading || establecimientosLoading
     val error = categoriasError ?: promocionesError ?: establecimientosError
 
@@ -83,39 +87,73 @@ fun InicioPage(
     val nombreJovenCompleto = sessionManager.getNombreJoven() ?: "Joven"
     val nombreJoven = nombreJovenCompleto.split(" ").firstOrNull() ?: "Joven"
 
+    // Estado para los favoritos - CORREGIDO: No usar produceState aquí
+    var listaFavoritos by remember { mutableStateOf<List<FavoritoDetalle>>(emptyList()) }
+    var favoritosLoading by remember { mutableStateOf(false) }
+
+    // Cargar favoritos cuando el usuario esté logueado
+    LaunchedEffect(Unit) {
+        val idUsuario = sessionManager.getJovenId()
+        if (idUsuario != null && idUsuario != -1) {
+            favoritosLoading = true
+            try {
+                val result = ServicioRemotoFavoritos.obtenerFavoritos(idUsuario)
+                listaFavoritos = result.getOrElse { emptyList() }
+                Log.d("INICIO_PAGE", "✅ Favoritos cargados: ${listaFavoritos.size}")
+            } catch (e: Exception) {
+                Log.e("INICIO_PAGE", "❌ Error cargando favoritos: ${e.message}")
+            } finally {
+                favoritosLoading = false
+            }
+        }
+    }
+
     // Estado para controlar el refresh manual
     var isRefreshing by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     var canTriggerRefresh by remember { mutableStateOf(true) }
 
-    // Función para recargar todos los datos
+    // Función para recargar todos los datos - CORREGIDA: Incluir favoritos
     fun recargarTodosLosDatos() {
         coroutineScope.launch {
             Log.d("INICIO_PAGE", "🔄 Recargando todos los datos...")
             busquedaViewModel.refrescarEstablecimientos(context)
             promocionesViewModel.refrescarPromociones()
             categoriasViewModel.refrescarCategorias()
+
+            // Recargar favoritos también
+            val idUsuario = sessionManager.getJovenId()
+            if (idUsuario != null && idUsuario != -1) {
+                try {
+                    val result = ServicioRemotoFavoritos.obtenerFavoritos(idUsuario)
+                    listaFavoritos = result.getOrElse { emptyList() }
+                    Log.d("INICIO_PAGE", "✅ Favoritos recargados: ${listaFavoritos.size}")
+                } catch (e: Exception) {
+                    Log.e("INICIO_PAGE", "❌ Error recargando favoritos: ${e.message}")
+                }
+            }
         }
     }
 
-    // Detectar cuando el usuario hace scroll hasta el top y luego baja para refrescar
     LaunchedEffect(scrollState.value) {
         val currentPosition = scrollState.value
 
-        // Si está en el top (posición 0) y puede activar refresh
         if (currentPosition == 0 && canTriggerRefresh && !isRefreshing && !isLoading) {
             isRefreshing = true
-            canTriggerRefresh = false // Prevenir múltiples triggers
-            Log.d("INICIO_PAGE", "🔄 Activando refresh por scroll (en top)")
+            canTriggerRefresh = false
+            Log.d("INICIO_PAGE", "🔄 Iniciando refresh por scroll")
 
-            // Ejecutar la recarga
-            recargarTodosLosDatos()
-
-            // Resetear después de un tiempo
-            kotlinx.coroutines.delay(2000)
-            canTriggerRefresh = true
-            isRefreshing = false
-            Log.d("INICIO_PAGE", "✅ Refresh completado")
+            try {
+                recargarTodosLosDatos()
+            } catch (e: Exception) {
+                Log.e("INICIO_PAGE", "❌ Error durante refresh: ${e.message}")
+            } finally {
+                // Espera breve para mostrar el spinner y evitar flicker
+                kotlinx.coroutines.delay(1200)
+                isRefreshing = false
+                canTriggerRefresh = true
+                Log.d("INICIO_PAGE", "✅ Refresh completado correctamente")
+            }
         }
     }
 
@@ -127,6 +165,20 @@ fun InicioPage(
         categoriasViewModel.refrescarCategorias()
     }
 
+    // En tu InicioPage, después de cargar los favoritos, agrega:
+    LaunchedEffect(listaFavoritos) {
+        if (listaFavoritos.isNotEmpty()) {
+            Log.d("FAVORITOS_ANALYSIS", "=== ANÁLISIS DE FAVORITOS ===")
+            listaFavoritos.forEachIndexed { index, favorito ->
+                Log.d("FAVORITOS_ANALYSIS",
+                    "Favorito $index: ${favorito.nombre_establecimiento} | " +
+                            "Foto: '${favorito.foto}' | " +
+                            "Es null: ${favorito.foto == null} | " +
+                            "Está vacío: ${favorito.foto?.isEmpty() ?: true}"
+                )
+            }
+        }
+    }
     Scaffold(
         topBar = { HomeTopBar(nombreJoven, navController) }
     ) { paddingValues ->
@@ -182,11 +234,24 @@ fun InicioPage(
                                 "Nuevas Promos: ${nuevasPromociones.size}, " +
                                 "Expiran: ${promocionesExpiracion.size}, " +
                                 "Todas: ${todasPromociones.size}, " +
-                                "Establecimientos: ${todosEstablecimientos.size}")
+                                "Establecimientos: ${todosEstablecimientos.size}, " +
+                                "Favoritos: ${listaFavoritos.size}")
 
                         Categorias(categorias = categorias, onCategoriaClick = { categoria ->
                             navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
                         })
+
+                        // Mostrar sección de favoritos solo si hay datos
+                        if (listaFavoritos.isNotEmpty() || favoritosLoading) {
+                            SeccionHorizontalFavoritos(
+                                titulo = "Tus Favoritos",
+                                favoritos = listaFavoritos,
+                                isLoading = favoritosLoading,
+                                onItemClick = { favorito ->
+                                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${favorito.id_establecimiento}")
+                                }
+                            )
+                        }
 
                         SeccionHorizontal(
                             titulo = "Nuevas Promociones",
@@ -225,8 +290,6 @@ fun InicioPage(
                     }
                 }
             }
-
-            // REMOVÍ el indicador de carga general que causaba el doble círculo
         }
     }
 }
@@ -755,6 +818,120 @@ fun HomeTopBar(
                     tint = Color.Gray
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun SeccionHorizontalFavoritos(
+    titulo: String,
+    favoritos: List<FavoritoDetalle>,
+    isLoading: Boolean = false,
+    onItemClick: (FavoritoDetalle) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = Color.Black
+            ),
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(30.dp),
+                    strokeWidth = 3.dp
+                )
+            }
+        } else if (favoritos.isEmpty()) {
+            Text(
+                text = "No tienes favoritos aún",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+        } else {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(favoritos) { favorito ->
+                    CardFavoritoHorizontal(favorito, onItemClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CardFavoritoHorizontal(
+    favorito: FavoritoDetalle,
+    onItemClick: (FavoritoDetalle) -> Unit
+) {
+    Column(
+        modifier = Modifier.width(176.dp)
+    ) {
+        Card(
+            onClick = { onItemClick(favorito) },
+            modifier = Modifier
+                .size(width = 176.dp, height = 100.dp),
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                // VERSIÓN SIMPLIFICADA - misma lógica que establecimientos
+
+                val imagenUrl = normalizarUrlImagen(favorito.foto, favorito.id_establecimiento)
+
+                Log.d("FAVORITO_IMAGE", "URL final: $imagenUrl")
+
+                AsyncImage(
+                    model = imagenUrl,
+                    contentDescription = "Imagen de ${favorito.nombre_establecimiento}",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
+
+        // Información del establecimiento
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
+        ) {
+            Text(
+                text = favorito.nombre_establecimiento,
+                color = Color.Black,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 14.sp
+            )
+
+            Text(
+                text = "${favorito.nombre_categoria ?: "Sin categoría"} • ${favorito.colonia ?: ""}",
+                color = Color.Gray,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Normal,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 0.dp),
+                lineHeight = 12.sp
+            )
         }
     }
 }
