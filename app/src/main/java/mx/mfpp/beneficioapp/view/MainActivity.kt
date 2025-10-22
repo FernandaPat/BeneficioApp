@@ -1,14 +1,8 @@
 package mx.mfpp.beneficioapp.view
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,18 +21,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -47,8 +36,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.firebase.Firebase
-import com.google.firebase.messaging.FirebaseMessaging
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
@@ -61,7 +48,6 @@ import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import java.net.URLDecoder
 import kotlin.getValue
 
-
 /**
  * Actividad principal de la aplicación Beneficio Joven.
  *
@@ -71,19 +57,9 @@ import kotlin.getValue
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
     private val promocionesViewModel: PromocionJovenViewModel by viewModels()
+    private val busquedaViewModel: BusquedaViewModel by viewModels() // Este es importante
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
-
-
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            Log.d("FCM_DEBUG", "Permiso concedido")
-        } else {
-            Log.w("FCM_DEBUG", "Permiso denegado")
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,37 +74,6 @@ class MainActivity : ComponentActivity() {
             else -> Pantalla.RUTA_JN_APP
         }
 
-        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-            if (!task.isSuccessful) {
-                task.exception?.printStackTrace()
-                return@addOnCompleteListener
-            }
-
-            val token = task.result
-
-            // ✅ GUARDAR TOKEN CON KTX
-            try {
-                getSharedPreferences("fcm", Context.MODE_PRIVATE).edit {
-                    putString("token", token)
-                }
-
-
-            } catch (e: Exception) {
-                Log.e("FCM_DEBUG", "❌ ERROR guardando: ${e.message}")
-            }
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-
-
 
         // Configurar interfaz full-screen
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -140,16 +85,11 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             BeneficioAppTheme {
-                val context = LocalContext.current
-                val busquedaViewModel: BusquedaViewModel = viewModel(
-                    factory = BusquedaViewModel.BusquedaViewModelFactory(context)
-                )
-
                 AppPrincipal(
                     startDestination = startDestination,
                     categoriasViewModel = categoriasViewModel,
                     promocionesViewModel = promocionesViewModel,
-                    busquedaViewModel = busquedaViewModel, // Usa el ViewModel creado con factory
+                    busquedaViewModel = busquedaViewModel, // Pasar este ViewModel
                     scannerViewModel = scannerViewModel,
                     qrViewModel = qrViewModel
                 )
@@ -274,10 +214,12 @@ fun AppNavHost(
         composable(Pantalla.RUTA_AGREGAR_PROMOCIONES) {
             AgregarPromocion(navController)
         }
-        composable("editarPromocion/{id}") {
-            Editar_Promociones(navController, it.arguments?.getString("id")?.toInt() ?: 0)
+        composable(
+            route = "editarPromocion/{id}",
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("id")?.toIntOrNull() ?: 0
+            Editar_Promociones(navController, id)
         }
-
         composable(Pantalla.RUTA_ACERCADE_APP) {
             AcercaDePage(navController)
         }
@@ -307,42 +249,18 @@ fun AppNavHost(
             QRPromocionPage(navController, qrViewModel)
         }
 
+        // Grafo de navegación Nav bar - JÓVENES
         composable(Pantalla.RUTA_INICIO_APP) {
             InicioPage(
                 navController = navController,
                 categoriasViewModel = categoriasViewModel,
                 promocionesViewModel = promocionesViewModel,
-                busquedaViewModel = busquedaViewModel // ← Pasa el ViewModel existente
+                busquedaViewModel = busquedaViewModel
             )
         }
-        
 
         composable(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO) {
             NotificacionesNegocioPage(navController)
-        }
-
-        composable(
-            route = "MapaPage?lat={lat}&lng={lng}",
-            arguments = listOf(
-                navArgument("lat") {
-                    type = NavType.FloatType
-                    defaultValue = 0f // valor por defecto si no viene
-                },
-                navArgument("lng") {
-                    type = NavType.FloatType
-                    defaultValue = 0f
-                }
-            )
-        ) { backStackEntry ->
-            val lat = backStackEntry.arguments?.getFloat("lat") ?: 0f
-            val lng = backStackEntry.arguments?.getFloat("lng") ?: 0f
-
-            // Si ambos son 0, asumimos que no se pasó ubicación del negocio
-            MapaPage(
-                navController = navController,
-                lat = if (lat != 0f) lat.toDouble() else null,
-                lng = if (lng != 0f) lng.toDouble() else null
-            )
         }
 
         composable(Pantalla.RUTA_MAPA_APP) {
@@ -421,6 +339,14 @@ fun AppNavHost(
             )
         }
 
+        // Grafo de navegación Nav bar - NEGOCIO
+        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
+            InicioNegocioPage(navController)
+        }
+        composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
+            Promociones(navController)
+        }
+
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
             val showScanner by scannerViewModel.showScanner.collectAsState()
 
@@ -450,17 +376,11 @@ fun AppNavHost(
         composable(Pantalla.RUTA_SOLICITUD_APP) {
             SolicitudPage(navController)
         }
-
+        composable(Pantalla.RUTA_ESTATUS_SOLICITUD_APP) {
+            EstatusSolicitudPage(navController)
+        }
         composable(Pantalla.RUTA_NOTIFICACIONES_APP) {
             NotificacionPage(navController)
-        }
-
-        // Grafo de navegación Nav bar - NEGOCIO
-        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
-            InicioNegocioPage(navController)
-        }
-        composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
-            Promociones(navController)
         }
     }
 }
