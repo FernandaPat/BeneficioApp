@@ -229,9 +229,6 @@ fun AppNavHost(
         composable(Pantalla.RUTA_AYUDA_APP) {
             AyudaPage(navController)
         }
-        composable(Pantalla.RUTA_CAMBIARCONTRASENA_APP) {
-            CambiarContrasenaPage(navController)
-        }
         composable(Pantalla.RUTA_TERMINOS_CONDICIONES){
             TerminosYCondicionesPage(navController)
         }
