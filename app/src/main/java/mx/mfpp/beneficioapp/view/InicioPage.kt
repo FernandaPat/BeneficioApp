@@ -260,8 +260,8 @@ fun InicioPage(
                             items = nuevasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
-                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
+                                // 🔹 CAMBIO: Pasar el ID de la promoción
+                                navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
 
@@ -270,8 +270,8 @@ fun InicioPage(
                             items = promocionesExpiracion,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
-                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
+                                // 🔹 CAMBIO: Pasar el ID de la promoción
+                                navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
 
@@ -280,8 +280,8 @@ fun InicioPage(
                             items = todasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
-                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
+                                // 🔹 CAMBIO: Pasar el ID de la promoción
+                                navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
 
