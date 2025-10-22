@@ -40,6 +40,8 @@ import mx.mfpp.beneficioapp.utils.normalizarUrlImagen
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Pantalla de inicio principal para usuarios jóvenes.
@@ -258,7 +260,8 @@ fun InicioPage(
                             items = nuevasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
+                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
                             }
                         )
 
@@ -267,7 +270,8 @@ fun InicioPage(
                             items = promocionesExpiracion,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
+                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
                             }
                         )
 
@@ -276,7 +280,8 @@ fun InicioPage(
                             items = todasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${promocion.id}")
+                                val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
+                                navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
                             }
                         )
 

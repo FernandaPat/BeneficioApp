@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import NegocioDetallePage
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -250,9 +251,18 @@ fun AppNavHost(
             Crear_Cuenta(navController)
         }
 
+        composable(
+            "qrPromocion/{nombrePromocion}",
+        ) { backStackEntry ->
+            val nombrePromocion = backStackEntry.arguments?.getString("nombrePromocion")?.let {
+                URLDecoder.decode(it, "UTF-8")
+            } ?: ""
 
-        composable(Pantalla.RUTA_QR_PROMOCION) {
-            QRPromocionPage(navController, qrViewModel)
+            QRPromocionPage(
+                navController = navController,
+                viewModel = qrViewModel,
+                nombrePromocion = nombrePromocion
+            )
         }
 
         // Grafo de navegación Nav bar - JÓVENES
