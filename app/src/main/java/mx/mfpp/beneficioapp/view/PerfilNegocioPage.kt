@@ -187,7 +187,7 @@ fun PerfilNegocioPage(navController: NavController) {
                         navController.navigate(Pantalla.RUTA_RECUPERAR_CONTRASENA)
                     },
                     OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
-                        navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
+                        navController.navigate(Pantalla.RUTA_DATOSNEGOCIO_APP)
                     },
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )
