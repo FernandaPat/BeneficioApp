@@ -114,7 +114,7 @@ class RecuperarContrasenaViewModel(application: Application) : AndroidViewModel(
         _recuperarState.value = RecuperarState.Loading
 
         authClient
-            .resetPassword(email.value, "Username-Password-Authentication") // ← VERIFICA ESTE NOMBRE
+            .resetPassword(email.value, "BeneficioJovenMovil") // ← VERIFICA ESTE NOMBRE
             .start(object : Callback<Void?, AuthenticationException> {
                 override fun onSuccess(result: Void?) {
                     Log.d("RECUPERAR_PASSWORD", "✅ Email enviado exitosamente")
