@@ -62,4 +62,23 @@ object ServicioRemotoFavoritos {
             Result.failure(e)
         }
     }
+
+    suspend fun obtenerFavoritos(idUsuario: Int): Result<List<FavoritoDetalle>> {
+        return try {
+            val response = servicio.obtenerFavoritos(idUsuario)
+
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d("FAVORITOS_SERVICIO", "✅ ${body?.total} favoritos obtenidos")
+                Result.success(body?.favoritos ?: emptyList())
+            } else {
+                val errorMsg = "Error ${response.code()}: ${response.message()}"
+                Log.e("FAVORITOS_SERVICIO", "❌ $errorMsg")
+                Result.failure(Exception(errorMsg))
+            }
+        } catch (e: Exception) {
+            Log.e("FAVORITOS_SERVICIO", "❌ Exception: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
 }

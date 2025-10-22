@@ -462,6 +462,14 @@ fun AppNavHost(
         composable(Pantalla.RUTA_NOTIFICACIONES_APP) {
             NotificacionPage(navController)
         }
+
+        // Grafo de navegación Nav bar - NEGOCIO
+        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
+            InicioNegocioPage(navController)
+        }
+        composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
+            Promociones(navController)
+        }
     }
 }
 
