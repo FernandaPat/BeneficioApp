@@ -62,13 +62,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Checkbox
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.mfpp.beneficioapp.viewmodel.CrearCuentaViewModel
 import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.network.RetrofitClient
 
 /**
  * Pantalla para el registro de una nueva cuenta en la aplicación Beneficio Joven.
@@ -90,7 +90,7 @@ fun Crear_Cuenta(
     val scroll = rememberScrollState()
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
-
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Crear Cuenta") },
@@ -196,30 +196,24 @@ fun Crear_Cuenta(
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.Center
             ) {
-                BotonMorado(
-                    texto = "Crear Cuenta",
+                ButtonAction(
+                    textoNormal = "Crear Cuenta",
+                    textoCargando = "Creando...",
+                    isLoading = viewModel.isLoading.value,
                     habilitado = viewModel.esFormularioValido(),
                     onClick = {
-                        Log.d("CrearCuenta", "Botón 'Crear Cuenta' presionado ")
-                        if (viewModel.esFormularioValido()) {
-                            viewModel.registrarUsuario(
-                                apiService = RetrofitClient.api
-                            ) { exito, mensajeError ->
-                                coroutineScope.launch {
-                                    if (exito) {
-                                        Log.d("CrearCuenta", "Cuenta creada exitosamente")
-                                        coroutineScope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                message = "Cuenta creada exitosamente ",
-                                                withDismissAction = false,
-                                                duration = androidx.compose.material3.SnackbarDuration.Short
-                                            )
-                                        }
-                                        coroutineScope.launch {
-                                            delay(500)
-                                            navController.navigate(Pantalla.RUTA_INICIAR_SESION)
-                                        }
+                        Log.d("CrearCuenta", "Botón 'Crear Cuenta' presionado")
 
+                        if (viewModel.esFormularioValido()) {
+                            viewModel.isLoading.value = true
+                            viewModel.registrarUsuario(context) { exito, mensajeError ->
+                                coroutineScope.launch {
+                                    viewModel.isLoading.value = false
+                                    if (exito) {
+                                        Log.d("CrearCuenta", "Cuenta creada exitosamente, navegando...")
+                                        navController.navigate(Pantalla.RUTA_INICIAR_SESION) {
+                                            popUpTo(Pantalla.RUTA_CREAR_CUENTA) { inclusive = true }
+                                        }
                                     } else {
                                         snackbarHostState.showSnackbar(
                                             mensajeError ?: "Error desconocido al crear la cuenta"

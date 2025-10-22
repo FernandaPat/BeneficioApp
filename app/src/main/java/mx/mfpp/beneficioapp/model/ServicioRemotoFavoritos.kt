@@ -6,7 +6,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ServicioRemotoFavoritos {
-    private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
+    private const val URL_BASE = "https://rs2xlkq5el.execute-api.us-east-1.amazonaws.com/default/"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()

@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,7 +64,9 @@ fun BotonMorado(
     texto: String,
     route: String? = null,
     habilitado: Boolean = true,
-    onClick: (() -> Unit)? = null // 🔹 Nuevo: callback opcional
+    onClick: (() -> Unit)? = null, // 🔹 Nuevo: callback opcional
+    contenido: @Composable (RowScope.() -> Unit)? = null
+
 ) {
     val moradoFuerte = Color(0xFF9605f7)
     val moradoSuave = Color(0xFFE9d4ff)
@@ -91,6 +95,37 @@ fun BotonMorado(
         )
     }
 }
+
+@Composable
+fun ButtonAction(
+    textoNormal: String,
+    textoCargando: String = "Procesando...",
+    isLoading: Boolean,
+    habilitado: Boolean = true,
+    onClick: () -> Unit
+) {
+    BotonMorado(
+        texto = if (isLoading) textoCargando else textoNormal,
+        habilitado = habilitado && !isLoading,
+        onClick = onClick,
+        contenido = {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(22.dp)
+                        .padding(end = 8.dp),
+                    strokeWidth = 2.dp,
+                    color = Color.White
+                )
+            }
+            Text(
+                text = if (isLoading) textoCargando else textoNormal,
+                color = Color.White
+            )
+        }
+    )
+}
+
 
 
 /**
@@ -211,8 +246,8 @@ fun ArrowTopBar(
     navController: NavController,
     text: String,
     modifier: Modifier = Modifier,
-    barHeight: Dp = 72.dp,   // ajusta altura visual
-    topOffset: Dp = 6.dp      // baja un poco el título
+    barHeight: Dp = 72.dp,
+    topOffset: Dp = 6.dp
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val (modifierAnimado, colorAnimado) = crearAnimacionIconosBotones(
@@ -224,7 +259,7 @@ fun ArrowTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .statusBarsPadding()
+            // 🔹 QUITA esta línea: .statusBarsPadding()
             .background(Color.White)
             .height(barHeight)
             .padding(bottom = 5.dp)
@@ -247,14 +282,13 @@ fun ArrowTopBar(
             )
         }
 
-        // Título centrado absoluto y un pelín más abajo
+        // Título centrado
         TextoMedioGrande(
             texto = text,
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(top = topOffset)
         )
-
     }
 }
 

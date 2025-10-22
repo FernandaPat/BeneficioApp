@@ -22,29 +22,27 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.HistorialPromocionUsuario
 import mx.mfpp.beneficioapp.model.SessionManager
-import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
+import mx.mfpp.beneficioapp.viewmodel.HistorialViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActividadPage(
     navController: NavController,
-    promocionesViewModel: PromocionesViewModel = viewModel()
+    historialViewModel: HistorialViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-    // Estados observados desde el ViewModel
-    val promociones by promocionesViewModel.promociones.collectAsState()
-    val isLoading by promocionesViewModel.isLoading.collectAsState()
-    val error by promocionesViewModel.error.collectAsState()
+    val historial by historialViewModel.historial.collectAsState()
+    val isLoading by historialViewModel.isLoading.collectAsState()
+    val error by historialViewModel.error.collectAsState()
 
-    // 🔹 Cargar promociones del negocio al abrir la pantalla
     LaunchedEffect(Unit) {
-        val idNegocio = sessionManager.getNegocioId() ?: 0
-        if (idNegocio != 0) {
-            promocionesViewModel.cargarPromociones(idNegocio)
+        val idUsuario = sessionManager.getJovenId() ?: 0
+        if (idUsuario != 0) {
+            historialViewModel.cargarHistorialUsuario(idUsuario)
         }
     }
 
@@ -55,12 +53,12 @@ fun ActividadPage(
                     Text(
                         "Promociones registradas",
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.Black,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
         containerColor = Color.White
@@ -90,7 +88,7 @@ fun ActividadPage(
                     )
                 }
 
-                promociones.isEmpty() -> {
+                historial.isEmpty() -> {
                     Text(
                         text = "No hay promociones registradas para este negocio.",
                         color = Color.Gray,
@@ -104,20 +102,38 @@ fun ActividadPage(
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 10.dp)
+                        contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
-                        items(promociones, key = { it.id }) { promo ->
-                            PromocionListItem(
-                                promo = promo,
-                                onEditClick = {
-                                    // 🔹 Navegar al editor con el ID de la promoción
-                                    navController.navigate("editarPromocion/${promo.id}")
+                        // Encabezado
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Cupones Canjeados",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                                Text(
+                                    text = "Fecha",
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 16.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+
+                        items(historial, key = { it.id }) { itemHistorial ->
+                            HistorialListItem(
+                                historialItem = itemHistorial,
+                                onItemClick = {
+                                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${itemHistorial.id_establecimiento}")
                                 }
-                            )
-                            HorizontalDivider(
-                                color = Color(0xFFF3F3F3),
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(horizontal = 20.dp)
                             )
                         }
                     }
@@ -127,24 +143,25 @@ fun ActividadPage(
     }
 }
 
-/**
- * Elemento individual del listado de promociones
- */
 @Composable
-private fun PromocionListItem(
-    promo: Promocion,
-    onEditClick: () -> Unit,
+private fun HistorialListItem(
+    historialItem: HistorialPromocionUsuario,
+    onItemClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
-        // 🖼️ Imagen + texto principal
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Imagen de la promoción
             Box(
                 modifier = Modifier
                     .size(65.dp)
@@ -153,47 +170,85 @@ private fun PromocionListItem(
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = promo.imagenUrl ?: "https://picsum.photos/200",
-                    contentDescription = promo.nombre,
+                    model = historialItem.foto_url ?: "https://picsum.photos/200",
+                    contentDescription = historialItem.titulo_promocion,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Columna de cupones canjeados
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = promo.nombre,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = Color.Black,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    text = historialItem.titulo_promocion,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    color = Color.Black
                 )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = promo.descripcion ?: "",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = Color.Gray,
-                        fontSize = 14.sp
-                    )
+                    text = historialItem.descripcion ?: "",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    maxLines = 2
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Fecha a la derecha
+            Box(
+                modifier = Modifier
+                    .height(28.dp)
+                    .width(80.dp)
+                    .background(
+                        color = Color(0xFF9605F7).copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(6.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = formatearFechaCorta(historialItem.fecha_canje),
+                    color = Color(0xFF9605F7),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = 4.dp)
                 )
             }
         }
 
-        // 📅 Fecha de expiración o botón editar
-        TextButton(onClick = onEditClick) {
-            Text(
-                text = "Editar",
-                color = Color(0xFF9605F7),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
+        // Línea divisora plana
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Color(0xFFF3F3F3))
+        )
     }
 }
 
-/**
- * Vista previa
- */
+private fun formatearFechaCorta(fecha: String): String {
+    return try {
+        val partes = fecha.split("T")[0].split("-")
+        if (partes.size == 3) {
+            "${partes[2]}/${partes[1]}/${partes[0].takeLast(2)}"
+        } else {
+            fecha
+        }
+    } catch (e: Exception) {
+        fecha
+    }
+}
+
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ActividadRecientePreview() {

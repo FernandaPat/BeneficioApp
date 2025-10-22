@@ -1,120 +1,112 @@
 package mx.mfpp.beneficioapp.viewmodel
 
+import android.content.Context
 import android.net.Uri
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.network.RetrofitClient
-import mx.mfpp.beneficioapp.utils.ErrorHandler
-import retrofit2.HttpException
+import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
+import mx.mfpp.beneficioapp.model.ServicioRemotoPromocionPorId
+import mx.mfpp.beneficioapp.utils.convertirImagenABase64
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+
+
 
 class EditarPromocionViewModel : ViewModel() {
 
-    // 🔹 Estado de la promoción seleccionada
-    var promocion = mutableStateOf<Promocion?>(null)
-        private set
+    // 🧾 Campos editables
+    var nombre = MutableStateFlow("")
+    var descripcion = MutableStateFlow("")
+    var descuento = MutableStateFlow("")
+    var desde = MutableStateFlow("")
+    var hasta = MutableStateFlow("")
 
-    // 🔹 Imagen seleccionada localmente (para mostrar previsualización)
-    var nuevaImagenUri = mutableStateOf<Uri?>(null)
-        private set
+    // 📸 Imagen
+    var nuevaImagenUri = MutableStateFlow<Uri?>(null)
+    var imagenRemota = MutableStateFlow<String?>(null)
 
-    // 🔹 Estado de carga y errores
-    var isLoading = mutableStateOf(false)
-        private set
+    // ⚙️ Estado general
+    var isLoading = MutableStateFlow(false)
 
-    var error = mutableStateOf<String?>(null)
-        private set
+    // === ACTUALIZADORES ===
+    fun actualizarNombre(v: String) { nombre.value = v }
+    fun actualizarDescripcion(v: String) { descripcion.value = v }
+    fun actualizarDescuento(v: String) { descuento.value = v }
+    fun actualizarDesde(v: String) { desde.value = v }
+    fun actualizarHasta(v: String) { hasta.value = v }
+    fun actualizarImagen(uri: Uri?) { nuevaImagenUri.value = uri }
 
-    var mensajeExito = mutableStateOf<String?>(null)
-        private set
-
-
-    /**
-     * 🔹 Cargar una promoción por ID
-     */
+    // === CARGAR PROMOCIÓN EXISTENTE ===
     fun cargarPromocionPorId(idPromocion: Int) {
         viewModelScope.launch {
             isLoading.value = true
-            error.value = null
             try {
-                Log.d("EDITAR_PROMO_DEBUG", "Cargando promoción con ID = $idPromocion")
-                val response = RetrofitClient.api.obtenerPromocionPorId(idPromocion)
-                promocion.value = response
+                val promocion = ServicioRemotoPromocionPorId.obtenerPromocionPorId(idPromocion)
+                println("📡 Datos recibidos: $promocion")
+
+                nombre.value = promocion.titulo ?: ""
+                descripcion.value = promocion.descripcion ?: ""
+                descuento.value = promocion.descuento ?: ""
+                desde.value = promocion.disponible_desde ?: ""
+                hasta.value = promocion.hasta ?: ""
+                imagenRemota.value = promocion.imagen ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
-                error.value = ErrorHandler.obtenerMensajeError(e)
             } finally {
                 isLoading.value = false
             }
         }
     }
 
-
-    /**
-     * 🔹 Guardar cambios (PUT)
-     */
-    fun guardarCambios(
-        onSuccess: () -> Unit = {},
-        onError: (String) -> Unit = {}
+    // === ACTUALIZAR PROMOCIÓN ===
+    fun actualizarPromocion(
+        context: Context,
+        idPromocion: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
     ) {
-        val promoActual = promocion.value ?: return
-
         viewModelScope.launch {
             isLoading.value = true
-            error.value = null
-            mensajeExito.value = null
-
             try {
-                val response = RetrofitClient.api.actualizarPromocion(
-                    promoActual.id,
-                    promoActual
+                // 🔹 Convierte imagen nueva (si hay)
+                val imagenBase64 = nuevaImagenUri.value?.let { convertirImagenABase64(context, it) } ?: imagenRemota.value
+
+                val formato = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+                fun normalizarFecha(fecha: String): String {
+                    // Intenta convertir fechas tipo 2025-10-23 → 23/10/2025
+                    return try {
+                        if (fecha.contains("-")) {
+                            LocalDate.parse(fecha).format(formato)
+                        } else fecha // ya está en dd/MM/yyyy
+                    } catch (e: Exception) {
+                        fecha
+                    }
+                }
+
+                val ok = ServicioRemotoActualizarPromocion.actualizarPromocion(
+                    idPromocion = idPromocion,
+                    titulo = nombre.value,
+                    descripcion = descripcion.value,
+                    descuento = descuento.value,
+                    disponibleDesde = normalizarFecha(desde.value),
+                    hasta = normalizarFecha(hasta.value),
+                    imagenBase64 = imagenBase64
                 )
 
-                if (response.isSuccessful) {
-                    mensajeExito.value = "Promoción actualizada con éxito 🎉"
-                    onSuccess()
-                } else {
-                    val mensaje = "Error al actualizar: ${response.code()} ${response.message()}"
-                    error.value = mensaje
-                    onError(mensaje)
-                }
+
+                if (ok) onSuccess()
+                else onError("Error al actualizar la promoción")
 
             } catch (e: Exception) {
                 e.printStackTrace()
-                val mensaje = ErrorHandler.obtenerMensajeError(e)
-                error.value = mensaje
-                onError(mensaje)
+                onError("Error al actualizar la promoción")
             } finally {
                 isLoading.value = false
             }
         }
-    }
-
-    // 🔹 Métodos para actualizar campos individuales
-    fun actualizarNombre(nuevo: String) {
-        promocion.value = promocion.value?.copy(nombre = nuevo)
-    }
-
-    fun actualizarDescripcion(nuevo: String) {
-        promocion.value = promocion.value?.copy(descripcion = nuevo)
-    }
-
-    fun actualizarDescuento(nuevo: String) {
-        promocion.value = promocion.value?.copy(descuento = nuevo)
-    }
-
-    fun actualizarCategoria(nueva: String) {
-        promocion.value = promocion.value?.copy(categoria = nueva)
-    }
-
-    fun actualizarExpiraEn(dias: Int?) {
-        promocion.value = promocion.value?.copy(expiraEn = dias)
-    }
-
-    fun actualizarImagen(uri: Uri?) {
-        nuevaImagenUri.value = uri
     }
 }

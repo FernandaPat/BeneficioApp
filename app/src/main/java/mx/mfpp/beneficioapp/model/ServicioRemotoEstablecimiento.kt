@@ -1,111 +1,95 @@
-// mx.mfpp.beneficioapp.model.ServicioRemotoEstablecimientos
-package mx.mfpp.beneficioapp.model
+package mx.mfpp.beneficioapp.mode
+
 
 import android.content.Context
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import kotlinx.coroutines.delay
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import mx.mfpp.beneficioapp.model.Establecimiento
+import mx.mfpp.beneficioapp.model.SessionManager
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 
 object ServicioRemotoEstablecimiento {
-    private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
-    private const val MAX_REINTENTOS = 3
 
-    private val retrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(URL_BASE)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    private const val BASE_URL =
+        "https://lista-establecimiento-819994103285.us-central1.run.app/establecimientos"
 
-    private val servicio: EstablecimientoAPI by lazy {
-        retrofit.create(EstablecimientoAPI::class.java)
-    }
+    suspend fun obtenerEstablecimientos(context: Context? = null): List<Establecimiento> =
+        withContext(Dispatchers.IO) {
+            val idUsuario = try {
+                context?.let { SessionManager(it).getJovenId() } ?: 0
+            } catch (e: Exception) {
+                Log.e("SERVICIO_EST", "Error obteniendo idUsuario: ${e.message}")
+                0
+            }
 
-    suspend fun obtenerEstablecimientos(context: Context? = null): List<Establecimiento> {
-        return try {
-            val idUsuario = context?.let { SessionManager(it).getJovenId() }
-            descargarTodasLasPaginas(idUsuario)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-    }
+            val urlString = "$BASE_URL?id_usuario=$idUsuario"
+            Log.d("SERVICIO_EST", "🌐 GET $urlString")
 
-    private suspend fun descargarTodasLasPaginas(idUsuario: Int?): List<Establecimiento> {
-        val todosLosEstablecimientos = mutableListOf<Establecimiento>()
-        var paginaActual = 1
-        var tieneMasPaginas = true
+            val url = URL(urlString)
+            val connection = url.openConnection() as HttpURLConnection
 
-        while (tieneMasPaginas) {
-            try {
-                val response = obtenerPaginaConReintentos(paginaActual, 50, idUsuario)
+            return@withContext try {
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 10000
+                connection.readTimeout = 10000
 
-                // Verificar si hay datos
-                if (response.data.isNotEmpty()) {
-                    todosLosEstablecimientos.addAll(response.data)
+                val responseCode = connection.responseCode
+                if (responseCode == 200) {
+                    val responseText =
+                        connection.inputStream.bufferedReader().use { it.readText() }
+                    Log.d("SERVICIO_EST", "✅ Respuesta completa: $responseText")
+
+                    val json = JSONObject(responseText)
+                    val dataArray = json.getJSONArray("data")
+
+                    val lista = (0 until dataArray.length()).map { i ->
+                        val item = dataArray.getJSONObject(i)
+
+                        // 🧩 Extraer nombre de categoría (maneja diferentes estructuras del backend)
+                        val categoriaObj = item.optJSONObject("categoria")
+                        val nombreCategoria = when {
+                            categoriaObj != null -> categoriaObj.optString("nombre", "")
+                            item.has("nombre_categoria") -> item.optString("nombre_categoria", "")
+                            item.has("categoria_nombre") -> item.optString("categoria_nombre", "")
+                            else -> ""
+                        }
+
+                        val est = Establecimiento(
+                            id_establecimiento = item.optInt("id_establecimiento"),
+                            nombre = item.optString("nombre", ""),
+                            colonia = item.optString("colonia", ""),
+                            nombre_categoria = nombreCategoria,
+                            direccion = item.optString("direccion", ""),
+                            telefono = item.optString("telefono", ""),
+                            latitud = item.optDouble("latitud", 0.0),
+                            longitud = item.optDouble("longitud", 0.0),
+                            imagen = item.optString("foto", ""),
+                            es_favorito = item.optBoolean("es_favorito", false)
+                        )
+
+                        // 🔍 Log de depuración por cada establecimiento
+                        Log.d(
+                            "SERVICIO_EST",
+                            "🏪 ${est.nombre} | 🏷️ ${est.nombre_categoria} | 📍 ${est.colonia} | ❤️ ${est.es_favorito}"
+                        )
+
+                        est
+                    }
+
+                    Log.d("SERVICIO_EST", "📦 Total establecimientos recibidos: ${lista.size}")
+                    lista
                 } else {
+                    Log.e("SERVICIO_EST", "❌ Error HTTP $responseCode")
+                    emptyList()
                 }
-
-                // Verificar si hay más páginas
-                tieneMasPaginas = response.pagination.has_next
-
-                paginaActual++
-
-                // Pequeña pausa entre páginas
-                if (tieneMasPaginas) {
-                    delay(50L)
-                }
-
             } catch (e: Exception) {
-                // Si falla una página, continuamos con la siguiente en lugar de detener todo
-                paginaActual++
-                tieneMasPaginas = paginaActual < 10 // Límite de seguridad
-                delay(1000L)
+                Log.e("SERVICIO_EST", "❌ Error de red: ${e.message}")
+                emptyList()
+            } finally {
+                connection.disconnect()
             }
         }
-
-        println("🎉 Descarga completada: ${todosLosEstablecimientos.size} establecimientos en total")
-
-        // Mostrar resumen de los establecimientos descargados
-        todosLosEstablecimientos.take(5).forEachIndexed { index, establecimiento ->
-            println("   ${index + 1}. ${establecimiento.nombre} - ${establecimiento.nombre_categoria}")
-        }
-        if (todosLosEstablecimientos.size > 5) {
-            println("   ... y ${todosLosEstablecimientos.size - 5} más")
-        }
-
-        return todosLosEstablecimientos
-    }
-
-    private suspend fun obtenerPaginaConReintentos(
-        pagina: Int,
-        limite: Int,
-        idUsuario: Int? = null,
-        reintentos: Int = MAX_REINTENTOS
-    ): EstablecimientosResponse {
-        var ultimoError: Exception? = null
-
-        repeat(reintentos) { intento ->
-            try {
-                val response = servicio.obtenerEstablecimientos(pagina, limite, idUsuario)
-                return response
-            } catch (e: Exception) {
-                ultimoError = e
-                if (intento < reintentos - 1) {
-                    delay(1000L * (intento + 1))
-                }
-            }
-        }
-
-        throw ultimoError ?: Exception("Error desconocido al obtener página $pagina")
-    }
-
-    // Método para probar solo una página específica
-    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): EstablecimientosResponse {
-        return try {
-            servicio.obtenerEstablecimientos(pagina, limite)
-        } catch (e: Exception) {
-            throw e
-        }
-    }
 }

@@ -1,11 +1,10 @@
-// mx.mfpp.beneficioapp.model.ServicioRemotoPromocion
 package mx.mfpp.beneficioapp.model
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ServicioRemotoNegocioDetalle {
-    private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
+    private const val URL_BASE = "https://listar-promociones-819994103285.us-central1.run.app/"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()

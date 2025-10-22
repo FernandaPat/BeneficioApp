@@ -92,7 +92,8 @@ fun Iniciar_Sesion(
                 modifier = Modifier
                     .padding(start = 30.dp)
                     .clickable {
-                        navController.navigate(Pantalla.RUTA_INICIAR_SESION)
+                        Log.d("Recuperar", "Se clickea pero se rompe")
+                        //navController.navigate(/*TODO: PANTALLA PARA RECUMERAR CONTRASEÑA*/)
                     }
             )
 

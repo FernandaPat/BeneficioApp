@@ -340,7 +340,7 @@ fun ItemEstablecimiento(
             .clickable { onEstablecimientoClick() }
     ) {
         AsyncImage(
-            model = establecimiento.foto ?: "https://picsum.photos/200/300?random=${establecimiento.id_establecimiento}",
+            model = establecimiento.imagen ?: "https://picsum.photos/200/300?random=${establecimiento.id_establecimiento}",
             contentDescription = "Imagen de ${establecimiento.nombre}",
             modifier = Modifier
                 .fillMaxWidth()

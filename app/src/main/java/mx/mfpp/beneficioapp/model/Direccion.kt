@@ -11,6 +11,8 @@ package mx.mfpp.beneficioapp.model
  * @property municipio Municipio o delegación donde se encuentra la dirección.
  * @property estado Estado o entidad federativa.
  */
+
+
 data class Direccion(
     val calle: String = "",
     val numeroExterior: String = "",

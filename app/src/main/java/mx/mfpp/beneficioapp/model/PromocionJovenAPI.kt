@@ -1,11 +1,10 @@
-// mx.mfpp.beneficioapp.model.PromocionJovenAPI
 package mx.mfpp.beneficioapp.model
 
 import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface PromocionJovenAPI {
-    @GET("promociones")
+    @GET("promociones") // Asegúrate de que este endpoint sea correcto para la nueva API
     suspend fun obtenerPromociones(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 50,

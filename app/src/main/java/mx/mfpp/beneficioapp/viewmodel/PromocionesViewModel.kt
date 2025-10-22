@@ -5,39 +5,61 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.Promocion
-import mx.mfpp.beneficioapp.network.RetrofitClient
-import retrofit2.HttpException
-import java.io.IOException
+import mx.mfpp.beneficioapp.model.*
+import mx.mfpp.beneficioapp.utils.ErrorHandler
 
 class PromocionesViewModel : ViewModel() {
 
-    // 🔹 Lista de promociones desde la API
     private val _promociones = MutableStateFlow<List<Promocion>>(emptyList())
-    val promociones: StateFlow<List<Promocion>> = _promociones.asStateFlow()
+    val promociones: StateFlow<List<Promocion>> = _promociones
 
-    // 🔹 Estados de carga y error
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+    val isLoading: StateFlow<Boolean> = _isLoading
 
     private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    val error: StateFlow<String?> = _error
 
-    /**
-     * 🔸 Cargar promociones desde la API según el ID del negocio
-     */
+    private val _isDeleting = MutableStateFlow(false)
+    val isDeleting: StateFlow<Boolean> = _isDeleting
+
     fun cargarPromociones(idNegocio: Int) {
         viewModelScope.launch {
-            _isLoading.value = true
-            _error.value = null
-
             try {
-                val response = RetrofitClient.api.obtenerPromociones(idNegocio)
-                _promociones.value = response.data
+                _isLoading.value = true
+                _error.value = null
+
+                Log.d("PromocionesVM", "🟢 Cargando promociones del negocio ID=$idNegocio")
+
+                val response = ServicioRemotoPromociones.api.getPromocionesPorNegocio(idNegocio)
+
+                if (response.isSuccessful) {
+                    val remotas = response.body()?.data ?: emptyList()
+
+                    val locales = remotas.map { p ->
+                        Promocion(
+                            id = p.id ?: 0,
+                            nombre = p.titulo ?: "(Sin título)",
+                            descripcion = p.descripcion ?: "",
+                            descuento = p.descuento ?: "",
+                            categoria = p.estado ?: "General",
+                            ubicacion = p.nombreEstablecimiento ?: "Sin ubicación",
+                            imagenUrl = p.foto ?: "",
+                            expiraEn = p.fechaExpiracion ?: "Sin fecha",
+                            esFavorito = false,
+                            rating = null
+                        )
+                    }
+
+                    _promociones.value = locales
+                    Log.d("PromocionesVM", "✅ Se cargaron ${locales.size} promociones")
+                } else {
+                    _error.value = "Error ${response.code()}: ${response.message()}"
+                    Log.e("PromocionesVM", _error.value ?: "")
+                }
             } catch (e: Exception) {
-                _error.value = "Error al cargar promociones: ${e.message}"
+                _error.value = ErrorHandler.obtenerMensajeError(e)
+                Log.e("PromocionesVM", "❌ Excepción: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
@@ -45,30 +67,28 @@ class PromocionesViewModel : ViewModel() {
     }
 
 
-    /**
-     * 🔸 Eliminar una promoción del backend y actualizar la lista local
-     */
-    fun eliminarPromocion(idPromocion: Int) {
+
+
+    fun eliminarPromocion(idPromocion: Int, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.api.eliminarPromocion(idPromocion)
+                _isDeleting.value = true // 🔹 Mostrar estado “Cargando...”
+                val response = ServicioRemotoEliminarPromocion.api.eliminarPromocion(idPromocion)
+
                 if (response.isSuccessful) {
                     _promociones.value = _promociones.value.filter { it.id != idPromocion }
-                    Log.d("PROMO_DEBUG", "✅ Promoción $idPromocion eliminada correctamente")
+                    onResult(true, "✅ Promoción eliminada correctamente")
                 } else {
-                    _error.value = "Error al eliminar: ${response.code()}"
-                    Log.e("PROMO_DEBUG", "❌ Error al eliminar: ${response.code()}")
+                    onResult(false, "⚠️ Error ${response.code()}: ${response.message()}")
                 }
-            } catch (e: IOException) {
-                _error.value = "Error de red: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error de red: ${e.message}")
-            } catch (e: HttpException) {
-                _error.value = "Error del servidor: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error del servidor: ${e.message}")
             } catch (e: Exception) {
-                _error.value = "Error desconocido: ${e.message}"
-                Log.e("PROMO_DEBUG", "❌ Error desconocido: ${e.message}")
+                onResult(false, "⚠️ Error al eliminar: ${e.localizedMessage}")
+            } finally {
+                _isDeleting.value = false // 🔹 Ocultar loading
             }
         }
     }
+
+
+
 }

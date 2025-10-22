@@ -6,17 +6,17 @@ import retrofit2.http.*
 
 interface FavoritosAPI {
 
-    @POST("favoritos")
+    @POST("getFavoritos")
     suspend fun agregarFavorito(
         @Body request: FavoritoRequest
     ): Response<FavoritoResponse>
 
-    @HTTP(method = "DELETE", path = "favoritos", hasBody = true)
+    @HTTP(method = "DELETE", path = "getFavoritos", hasBody = true)
     suspend fun eliminarFavorito(
         @Body request: FavoritoRequest
     ): Response<FavoritoResponse>
 
-    @GET("favoritos")
+    @GET("getFavoritos")
     suspend fun obtenerFavoritos(
         @Query("id_usuario") idUsuario: Int
     ): Response<FavoritosListResponse>

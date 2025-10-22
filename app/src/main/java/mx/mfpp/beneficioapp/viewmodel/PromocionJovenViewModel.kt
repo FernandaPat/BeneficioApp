@@ -41,20 +41,32 @@ class PromocionJovenViewModel: ViewModel() {
 
         viewModelScope.launch {
             try {
+                println("🔄 Cargando promociones desde la nueva API...")
                 val promocionesReales = ServicioRemotoJovenesPromocion.obtenerPromociones()
+
+                println("✅ Promociones recibidas: ${promocionesReales.size}")
+                promocionesReales.take(3).forEach { promocion ->
+                    println("   - ${promocion.titulo} (${promocion.nombre_establecimiento})")
+                }
 
                 // Filtrar promociones activas
                 val promocionesActivas = promocionesReales.filter { it.estado == "activa" }
+                println("✅ Promociones activas: ${promocionesActivas.size}")
 
                 // Aplicar lógica de filtrado
                 _nuevasPromociones.value = filtrarNuevasPromociones(promocionesActivas)
                 _promocionesExpiracion.value = filtrarPromocionesPorExpiracion(promocionesActivas)
-
-                // NUEVO: Guardar todas las promociones activas
                 _todasPromociones.value = promocionesActivas
 
+                println("✅ Filtrado completado:")
+                println("   - Nuevas: ${_nuevasPromociones.value.size}")
+                println("   - Por expirar: ${_promocionesExpiracion.value.size}")
+                println("   - Todas: ${_todasPromociones.value.size}")
+
             } catch (e: Exception) {
+                println("❌ Error al cargar promociones: ${e.message}")
                 _error.value = "Error al cargar promociones: ${e.message}"
+                e.printStackTrace()
             } finally {
                 _isLoading.value = false
             }
@@ -69,7 +81,7 @@ class PromocionJovenViewModel: ViewModel() {
 
     private fun filtrarPromocionesPorExpiracion(promociones: List<PromocionJoven>): List<PromocionJoven> {
         return promociones.filter { promocion ->
-            diasHastaExpiracion(promocion.fecha_expiracion) in 1..7
+            diasHastaExpiracion(promocion.fecha_expiracion) in 1..15
         }
     }
 
@@ -105,7 +117,7 @@ class PromocionJovenViewModel: ViewModel() {
             dias < 0 -> "Expirada"
             dias == 0L -> "Vence hoy"
             dias == 1L -> "Vence en 1 día"
-            dias <= 7L -> "Vence en $dias días"
+            dias <= 20L -> "Vence en $dias días"
             else -> "Válida"
         }
     }

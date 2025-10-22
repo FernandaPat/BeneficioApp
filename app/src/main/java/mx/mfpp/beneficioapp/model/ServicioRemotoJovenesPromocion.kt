@@ -6,10 +6,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import kotlinx.coroutines.delay
 
 object ServicioRemotoJovenesPromocion {
-    private const val URL_BASE = "https://9somwbyil5.execute-api.us-east-1.amazonaws.com/prod/"
+    private const val URL_BASE = "https://listar-promociones-819994103285.us-central1.run.app/"
     private const val MAX_REINTENTOS = 3
 
     private val retrofit: Retrofit by lazy {
+        println("🔄 Configurando Retrofit con URL: $URL_BASE")
         Retrofit.Builder()
             .baseUrl(URL_BASE)
             .addConverterFactory(GsonConverterFactory.create())
@@ -17,59 +18,58 @@ object ServicioRemotoJovenesPromocion {
     }
 
     private val servicio: PromocionJovenAPI by lazy {
+        println("🔄 Creando servicio API")
         retrofit.create(PromocionJovenAPI::class.java)
     }
 
     suspend fun obtenerPromociones(): List<PromocionJoven> {
+        println("🔄 Iniciando obtención de promociones")
         return try {
-            descargarTodasLasPaginas()
+            val resultado = descargarTodasLasPaginas()
+            println("✅ Obtención completada: ${resultado.size} promociones")
+            resultado
         } catch (e: Exception) {
+            println("❌ Error en obtenerPromociones: ${e.message}")
             e.printStackTrace()
             emptyList()
         }
     }
 
     private suspend fun descargarTodasLasPaginas(): List<PromocionJoven> {
+        println("🔄 Iniciando descarga de páginas")
         val todasLasPromociones = mutableListOf<PromocionJoven>()
         var paginaActual = 1
         var tieneMasPaginas = true
 
         while (tieneMasPaginas) {
             try {
+                println("📄 Descargando página $paginaActual")
                 val response = obtenerPaginaConReintentos(paginaActual, 50)
 
-                // Verificar si hay datos
+                println("📄 Página $paginaActual - Datos recibidos: ${response.data.size} items")
+                println("📄 Paginación - has_next: ${response.pagination.has_next}")
+
                 if (response.data.isNotEmpty()) {
                     todasLasPromociones.addAll(response.data)
-                } else {
+                    println("📄 Total acumulado: ${todasLasPromociones.size}")
                 }
 
-                // Verificar si hay más páginas
                 tieneMasPaginas = response.pagination.has_next
-
                 paginaActual++
 
-                // Pequeña pausa entre páginas
                 if (tieneMasPaginas) {
                     delay(50L)
                 }
 
             } catch (e: Exception) {
-                // Si falla una página, continuamos con la siguiente en lugar de detener todo
+                println("❌ Error en página $paginaActual: ${e.message}")
                 paginaActual++
-                tieneMasPaginas = paginaActual < 10 // Límite de seguridad
+                tieneMasPaginas = paginaActual < 10
                 delay(1000L)
             }
         }
 
-        // Mostrar resumen de las promociones descargadas
-        todasLasPromociones.take(5).forEachIndexed { index, promocion ->
-            println("   ${index + 1}. ${promocion.titulo_promocion} - ${promocion.nombre_establecimiento}")
-        }
-        if (todasLasPromociones.size > 5) {
-            println("   ... y ${todasLasPromociones.size - 5} más")
-        }
-
+        println("✅ Descarga completada: ${todasLasPromociones.size} promociones totales")
         return todasLasPromociones
     }
 
@@ -78,29 +78,27 @@ object ServicioRemotoJovenesPromocion {
         limite: Int,
         reintentos: Int = MAX_REINTENTOS
     ): PromocionesJovenResponse {
+        println("🔄 Obteniendo página $pagina (reintentos: $reintentos)")
         var ultimoError: Exception? = null
 
         repeat(reintentos) { intento ->
             try {
+                println("🔄 Intento ${intento + 1} para página $pagina")
                 val response = servicio.obtenerPromociones(pagina, limite)
+                println("✅ Página $pagina obtenida exitosamente")
                 return response
             } catch (e: Exception) {
+                println("❌ Intento ${intento + 1} falló: ${e.message}")
                 ultimoError = e
                 if (intento < reintentos - 1) {
-                    delay(1000L * (intento + 1))
+                    val delayMs = 1000L * (intento + 1)
+                    println("⏳ Esperando $delayMs ms antes de reintentar...")
+                    delay(delayMs)
                 }
             }
         }
 
+        println("❌ Todos los reintentos fallaron para página $pagina")
         throw ultimoError ?: Exception("Error desconocido al obtener página $pagina")
-    }
-
-    // Método para probar solo una página específica
-    suspend fun obtenerPaginaEspecifica(pagina: Int = 1, limite: Int = 10): PromocionesJovenResponse {
-        return try {
-            servicio.obtenerPromociones(pagina, limite)
-        } catch (e: Exception) {
-            throw e
-        }
     }
 }

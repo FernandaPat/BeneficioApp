@@ -17,11 +17,12 @@ import androidx.core.content.edit
 import mx.mfpp.beneficioapp.model.SessionManager
 import com.auth0.android.jwt.JWT
 import mx.mfpp.beneficioapp.utils.AuthErrorUtils
+import mx.mfpp.beneficioapp.utils.FcmHelper
 
 sealed class LoginState {
     object Idle : LoginState()
     object Loading : LoginState()
-    data class Success(val accessToken: String) : LoginState()
+    data class Success(val accessToken: String, val userId: Int) : LoginState() // ✅ AGREGAR userId
     data class Error(val message: String) : LoginState()
 }
 
@@ -65,7 +66,6 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun iniciarSesion() {
-        Log.d("AUTH0_LOGIN", "iniciarSesion() llamado")
 
         if (!esFormularioValido()) {
             Log.d("AUTH0_LOGIN", "Formulario no válido")
@@ -73,8 +73,9 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             return
         }
 
-        Log.d("AUTH0_LOGIN", "Iniciando login con Auth0")
+        Log.d("AUTH0_LOGIN", "Formulario válido")
         Log.d("AUTH0_LOGIN", "Email: ${login.value.correo}")
+        Log.d("AUTH0_LOGIN", "Iniciando autenticación con Auth0...")
 
         _loginState.value = LoginState.Loading
 
@@ -84,11 +85,12 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
+
                     val idToken = result.idToken
                     val accessToken = result.accessToken
                     val refreshToken = result.refreshToken
 
-
+                    // Decodificar JWT para obtener datos del usuario
                     val jwt = JWT(idToken)
                     val namespace = "https://api.beneficiojoven.com/"
                     val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
@@ -98,32 +100,41 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
 
                     Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
                     Log.d("AUTH0_SUCCESS", "ID joven: $idJoven")
-                    Log.d("AUTH0_SUCCESS", "Nombre joven: $nombreJoven")
-                    Log.d("AUTH0_SUCCESS", "Tarjeta ID: $folioDigital")
+                    Log.d("AUTH0_SUCCESS", "Nombre: $nombreJoven")
+                    Log.d("AUTH0_SUCCESS", "Folio: $folioDigital")
 
-
+                    // Guardar sesión
                     val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
                     sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital)
 
-                    _loginState.value = LoginState.Success(accessToken)
+                    Log.d("AUTH0_SUCCESS", "Sesión guardada en SessionManager")
 
-                    Log.d("AUTH0_SUCCESS", "Login exitoso!")
+                    // ✅ REGISTRAR TOKEN FCM (SOLO PARA JÓVENES)
+                    if (userType == "joven" && idJoven != -1) {
+                        Log.d("AUTH0_SUCCESS", "Usuario es JOVEN → Registrando token FCM")
+                        FcmHelper.registrarTokenEnServidor(idJoven)
+                    } else {
+                        Log.d("AUTH0_SUCCESS", "⚠Usuario NO es joven o ID inválido → No se registra token FCM")
+                    }
+
+                    _loginState.value = LoginState.Success(accessToken, idJoven)
                 }
 
                 override fun onFailure(error: AuthenticationException) {
-                    Log.e("AUTH0_ERROR", "${error.getCode()}: ${error.getDescription()}")
+                    Log.e("AUTH0_ERROR", "ERROR EN LOGIN")
+                    Log.e("AUTH0_ERROR", "Código: ${error.getCode()}")
+                    Log.e("AUTH0_ERROR", "Descripción: ${error.getDescription()}")
+
                     val mensaje = AuthErrorUtils.obtenerMensaje(error)
                     _loginState.value = LoginState.Error(mensaje)
                 }
-
-
             })
     }
 
     private fun saveTokenSecurely(token: String) {
         val prefs = getApplication<Application>().getSharedPreferences("auth", Application.MODE_PRIVATE)
-        prefs.edit { // The KTX function provides a safe block
+        prefs.edit {
             putString("access_token", token)
         }
         Log.d("AUTH0_TOKEN", "Token guardado")
@@ -132,5 +143,4 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
     fun resetState() {
         _loginState.value = LoginState.Idle
     }
-
 }
