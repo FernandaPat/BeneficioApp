@@ -15,6 +15,7 @@ playServicesMaps = "19.2.0"
 zxing = "3.4.1"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
+lifecycleViewmodelKtx = "2.9.4"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -40,6 +41,7 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps"}
 
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
