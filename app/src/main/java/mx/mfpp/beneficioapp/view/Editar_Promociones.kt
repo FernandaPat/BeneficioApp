@@ -1,10 +1,9 @@
 package mx.mfpp.beneficioapp.view
 
-import android.net.Uri
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -41,19 +40,15 @@ fun Editar_Promociones(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // 🟣 Cargar promoción al abrir la pantalla
+    // 📥 Cargar datos de la promoción al entrar
     LaunchedEffect(idPromocion) {
         viewModel.cargarPromocion(idPromocion) {}
     }
 
-    // 📸 Selector de imagen
     val pickImage = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let {
-            // 🟣 Llamas aquí al ViewModel para procesar la imagen
-            viewModel.onNuevaImagen(it, context)
-        }
+        uri?.let { viewModel.onNuevaImagen(it, context) }
     }
 
     Scaffold(
@@ -69,7 +64,7 @@ fun Editar_Promociones(
                 .verticalScroll(scroll)
                 .padding(padding)
         ) {
-
+            // 📸 Imagen de promoción
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -79,9 +74,9 @@ fun Editar_Promociones(
                     .background(Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
-                val imagenUri = viewModel.uri.collectAsState().value
+                val imagenActual = viewModel.uri.collectAsState().value ?: viewModel.imagenUrl.collectAsState().value
 
-                if (imagenUri == null) {
+                if (imagenActual == null || (imagenActual is String && imagenActual.isBlank())) {
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -94,12 +89,11 @@ fun Editar_Promociones(
                     }
                 } else {
                     AsyncImage(
-                        model = imagenUri,
+                        model = imagenActual,
                         contentDescription = "Imagen de la promoción",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
                     )
-
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         modifier = Modifier
@@ -114,10 +108,7 @@ fun Editar_Promociones(
                 }
             }
 
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // === CAMPOS ===
+            // 🧾 Campos de texto
             Etiqueta("Título", true)
             BeneficioOutlinedTextField(
                 value = viewModel.nombre.collectAsState().value,
@@ -139,17 +130,17 @@ fun Editar_Promociones(
                 placeholder = "Ej. 20% o 2x1"
             )
 
-            // === 📅 FECHAS ===
+            // 🗓️ Rango de fechas
             RangoFechasPicker(
-                desde = viewModel.desde.collectAsState().value,
-                hasta = viewModel.hasta.collectAsState().value,
+                desde = viewModel.desde.collectAsState().value.ifBlank { "dd/MM/yyyy" },
+                hasta = viewModel.hasta.collectAsState().value.ifBlank { "dd/MM/yyyy" },
                 onDesdeChange = { viewModel.desde.value = it },
                 onHastaChange = { fecha, _ -> viewModel.hasta.value = fecha }
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // === BOTÓN GUARDAR ===
+            // 🟣 Botón Guardar
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
