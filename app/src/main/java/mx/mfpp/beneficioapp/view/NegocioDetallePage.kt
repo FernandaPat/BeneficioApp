@@ -190,9 +190,8 @@ fun NegocioDetallePage(
                     PromocionItem(
                         promocion = promocion,
                         onAplicarClick = {
-                            // 🔹 CORRECCIÓN: codificar título antes de navegar
-                            val encodedTitulo = URLEncoder.encode(promocion.titulo, StandardCharsets.UTF_8.toString())
-                            navController.navigate("${Pantalla.RUTA_QR_PROMOCION}/$encodedTitulo")
+                            // 🔹 CAMBIO: Pasar el ID de la promoción en lugar del título
+                            navController.navigate("qrPromocion/${promocion.id}")
                         }
                     )
                 }

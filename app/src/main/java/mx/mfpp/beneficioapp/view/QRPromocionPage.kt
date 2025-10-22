@@ -3,6 +3,8 @@ package mx.mfpp.beneficioapp.view
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -11,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -20,27 +23,23 @@ import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 fun QRPromocionPage(
     navController: NavController,
     viewModel: QRViewModel,
-    nombrePromocion: String
+    idJoven: Int,
+    idPromocion: Int
 ) {
-    val moradoQR = Color(0xFF9605F7) // Color morado para el QR
-    val rojoBoton = Color(0xFFE9d4ff) // Color de fondo del botón
-    val rojoTexto = Color(0xFF9605f7) // Color del texto del botón
+    val moradoQR = Color(0xFF9605F7)
+    val fondoBoton = Color(0xFFE9D4FF)
+    val textoBoton = Color(0xFF9605F7)
 
-    // Observar los datos del ViewModel
-    val promocionData by viewModel.promocionData
-    val qrBitmap by viewModel.qrBitmap
+    // Estados observables del ViewModel
+    val qrTokenResponse by viewModel.qrTokenResponse.collectAsState()
+    val qrBitmap by viewModel.qrBitmap.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    // Generar la promoción y QR al mostrar la pantalla
+    // Generar QR cuando se entra a la pantalla
     LaunchedEffect(Unit) {
-        viewModel.aplicarPromocion("Promoción Especial")
+        viewModel.generarQR(idJoven, idPromocion)
     }
-
-    LaunchedEffect(nombrePromocion) {
-        if (nombrePromocion.isNotEmpty()) {
-            viewModel.aplicarPromocion(nombrePromocion)
-        }
-    }
-
 
     Box(
         modifier = Modifier
@@ -50,114 +49,157 @@ fun QRPromocionPage(
         contentAlignment = Alignment.Center
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            verticalArrangement = Arrangement.Center
         ) {
-            // Título
+            // Título principal
             Text(
                 text = "Tu Cupón QR",
                 fontWeight = FontWeight.Bold,
                 fontSize = 28.sp,
                 color = Color.Black,
-                modifier = Modifier.padding(bottom = 20.dp)
+                modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Información de la promoción
+            // Información de la promoción (en una Card)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 20.dp),
+                    .padding(bottom = 24.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF))
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = promocionData?.nombrePromocion ?: "Promoción",
+                        text = qrTokenResponse?.preview?.promocion ?: "Promoción",
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Color.Black,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        color = Color.Black
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Tarjeta: •••• ${promocionData?.numeroTarjeta?.takeLast(4) ?: "0000"}",
+                        text = "Tarjeta: •••• ${qrTokenResponse?.preview?.folio_digital?.takeLast(4) ?: "0000"}",
                         fontSize = 16.sp,
                         color = Color.Gray
                     )
                     Text(
-                        text = "Fecha: ${promocionData?.fecha ?: "15/10/2025"}",
+                        text = "Establecimiento: ${qrTokenResponse?.preview?.establecimiento ?: "-"}",
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+                    Text(
+                        text = "Descripción: ${qrTokenResponse?.preview?.descripcion ?: "-"}",
                         fontSize = 16.sp,
                         color = Color.Gray
                     )
                 }
             }
 
-            // Código QR
-            if (qrBitmap != null) {
-                Card(
-                    modifier = Modifier
-                        .size(300.dp)
-                        .padding(16.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-                ) {
-                    Box(
+            // Estado del QR (loading, error o imagen)
+            when {
+                isLoading -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
+                            .size(300.dp)
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Image(
-                            bitmap = qrBitmap!!.asImageBitmap(),
-                            contentDescription = "Código QR de la promoción",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp)
+                        CircularProgressIndicator(color = moradoQR, modifier = Modifier.size(48.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Generando QR...",
+                            color = Color.Gray,
+                            fontSize = 16.sp
                         )
                     }
                 }
-            } else {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .size(300.dp)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Generando QR...",
-                        color = Color.Gray,
-                        fontSize = 16.sp,
+
+                error != null -> {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(16.dp)
-                    )
-                    CircularProgressIndicator(
-                        color = moradoQR,
-                        modifier = Modifier.size(48.dp)
-                    )
+                    ) {
+                        Text(
+                            text = error ?: "Error al generar QR",
+                            color = Color.Red,
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Button(
+                            onClick = {
+                                viewModel.clear()
+                                navController.popBackStack()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = fondoBoton,
+                                contentColor = textoBoton
+                            ),
+                            shape = RoundedCornerShape(50.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.8f)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = "Volver",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                        }
+                    }
+                }
+
+                qrBitmap != null -> {
+                    Card(
+                        modifier = Modifier
+                            .size(300.dp)
+                            .padding(16.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                bitmap = qrBitmap!!.asImageBitmap(),
+                                contentDescription = "Código QR",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
                 }
             }
 
-            // Instrucciones
+            // Texto de instrucciones
             Text(
                 text = "Muestra este código QR en el establecimiento",
                 fontSize = 16.sp,
                 color = Color.Gray,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(vertical = 12.dp)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Cancelar
+            // Botón de Cancelar
             Button(
                 onClick = {
-                    viewModel.clearPromocionData()
+                    viewModel.clear()
                     navController.popBackStack()
                 },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = rojoBoton,
-                    contentColor = rojoTexto
+                    containerColor = fondoBoton,
+                    contentColor = textoBoton
                 ),
                 shape = RoundedCornerShape(50.dp),
                 modifier = Modifier
@@ -166,7 +208,6 @@ fun QRPromocionPage(
             ) {
                 Text(
                     text = "Cancelar",
-                    color = rojoTexto,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
