@@ -52,7 +52,7 @@ fun CambiarContrasenaPage(navController: NavController) {
             BeneficioPasswordField(
                 value = contraNueva,
                 onValueChange = { contraNueva = it },
-                placeholder = "Mínimo 8 caracteres"
+                placeholder = "Escribe tu nueva contraseña"
             )
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -62,15 +62,17 @@ fun CambiarContrasenaPage(navController: NavController) {
                 onValueChange = { contraConfirm = it },
                 placeholder = "Repite la nueva contraseña"
             )
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
             Button(
                 onClick = { /* Lógica de cambio */ },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .width(250.dp)
+                    .height(60.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF9605F7))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE9d4ff))
             ) {
-                Text("Guardar cambios", color = Color.White, fontSize = 16.sp)
+                Text("Guardar cambios", color = Color(0xFF9605f7), fontSize = 16.sp)
             }
         }
     }
