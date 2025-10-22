@@ -1,15 +1,14 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import android.content.Context
-import android.net.Uri
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
 import mx.mfpp.beneficioapp.model.Promocion
+import mx.mfpp.beneficioapp.model.ServicioRemotoActualizarPromocion
+import mx.mfpp.beneficioapp.model.ServicioRemotoObtenerPromocion
+import java.net.URI
 
 class EditarPromocionViewModel : ViewModel() {
 
@@ -19,42 +18,78 @@ class EditarPromocionViewModel : ViewModel() {
     val desde = MutableStateFlow("")
     val hasta = MutableStateFlow("")
     val imagenUrl = MutableStateFlow("")
+    val uri = MutableStateFlow<URI?>(null)
+    val isLoading = MutableStateFlow(false)
 
-    val uri = mutableStateOf<Uri?>(null)
+    /**
+     * Cargar datos de la promoción por ID
+     */
+    fun cargarPromocion(idPromocion: Int, onLoaded: (Promocion?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                println("🟣 Cargando promoción con ID: $idPromocion")
+                val promo = ServicioRemotoObtenerPromocion.obtenerPromocionPorId(idPromocion)
 
+                promo?.let {
+                    nombre.value = it.nombre
+                    descripcion.value = it.descripcion
+                    descuento.value = it.descuento
+                    desde.value = it.desde
+                    hasta.value = it.hasta
+                    imagenUrl.value = it.imagenUrl
+                    uri.value = try { URI(it.imagenUrl) } catch (_: Exception) { null }
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+                    println("✅ Promoción cargada: ${it.nombre}")
+                } ?: println("⚠️ No se encontró la promoción con ID: $idPromocion")
 
+                onLoaded(promo)
+            } catch (e: Exception) {
+                println("❌ Error al cargar promoción: ${e.message}")
+                onLoaded(null)
+            }
+        }
+    }
+
+    /**
+     * Actualizar datos de la promoción en el servidor
+     */
     fun actualizarPromocion(
         idPromocion: Int,
         context: Context,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        println("🟣 Actualizando promoción con ID: $idPromocion")
-
-        if (idPromocion <= 0) {
-            onError("❌ ID de promoción inválido ($idPromocion)")
-            return
-        }
-
-        val promo = Promocion(
-            id = idPromocion,
-            nombre = nombre.value,
-            descripcion = descripcion.value,
-            descuento = descuento.value,
-            desde = desde.value,
-            hasta = hasta.value,
-            imagenUrl = imagenUrl.value
-        )
-
         viewModelScope.launch {
-            _isLoading.value = true
-            val (exito, mensaje) = ServicioRemotoActualizarPromocion.actualizarPromocion(idPromocion, promo)
-            _isLoading.value = false
+            try {
+                isLoading.value = true
+                println("🟣 Actualizando promoción con ID: $idPromocion")
 
-            if (exito) onSuccess() else onError(mensaje)
+                val promoActualizada = Promocion(
+                    id = idPromocion,
+                    nombre = nombre.value,
+                    descripcion = descripcion.value,
+                    descuento = descuento.value,
+                    desde = desde.value,
+                    hasta = hasta.value,
+                    imagenUrl = imagenUrl.value
+                )
+
+                val exito = ServicioRemotoActualizarPromocion.actualizarPromocion(
+                    idPromocion = idPromocion,
+                    promocion = promoActualizada
+                )
+
+                if (exito) {
+                    println("✅ Promoción actualizada correctamente.")
+                    onSuccess()
+                } else {
+                    onError("⚠️ Error al actualizar la promoción.")
+                }
+            } catch (e: Exception) {
+                onError("❌ Excepción al actualizar promoción: ${e.message}")
+            } finally {
+                isLoading.value = false
+            }
         }
     }
 }

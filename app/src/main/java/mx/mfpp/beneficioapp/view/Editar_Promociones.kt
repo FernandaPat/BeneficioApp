@@ -1,9 +1,11 @@
 package mx.mfpp.beneficioapp.view
 
+import android.net.Uri
 import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -27,6 +29,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.EditarPromocionViewModel
+import java.net.URI
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -41,8 +44,17 @@ fun Editar_Promociones(
     val scope = rememberCoroutineScope()
 
     // 📸 Selector de imagen
-    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        viewModel.uri.value = uri
+    val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            viewModel.uri.value = URI(it.toString())
+            viewModel.imagenUrl.value = it.toString()
+        }
+    }
+
+    // ⚡ Cargar datos al iniciar
+    LaunchedEffect(idPromocion) {
+        println("🟣 Navegando a editarPromocion/$idPromocion")
+        viewModel.cargarPromocion(idPromocion) {}
     }
 
     Scaffold(
@@ -57,20 +69,18 @@ fun Editar_Promociones(
                 .background(Color.White)
                 .verticalScroll(scroll)
                 .padding(padding)
+                .padding(horizontal = 20.dp)
         ) {
-            // === IMAGEN ===
+            // 📸 IMAGEN
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
                     .fillMaxWidth()
                     .height(200.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFF5F5F5)),
                 contentAlignment = Alignment.Center
             ) {
-                val imagenActual = viewModel.uri.value ?: viewModel.imagenUrl.collectAsState().value
-
-                if (imagenActual == null || imagenActual.toString().isEmpty()) {
+                if (viewModel.imagenUrl.collectAsState().value.isEmpty()) {
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         colors = IconButtonDefaults.iconButtonColors(
@@ -83,7 +93,7 @@ fun Editar_Promociones(
                     }
                 } else {
                     AsyncImage(
-                        model = imagenActual,
+                        model = viewModel.imagenUrl.collectAsState().value,
                         contentDescription = "Imagen de la promoción",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.matchParentSize()
@@ -97,12 +107,18 @@ fun Editar_Promociones(
                             .clip(CircleShape)
                             .background(Color.Black.copy(alpha = 0.6f))
                     ) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Cambiar imagen", tint = Color.White)
+                        Icon(
+                            Icons.Outlined.Edit,
+                            contentDescription = "Cambiar imagen",
+                            tint = Color.White
+                        )
                     }
                 }
             }
 
-            // === CAMPOS DE TEXTO ===
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 🧾 CAMPOS DE TEXTO
             Etiqueta("Título", true)
             BeneficioOutlinedTextField(
                 value = viewModel.nombre.collectAsState().value,
@@ -124,7 +140,8 @@ fun Editar_Promociones(
                 placeholder = "Ej. 20% o 2x1"
             )
 
-            // === FECHAS ===
+            // 📅 FECHAS
+            Etiqueta("Periodo de validez", true)
             RangoFechasPicker(
                 desde = viewModel.desde.collectAsState().value,
                 hasta = viewModel.hasta.collectAsState().value,
@@ -134,7 +151,7 @@ fun Editar_Promociones(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // === BOTÓN GUARDAR ===
+            // 💾 BOTÓN GUARDAR
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -145,8 +162,6 @@ fun Editar_Promociones(
                     isLoading = viewModel.isLoading.collectAsState().value,
                     habilitado = true,
                     onClick = {
-                        println("🟣 ID recibido en Editar_Promociones: $idPromocion")
-
                         viewModel.actualizarPromocion(
                             idPromocion = idPromocion,
                             context = context,
