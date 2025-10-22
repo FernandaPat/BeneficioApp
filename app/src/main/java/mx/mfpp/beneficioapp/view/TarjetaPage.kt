@@ -39,6 +39,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
 
     val folioTarjeta = sessionManager.getFolioTarjeta().toString()
     val nombreJoven = sessionManager.getNombreJoven().toString()
+    val apellidosJoven = sessionManager.getApellidosJoven().toString()
 
 
     Scaffold { paddingValues ->
@@ -55,7 +56,7 @@ fun TarjetaPage(navController: NavController, modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(55.dp))
             TextoMedioGrande(folioTarjeta , modifier)
             Spacer(modifier = Modifier.height(50.dp))
-            TextoMedioGrande(nombreJoven , modifier)
+            TextoMedioGrande("$nombreJoven $apellidosJoven", modifier)
             Spacer(modifier = Modifier.height(50.dp))
 
         }

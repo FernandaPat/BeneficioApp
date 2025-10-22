@@ -95,18 +95,20 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
                     val namespace = "https://api.beneficiojoven.com/"
                     val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
                     val idJoven = jwt.getClaim(namespace + "id_usuario").asInt() ?: -1
-                    val nombreJoven = jwt.getClaim(namespace + "nombre_completo").asString() ?: "Joven"
+                    val nombreJoven = jwt.getClaim(namespace + "nombre").asString() ?: "Joven"
                     val folioDigital = jwt.getClaim(namespace + "folio_digital").asString() ?: "0"
+                    val apellidos=jwt.getClaim(namespace + "apellidos").asString() ?: "Apellido"
 
                     Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
                     Log.d("AUTH0_SUCCESS", "ID joven: $idJoven")
                     Log.d("AUTH0_SUCCESS", "Nombre: $nombreJoven")
                     Log.d("AUTH0_SUCCESS", "Folio: $folioDigital")
+                    Log.d("AUTH0_SUCCESS", "Apellidos: $apellidos")
 
                     // Guardar sesión
                     val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
-                    sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital)
+                    sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital, apellidos)
 
                     Log.d("AUTH0_SUCCESS", "Sesión guardada en SessionManager")
 
