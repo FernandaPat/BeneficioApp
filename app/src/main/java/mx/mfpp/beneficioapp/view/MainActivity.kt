@@ -1,8 +1,14 @@
 package mx.mfpp.beneficioapp.view
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,6 +32,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -39,6 +47,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.FirebaseMessaging
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.ui.theme.BeneficioAppTheme
 import mx.mfpp.beneficioapp.viewmodel.BeneficioJovenVM
@@ -63,6 +73,16 @@ class MainActivity : ComponentActivity() {
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.d("FCM_DEBUG", "Permiso concedido")
+        } else {
+            Log.w("FCM_DEBUG", "Permiso denegado")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //Configuracion para guardar la sesion
@@ -75,6 +95,37 @@ class MainActivity : ComponentActivity() {
             accessToken != null && userType == "establecimiento" -> Pantalla.RUTA_INICIO_NEGOCIO
             else -> Pantalla.RUTA_JN_APP
         }
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                task.exception?.printStackTrace()
+                return@addOnCompleteListener
+            }
+
+            val token = task.result
+
+            // ✅ GUARDAR TOKEN CON KTX
+            try {
+                getSharedPreferences("fcm", Context.MODE_PRIVATE).edit {
+                    putString("token", token)
+                }
+
+
+            } catch (e: Exception) {
+                Log.e("FCM_DEBUG", "❌ ERROR guardando: ${e.message}")
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
 
 
         // Configurar interfaz full-screen
