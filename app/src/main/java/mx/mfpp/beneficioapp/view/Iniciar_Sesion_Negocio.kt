@@ -60,7 +60,7 @@ fun Iniciar_Sesion_Negocio(
     }
 
     Scaffold(
-        topBar = { ArrowTopBar(navController, "Iniciar Sesión") },
+        topBar = { ArrowTopBar(navController, "Iniciar Sesión (Negocio)") },
     ) { paddingValues ->
         Column(
             modifier = modifier
@@ -72,7 +72,7 @@ fun Iniciar_Sesion_Negocio(
                 .padding(top = 3.dp)
         ) {
             // === CORREO O TELÉFONO ===
-            Etiqueta("Correo", true)
+            Etiqueta("Correo o número de teléfono", true)
             CapturaTexto(
                 placeholder = "Escribe aquí",
                 value = login.correo,
