@@ -115,14 +115,16 @@ fun Iniciar_Sesion_Negocio(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
-                BotonMorado(
-                    texto = "Iniciar Sesion",
+                ButtonAction(
+                    textoNormal = "Iniciar Sesión",
+                    textoCargando = "Iniciando...",
+                    isLoading = loginState is LoginStateNegocio.Loading,
+                    habilitado = viewModel.esFormularioValido(),
                     onClick = {
-                        Log.d("LOGIN_UI_CHECK", "¡El onClick del Botón Morado FUE EJECUTADO!")
                         viewModel.iniciarSesion()
-                    },
-                    habilitado = viewModel.esFormularioValido() && loginState !is LoginStateNegocio.Loading
+                    }
                 )
+
 
                 Spacer(Modifier.height(16.dp))
             }

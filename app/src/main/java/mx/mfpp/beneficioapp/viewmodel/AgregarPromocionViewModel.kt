@@ -10,27 +10,25 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.AgregarPromocionRequest
 import mx.mfpp.beneficioapp.model.SessionManager
-import mx.mfpp.beneficioapp.network.RetrofitClient
+import mx.mfpp.beneficioapp.model.ServicioRemotoAgregarPromocion
 import mx.mfpp.beneficioapp.utils.ErrorHandler
-import mx.mfpp.beneficioapp.utils.ImageUtils // ✅ importa tu util de conversión Base64
+import mx.mfpp.beneficioapp.utils.ImageUtils
 
 class AgregarPromocionViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Campos del formulario
+    // === CAMPOS DEL FORMULARIO ===
     val uri = mutableStateOf<Uri?>(null)
     val nombre = mutableStateOf("")
     val descripcion = mutableStateOf("")
     val descuento = mutableStateOf("")
-    val categoria = mutableStateOf("")
     val desde = mutableStateOf("")
     val hasta = mutableStateOf("")
-    val expiraEn = mutableStateOf<Int?>(null)
-    val categorias = listOf("Alimentos", "Ropa", "Entretenimiento", "Servicios", "Salud")
+    var isLoading = mutableStateOf(false)
 
     private val sessionManager = SessionManager(application)
 
     /**
-     * Envía la promoción a la API con el ID del negocio logueado y la imagen en Base64 real.
+     * Envía la promoción al backend (Google Cloud Run).
      */
     fun guardarPromocion(
         context: Context,
@@ -45,27 +43,30 @@ class AgregarPromocionViewModel(application: Application) : AndroidViewModel(app
                     return@launch
                 }
 
-                // ✅ Convierte la imagen seleccionada (si existe) a Base64 real
+                // Convierte la imagen a base64 (si existe)
                 val imagenBase64 = uri.value?.let { ImageUtils.uriToBase64(context, it) } ?: ""
 
+                // Crea el request con los nombres correctos del backend
                 val promocion = AgregarPromocionRequest(
                     id_negocio = idNegocio,
-                    titulo = nombre.value.ifBlank { "" },
-                    descripcion = descripcion.value.ifBlank { "" },
-                    descuento = descuento.value.ifBlank { null },
-                    disponible_desde = desde.value.ifBlank { "" },
-                    hasta = hasta.value.ifBlank { "" },
+                    titulo = nombre.value.ifBlank { "Sin título" },
+                    descripcion = descripcion.value.ifBlank { "Sin descripción" },
+                    descuento = descuento.value.ifBlank { "Sin descuento" },
+                    disponible_desde = desde.value.ifBlank { "22/10/2025" },
+                    hasta = hasta.value.ifBlank { "31/10/2025" },
                     imagen = imagenBase64
                 )
 
-                Log.d("API_REQUEST", "Enviando promoción: $promocion")
+                Log.d("API_REQUEST", "📤 Enviando promoción: ${promocion}")
 
-                val response = RetrofitClient.api.registrarPromocion(promocion)
+                val response = ServicioRemotoAgregarPromocion.api.agregarPromocion(promocion)
+
                 if (response.isSuccessful) {
-                    Log.d("API_SUCCESS", "Promoción agregada correctamente")
+                    Log.d("API_SUCCESS", "✅ Promoción agregada correctamente")
                     onSuccess()
                 } else {
-                    val errorMsg = "Error al registrar promoción: ${response.code()} ${response.message()}"
+                    val errorBody = response.errorBody()?.string()
+                    val errorMsg = "❌ Error al registrar promoción: ${response.code()} → ${errorBody ?: "sin detalle"}"
                     Log.e("API_ERROR", errorMsg)
                     onError(errorMsg)
                 }
