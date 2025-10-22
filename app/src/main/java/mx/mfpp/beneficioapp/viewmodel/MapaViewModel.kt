@@ -58,6 +58,8 @@ class MapaViewModel : ViewModel() {
         cargarEstablecimientos()
     }
 
+
+
     fun cargarEstablecimientos() {
         _isLoading.value = true
         _error.value = null
@@ -69,7 +71,8 @@ class MapaViewModel : ViewModel() {
                 _establecimientos.value = todosEstablecimientos
                 _establecimientosFiltrados.value = todosEstablecimientos
 
-                val conCoordenadas = todosEstablecimientos.count { it.latitud != null && it.longitud != null }
+                // 🔧 Agregamos un pequeño delay para asegurar actualización del flujo
+                kotlinx.coroutines.delay(300)
 
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
@@ -79,8 +82,17 @@ class MapaViewModel : ViewModel() {
         }
     }
 
+    private val _establecimientosOrdenados = MutableStateFlow<List<Establecimiento>>(emptyList())
+    val establecimientosOrdenados: StateFlow<List<Establecimiento>> = _establecimientosOrdenados.asStateFlow()
+
     fun actualizarUbicacionActual(latLng: LatLng) {
         _ubicacionActual.value = latLng
+        _establecimientosFiltrados.value = _establecimientosFiltrados.value.sortedBy {
+            if (it.latitud != null && it.longitud != null)
+                calcularDistancia(latLng, LatLng(it.latitud!!, it.longitud!!))
+            else Double.MAX_VALUE
+        }
+        _establecimientosOrdenados.value = _establecimientosFiltrados.value
     }
 
     fun filtrarEstablecimientos(query: String) {
@@ -132,4 +144,5 @@ class MapaViewModel : ViewModel() {
 
     // Extensión para formatear decimales
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
+
 }

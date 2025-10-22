@@ -61,6 +61,7 @@ import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import java.net.URLDecoder
 import kotlin.getValue
 
+
 /**
  * Actividad principal de la aplicación Beneficio Joven.
  *
@@ -328,6 +329,30 @@ fun AppNavHost(
             NotificacionesNegocioPage(navController)
         }
 
+        composable(
+            route = "MapaPage?lat={lat}&lng={lng}",
+            arguments = listOf(
+                navArgument("lat") {
+                    type = NavType.FloatType
+                    defaultValue = 0f // valor por defecto si no viene
+                },
+                navArgument("lng") {
+                    type = NavType.FloatType
+                    defaultValue = 0f
+                }
+            )
+        ) { backStackEntry ->
+            val lat = backStackEntry.arguments?.getFloat("lat") ?: 0f
+            val lng = backStackEntry.arguments?.getFloat("lng") ?: 0f
+
+            // Si ambos son 0, asumimos que no se pasó ubicación del negocio
+            MapaPage(
+                navController = navController,
+                lat = if (lat != 0f) lat.toDouble() else null,
+                lng = if (lng != 0f) lng.toDouble() else null
+            )
+        }
+
         composable(Pantalla.RUTA_MAPA_APP) {
             MapaPage(navController)
         }
@@ -402,14 +427,6 @@ fun AppNavHost(
                 categoriasViewModel = categoriasViewModel,
                 busquedaViewModel = busquedaViewModel
             )
-        }
-
-        // Grafo de navegación Nav bar - NEGOCIO
-        composable(Pantalla.RUTA_INICIO_NEGOCIO) {
-            InicioNegocioPage(navController)
-        }
-        composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
-            Promociones(navController)
         }
 
         composable(Pantalla.RUTA_SCANER_NEGOCIO) {
