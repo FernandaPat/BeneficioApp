@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private val scannerViewModel: ScannerViewModel by viewModels()
     private val qrViewModel: QRViewModel by viewModels()
 
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -141,19 +142,14 @@ class MainActivity : ComponentActivity() {
             BeneficioAppTheme {
                 val context = LocalContext.current
                 val busquedaViewModel: BusquedaViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            @Suppress("UNCHECKED_CAST")
-                            return BusquedaViewModel(context) as T
-                        }
-                    }
+                    factory = BusquedaViewModel.BusquedaViewModelFactory(context)
                 )
 
                 AppPrincipal(
                     startDestination = startDestination,
                     categoriasViewModel = categoriasViewModel,
                     promocionesViewModel = promocionesViewModel,
-                    busquedaViewModel = busquedaViewModel, // Pasar este ViewModel
+                    busquedaViewModel = busquedaViewModel, // Usa el ViewModel creado con factory
                     scannerViewModel = scannerViewModel,
                     qrViewModel = qrViewModel
                 )
@@ -315,15 +311,15 @@ fun AppNavHost(
             QRPromocionPage(navController, qrViewModel)
         }
 
-        // Grafo de navegación Nav bar - JÓVENES
         composable(Pantalla.RUTA_INICIO_APP) {
             InicioPage(
                 navController = navController,
                 categoriasViewModel = categoriasViewModel,
                 promocionesViewModel = promocionesViewModel,
-                busquedaViewModel = busquedaViewModel
+                busquedaViewModel = busquedaViewModel // ← Pasa el ViewModel existente
             )
         }
+        
 
         composable(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO) {
             NotificacionesNegocioPage(navController)
