@@ -129,7 +129,8 @@ fun AppPrincipal(
         Pantalla.RUTA_ACERCADE_APP,
         Pantalla.RUTA_AYUDA_APP,
         Pantalla.RUTA_CAMBIARCONTRASENA_APP,
-        Pantalla.RUTA_DATOSPERSONALES_APP
+        Pantalla.RUTA_DATOSPERSONALES_APP,
+        Pantalla.RUTA_RECUPERAR_CONTRASENA
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -240,6 +241,11 @@ fun AppNavHost(
         composable(Pantalla.RUTA_INICIAR_SESION) {
             Iniciar_Sesion(navController)
         }
+
+        composable(Pantalla.RUTA_RECUPERAR_CONTRASENA) {
+            RecuperarContrasena(navController)
+        }
+
         composable(Pantalla.RUTA_CREAR_CUENTA) {
             Crear_Cuenta(navController)
         }
