@@ -7,4 +7,7 @@ import retrofit2.http.POST
 interface QRAPI {
     @POST("generar-qr")
     suspend fun generarQR(@Body request: GenerarQRRequest): Response<QRTokenResponse>
+
+    @POST("validar-qr")
+    suspend fun validarQR(@Body request: ValidarQRRequest): Response<QRValidationResponse>
 }
