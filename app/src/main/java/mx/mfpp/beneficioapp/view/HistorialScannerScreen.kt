@@ -2,34 +2,30 @@ package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 
 /**
- * Pantalla que muestra el historial de escaneos QR realizados por el negocio.
+ * Pantalla principal del scanner QR para establecimientos.
  *
- * Permite ver todos los códigos QR escaneados, eliminar registros individuales
- * y acceder al escáner para realizar nuevos escaneos.
- *
- * @param navController Controlador de navegación para manejar la navegación entre pantallas
- * @param viewModel ViewModel que gestiona el estado y datos de los escaneos QR
+ * Muestra información del establecimiento y acceso al escáner QR.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,8 +33,10 @@ fun HistorialScannerScreen(
     navController: NavController,
     viewModel: ScannerViewModel = viewModel()
 ) {
-    val qrScanResults by viewModel.qrScanResults.collectAsState()
-    val totalScans = viewModel.getTotalScans()
+    val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val nombreEstablecimiento = sessionManager.getNombreNegocio() ?: "Establecimiento"
+    val idEstablecimiento = sessionManager.getNegocioId() ?: 0
 
     Scaffold(
         topBar = {
@@ -53,7 +51,6 @@ fun HistorialScannerScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        // Navegar de manera segura al inicio de negocio
                         navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
                             popUpTo(Pantalla.RUTA_INICIO_NEGOCIO) { inclusive = true }
                             launchSingleTop = true
@@ -72,7 +69,8 @@ fun HistorialScannerScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate(Pantalla.RUTA_QR_SCANNER_SCREEN)
+                    // Navegar al escáner pasando el ID del establecimiento
+                    navController.navigate("${Pantalla.RUTA_QR_SCANNER_SCREEN}/$idEstablecimiento")
                 },
                 containerColor = Color(0xFF9605F7),
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -91,7 +89,7 @@ fun HistorialScannerScreen(
                 .padding(paddingValues)
                 .background(Color.White)
         ) {
-            // Tarjeta de información
+            // Información del establecimiento
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -104,135 +102,119 @@ fun HistorialScannerScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = "Scanner QR",
+                        text = "Bienvenido, $nombreEstablecimiento",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp,
                         color = Color.Black,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
                     Text(
-                        text = "Escanea códigos QR de clientes para registrar sus beneficios",
+                        text = "ID: $idEstablecimiento",
                         color = Color.Gray,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Total de escaneos:",
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "$totalScans",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp,
-                            color = Color(0xFF9605F7)
-                        )
-                    }
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        color = Color.LightGray
+                    )
+
+                    Text(
+                        text = "Instrucciones:",
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Text(
+                        text = "1. Presiona el botón de escanear abajo\n" +
+                                "2. Enfoca el código QR del cliente\n" +
+                                "3. Valida la información mostrada\n" +
+                                "4. Activa la promoción",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp
+                    )
                 }
             }
 
-            // Lista de escaneos
-            if (qrScanResults.isEmpty()) {
-                Box(
+            // Tarjeta de funcionalidad
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 12.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.QrCodeScanner,
-                            contentDescription = "Sin escaneos",
-                            tint = Color.LightGray,
-                            modifier = Modifier.size(64.dp)
+                            contentDescription = "Scanner",
+                            tint = Color(0xFF9605F7),
+                            modifier = Modifier.size(24.dp)
                         )
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "No hay escaneos registrados",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
-                        Text(
-                            text = "Presiona el botón para comenzar a escanear",
-                            color = Color.Gray,
-                            fontSize = 14.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            text = "Escáner QR Activo",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color.Black
                         )
                     }
+
+                    Text(
+                        text = "El sistema valida automáticamente cada código QR escaneado y verifica:\n" +
+                                "• Validez del token QR\n" +
+                                "• Vigencia de la promoción\n" +
+                                "• Que no haya sido usada antes\n" +
+                                "• Que corresponda a este establecimiento",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        lineHeight = 18.sp
+                    )
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp)
+            }
+
+            // Mensaje de estado vacío
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(qrScanResults) { scanResult ->
-                        ScanResultCard(
-                            scanResult = scanResult,
-                            onDelete = { viewModel.deleteQrScanResult(it) }
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = "Listo para escanear",
+                        tint = Color(0xFF9605F7),
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Text(
+                        text = "Listo para Escanear",
+                        color = Color.Black,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Presiona el botón flotante para comenzar a escanear códigos QR de clientes",
+                        color = Color.Gray,
+                        fontSize = 14.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
                 }
-            }
-        }
-    }
-}
-
-/**
- * Componente que representa una tarjeta individual de resultado de escaneo QR.
- *
- * Muestra el contenido del código QR, la fecha/hora del escaneo y permite eliminarlo.
- *
- * @param scanResult Datos del escaneo QR a mostrar
- * @param onDelete Callback invocado cuando se solicita eliminar el escaneo
- */
-@Composable
-fun ScanResultCard(
-    scanResult: mx.mfpp.beneficioapp.model.QrScanResult,
-    onDelete: (mx.mfpp.beneficioapp.model.QrScanResult) -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = scanResult.content,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                Text(
-                    text = "Escaneado: ${java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(java.util.Date(scanResult.timestamp))}",
-                    color = Color.Gray,
-                    fontSize = 12.sp
-                )
-            }
-
-            IconButton(
-                onClick = { onDelete(scanResult) }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color.Gray
-                )
             }
         }
     }
