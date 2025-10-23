@@ -33,9 +33,11 @@ object ServicioRemotoObtenerDatosJoven {
                     id = data.optInt("id"),
                     nombre = data.optString("nombre"),
                     correo = data.optString("correo_electronico", data.optString("email", "")),
-                    telefono = data.optString("telefono"),
-                    direccion = data.optString("direccion")
+                    telefono = data.optString("telefono", ""),
+                    direccion = if (data.has("direccion")) data.optString("direccion") else "",
+                    foto = data.optString("foto", "")
                 )
+
             } catch (e: Exception) {
                 println("❌ Error al obtener datos del joven: ${e.localizedMessage}")
                 null

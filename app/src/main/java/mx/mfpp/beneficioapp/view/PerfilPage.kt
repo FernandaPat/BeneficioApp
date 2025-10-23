@@ -42,6 +42,10 @@ import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Save
+import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.viewmodel.SubirFotoJovenViewModel
 
 /**
  * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
@@ -64,6 +68,8 @@ import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
     val viewModel: PerfilViewModel = viewModel()
+    val vmSubirFoto: SubirFotoJovenViewModel = viewModel()
+
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvent.collect {
@@ -112,29 +118,74 @@ fun PerfilPage(navController: NavController) {
                 }
 
                 Box(
-                    modifier = Modifier.size(160.dp).align(Alignment.BottomCenter).offset(y = 80.dp),
+                    modifier = Modifier
+                        .size(160.dp)
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 80.dp),
                     contentAlignment = Alignment.Center
                 ) {
+                    // Fondo redondeado
                     Box(
-                        modifier = Modifier.matchParentSize().clip(CircleShape)
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(CircleShape)
                             .background(Color(0xFFF5F5F5))
                     )
-                    if (uri == null) {
-                        IconButton(
-                            onClick = { pickImage.launch("image/*") },
-                            modifier = Modifier.size(160.dp).clip(CircleShape)
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = "Seleccionar imagen")
+
+                    // 🔄 Mostrar imagen en el siguiente orden de prioridad:
+                    // 1. Nueva seleccionada (uri)
+                    // 2. Foto del backend (joven.value?.foto)
+                    // 3. Botón para agregar
+                    when {
+                        uri != null -> {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = "Nueva imagen seleccionada",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize().clip(CircleShape)
+                            )
                         }
-                    } else {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = "Imagen de perfil",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.matchParentSize().clip(CircleShape)
+                        joven.value?.foto?.isNotBlank() == true -> {
+                            AsyncImage(
+                                model = joven.value!!.foto,
+                                contentDescription = "Foto actual del perfil",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize().clip(CircleShape)
+                            )
+                        }
+                        else -> {
+                            IconButton(
+                                onClick = { pickImage.launch("image/*") },
+                                modifier = Modifier.size(160.dp).clip(CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Seleccionar imagen",
+                                    tint = moradoTexto
+                                )
+                            }
+                        }
+                    }
+
+                    // 🟣 Botón flotante de edición arriba a la derecha
+                    IconButton(
+                        onClick = { pickImage.launch("image/*") },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .zIndex(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Cambiar imagen",
+                            tint = Color.White
                         )
                     }
                 }
+
             }
 
             Spacer(Modifier.height(100.dp))
@@ -272,6 +323,40 @@ fun PerfilPage(navController: NavController) {
                 }
             }
         }
+        // === BOTÓN FLOTANTE GUARDAR ===
+        val mensaje by vmSubirFoto.mensaje.collectAsState()
+        val subiendo by vmSubirFoto.subiendo.collectAsState()
+
+        mensaje?.let {
+            LaunchedEffect(it) {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                vmSubirFoto.limpiarMensaje()
+                uri = null
+            }
+        }
+
+        if (uri != null && !subiendo) {
+            FloatingActionButton(
+                onClick = { vmSubirFoto.subirFoto(uri!!) },
+                containerColor = moradoTexto,
+                contentColor = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(20.dp)
+            ) {
+                Icon(Icons.Filled.Save, contentDescription = "Guardar foto")
+            }
+        }
+
+        if (subiendo) {
+            CircularProgressIndicator(
+                color = moradoTexto,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(32.dp)
+            )
+        }
+
     }
 }
 
