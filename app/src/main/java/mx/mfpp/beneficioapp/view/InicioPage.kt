@@ -43,20 +43,7 @@ import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
-/**
- * Pantalla de inicio principal para usuarios jóvenes.
- *
- * Muestra categorías, promociones favoritas, nuevas promociones y promociones cercanas
- * en un diseño scrollable organizado por secciones.
- *
- * @param navController Controlador de navegación para manejar la navegación entre pantallas
- * @param categoriasViewModel ViewModel para categorías
- * @param promocionesViewModel ViewModel para promociones
- * @param modifier Modificador de Composable para personalizar el layout
- */
 @Composable
 fun InicioPage(
     navController: NavController,
@@ -84,7 +71,6 @@ fun InicioPage(
     val establecimientosLoading by busquedaViewModel.isLoading.collectAsState()
     val establecimientosError by busquedaViewModel.error.collectAsState()
 
-    // CORREGIDO: Solo considerar loading de los ViewModels principales, no de favoritos
     val isLoading = categoriasLoading || promocionesLoading || establecimientosLoading
     val error = categoriasError ?: promocionesError ?: establecimientosError
 
@@ -92,7 +78,6 @@ fun InicioPage(
     val nombreJovenCompleto = sessionManager.getNombreJoven() ?: "Joven"
     val nombreJoven = nombreJovenCompleto.split(" ").firstOrNull() ?: "Joven"
 
-    // Estado para los favoritos - CORREGIDO: No usar produceState aquí
     var listaFavoritos by remember { mutableStateOf<List<FavoritoDetalle>>(emptyList()) }
     var favoritosLoading by remember { mutableStateOf(false) }
 
@@ -102,7 +87,6 @@ fun InicioPage(
 
     LaunchedEffect(Unit) {
         vmDatosJoven.cargarDatos(context)
-
         Log.d("INICIO_PAGE", "🧹 Limpiando filtros al entrar a InicioPage")
         busquedaViewModel.limpiarFiltrosCompletamente()
     }
@@ -129,7 +113,7 @@ fun InicioPage(
     val scrollState = rememberScrollState()
     var canTriggerRefresh by remember { mutableStateOf(true) }
 
-    // Función para recargar todos los datos - CORREGIDA: Incluir favoritos
+    // Función para recargar todos los datos
     fun recargarTodosLosDatos() {
         coroutineScope.launch {
             Log.d("INICIO_PAGE", "🔄 Recargando todos los datos...")
@@ -164,7 +148,6 @@ fun InicioPage(
             } catch (e: Exception) {
                 Log.e("INICIO_PAGE", "❌ Error durante refresh: ${e.message}")
             } finally {
-                // Espera breve para mostrar el spinner y evitar flicker
                 kotlinx.coroutines.delay(1200)
                 isRefreshing = false
                 canTriggerRefresh = true
@@ -181,20 +164,6 @@ fun InicioPage(
         categoriasViewModel.refrescarCategorias()
     }
 
-    // En tu InicioPage, después de cargar los favoritos, agrega:
-    LaunchedEffect(listaFavoritos) {
-        if (listaFavoritos.isNotEmpty()) {
-            Log.d("FAVORITOS_ANALYSIS", "=== ANÁLISIS DE FAVORITOS ===")
-            listaFavoritos.forEachIndexed { index, favorito ->
-                Log.d("FAVORITOS_ANALYSIS",
-                    "Favorito $index: ${favorito.nombre_establecimiento} | " +
-                            "Foto: '${favorito.foto}' | " +
-                            "Es null: ${favorito.foto == null} | " +
-                            "Está vacío: ${favorito.foto?.isEmpty() ?: true}"
-                )
-            }
-        }
-    }
     Scaffold(
         topBar = { HomeTopBar(nombreJoven, fotoPerfil, navController) }
     ) { paddingValues ->
@@ -208,7 +177,7 @@ fun InicioPage(
                     .fillMaxSize()
                     .verticalScroll(scrollState)
             ) {
-                // Mostrar indicador de refresh manual SOLO cuando se activa por scroll
+                // Mostrar indicador de refresh manual
                 if (isRefreshing) {
                     Box(
                         modifier = Modifier
@@ -274,7 +243,6 @@ fun InicioPage(
                             items = nuevasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                // 🔹 CAMBIO: Pasar el ID de la promoción
                                 navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
@@ -284,7 +252,6 @@ fun InicioPage(
                             items = promocionesExpiracion,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                // 🔹 CAMBIO: Pasar el ID de la promoción
                                 navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
@@ -294,7 +261,6 @@ fun InicioPage(
                             items = todasPromociones,
                             promocionesViewModel = promocionesViewModel,
                             onItemClick = { promocion ->
-                                // 🔹 CAMBIO: Pasar el ID de la promoción
                                 navController.navigate("qrPromocion/${promocion.id}")
                             }
                         )
@@ -359,7 +325,6 @@ fun SeccionHorizontalEstablecimientos(
     }
 }
 
-// NUEVO COMPONENTE: Card para establecimientos (similar al de promociones)
 @Composable
 fun CardEstablecimientoHorizontal(
     establecimiento: Establecimiento,
@@ -377,7 +342,6 @@ fun CardEstablecimientoHorizontal(
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Imagen del establecimiento
                 AsyncImage(
                     model = establecimiento.imagen ?: "https://picsum.photos/200/150?random=${establecimiento.id_establecimiento}",
                     contentDescription = "Imagen de ${establecimiento.nombre}",
@@ -387,13 +351,11 @@ fun CardEstablecimientoHorizontal(
             }
         }
 
-        // Información del establecimiento
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 4.dp)
         ) {
-            // Nombre del establecimiento
             Text(
                 text = establecimiento.nombre,
                 color = Color.Black,
@@ -404,7 +366,6 @@ fun CardEstablecimientoHorizontal(
                 lineHeight = 14.sp
             )
 
-            // Categoría y ubicación
             Text(
                 text = "${establecimiento.nombre_categoria} • ${establecimiento.colonia}",
                 color = Color.Gray,
@@ -419,11 +380,6 @@ fun CardEstablecimientoHorizontal(
     }
 }
 
-/**
- * Componente que muestra un estado de carga.
- *
- * Se muestra mientras se cargan los datos de la aplicación.
- */
 @Composable
 fun EstadoCargando() {
     Box(
@@ -443,14 +399,6 @@ fun EstadoCargando() {
     }
 }
 
-/**
- * Componente que muestra un estado de error.
- *
- * Se muestra cuando ocurre un error al cargar los datos.
- *
- * @param mensajeError Mensaje descriptivo del error ocurrido
- * @param onReintentar Callback invocado cuando el usuario presiona el botón de reintentar
- */
 @Composable
 fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
     Box(
@@ -482,17 +430,6 @@ fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
         }
     }
 }
-
-/**
- * Componente que muestra una sección horizontal de items.
- *
- * Presenta una lista de promociones en un scroll horizontal con un título.
- *
- * @param titulo Título descriptivo de la sección
- * @param items Lista de promociones a mostrar en la sección
- * @param onItemClick Callback invocado cuando se hace clic en un item
- * @param modifier Modificador de Composable para personalizar el layout
- */
 
 @Composable
 fun SeccionHorizontal(
@@ -534,7 +471,7 @@ fun SeccionHorizontal(
                     CardItemHorizontal(
                         promocion = item,
                         promocionesViewModel = promocionesViewModel,
-                        esNuevaSeccion = titulo == "Nuevas Promociones", // Pasar si es nueva sección
+                        mostrarBadgeExpiracion = titulo != "Nuevas Promociones", // SOLO mostrar badge en expiración
                         onItemClick = { onItemClick(item) }
                     )
                 }
@@ -547,92 +484,68 @@ fun SeccionHorizontal(
 fun CardItemHorizontal(
     promocion: PromocionJoven,
     promocionesViewModel: PromocionJovenViewModel,
-    esNuevaSeccion: Boolean = false,
+    mostrarBadgeExpiracion: Boolean = false,
     onItemClick: () -> Unit
 ) {
-
-    // Texto y color según la sección
-    val (textoEstado, colorFondo, colorTexto) = if (esNuevaSeccion) {
-        val diasDesdeCreacion = promocionesViewModel.diasDesdeCreacion(promocion.fecha_creacion)
-        val textoCreacion = when {
-            diasDesdeCreacion < 0 -> "Fecha inválida"
-            diasDesdeCreacion == 0L -> "hoy"
-            diasDesdeCreacion == 1L -> "ayer"
-            diasDesdeCreacion <= 7L -> "hace $diasDesdeCreacion días"
-            else -> "hace $diasDesdeCreacion días"
-        }
-        Triple(
-            textoCreacion,
-            Color(0xFF7AF1A7), // Verde claro para "agregada"
-            Color(0xFF008033)  // Verde oscuro
-        )
-    } else {
-        val textoExpiracion = promocionesViewModel.formatearTextoExpiracion(promocion.fecha_expiracion)
-        val (fondo, texto) = when {
-            textoExpiracion.contains("hoy") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja
-            textoExpiracion.contains("1 día") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja para "vence en 1 día"
-            textoExpiracion.contains("días") -> Color(0xFFFFA500) to Color(0xFF8B4513) // Naranja
-            textoExpiracion.contains("Expirada") -> Color(0xFFBDBDBD) to Color(0xFF616161) // Gris
-            else -> Color(0xFF7AF1A7) to Color(0xFF008033) // Verde para válida
-        }
-        Triple(textoExpiracion, fondo, texto)
-    }
-
     Column(
         modifier = Modifier.width(176.dp)
     ) {
         Card(
             onClick = onItemClick,
             modifier = Modifier
-                .size(width = 176.dp, height = 100.dp), // Rectangular
+                .size(width = 176.dp, height = 100.dp),
             shape = RoundedCornerShape(16.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // Imagen rectangular
                 AsyncImage(
                     model = promocion.foto ?: "https://picsum.photos/200/150?random=${promocion.id}",
-                    contentDescription = "Imagen de ${promocion.titulo}", // CAMBIO: titulo_promocion -> titulo
+                    contentDescription = "Imagen de ${promocion.titulo}",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
 
-                // Badge de estado con offset forzado
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 6.dp, end = 6.dp)
-                        .width(if (textoEstado == "hoy" || textoEstado == "ayer") 50.dp else 80.dp)
-                        .height(18.dp) // Mismo alto para todos
-                        .background(
-                            color = colorFondo,
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                ) {
-                    Text(
-                        text = textoEstado.uppercase(),
-                        fontSize = 8.sp,
-                        color = colorTexto,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        maxLines = 1,
+                // SOLO mostrar badge si es para expiración y no es "Válida"
+                if (mostrarBadgeExpiracion) {
+                    val textoExpiracion = promocionesViewModel.formatearTextoExpiracion(promocion.fecha_expiracion)
+                    val (colorFondo, colorTexto) = when {
+                        textoExpiracion.contains("hoy") -> Color(0xFFFFA500) to Color(0xFF8B4513)
+                        textoExpiracion.contains("1 día") -> Color(0xFFFFA500) to Color(0xFF8B4513)
+                        textoExpiracion.contains("días") -> Color(0xFFFFA500) to Color(0xFF8B4513)
+                        textoExpiracion.contains("Expirada") -> Color(0xFFBDBDBD) to Color(0xFF616161)
+                        else -> return@Box // No mostrar badge si es "Válida"
+                    }
+
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                            .offset(y = (-1).dp) // Offset forzado para centrado vertical
-                    )
+                            .align(Alignment.TopEnd)
+                            .padding(top = 6.dp, end = 6.dp)
+                            .width(if (textoExpiracion == "hoy" || textoExpiracion == "ayer") 50.dp else 80.dp)
+                            .height(18.dp)
+                            .background(color = colorFondo, shape = RoundedCornerShape(4.dp))
+                    ) {
+                        Text(
+                            text = textoExpiracion.uppercase(),
+                            fontSize = 8.sp,
+                            color = colorTexto,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 1,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp)
+                        )
+                    }
                 }
             }
         }
 
-        // Información muy compacta
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 4.dp) // Mínimo espaciado
+                .padding(top = 4.dp)
         ) {
-
             Text(
                 text = promocion.titulo,
                 color = Color.Black,
@@ -642,29 +555,20 @@ fun CardItemHorizontal(
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 14.sp
             )
-
-            // Título de la promoción - CAMBIO: titulo_promocion -> titulo
             Text(
-                text = promocion.nombre_establecimiento, // CAMBIO AQUÍ
+                text = promocion.nombre_establecimiento,
                 color = Color.Gray,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Normal,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 0.dp), // Sin espaciado
+                modifier = Modifier.padding(top = 0.dp),
                 lineHeight = 12.sp
             )
         }
     }
 }
 
-/**
- * Componente que muestra la sección de categorías.
- *
- * Presenta las categorías disponibles en una cuadrícula de 2 filas (4+3 items).
- *
- * @param categorias Lista de categorías a mostrar
- */
 @Composable
 fun Categorias(
     categorias: List<Categoria>,
@@ -747,14 +651,6 @@ fun Categorias(
     }
 }
 
-
-/**
- * Componente que representa un item individual de categoría en forma circular.
- *
- * Muestra el icono de la categoría en un card circular.
- *
- * @param categoria Datos de la categoría a mostrar
- */
 @Composable
 fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
     Card(
@@ -775,14 +671,6 @@ fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
     }
 }
 
-/**
- * Barra superior personalizada para la pantalla de inicio.
- *
- * Muestra el perfil del usuario y acceso a notificaciones.
- *
- * @param navController Controlador de navegación para manejar la navegación
- * @param modifier Modificador de Composable para personalizar el layout
- */
 @Composable
 fun HomeTopBar(
     nombreJoven: String,
@@ -857,7 +745,6 @@ fun HomeTopBar(
     }
 }
 
-
 @Composable
 fun SeccionHorizontalFavoritos(
     titulo: String,
@@ -927,8 +814,6 @@ fun CardFavoritoHorizontal(
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
-                // VERSIÓN SIMPLIFICADA - misma lógica que establecimientos
-
                 val imagenUrl = normalizarUrlImagen(favorito.foto, favorito.id_establecimiento)
 
                 Log.d("FAVORITO_IMAGE", "URL final: $imagenUrl")
@@ -942,7 +827,6 @@ fun CardFavoritoHorizontal(
             }
         }
 
-        // Información del establecimiento
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -972,14 +856,10 @@ fun CardFavoritoHorizontal(
     }
 }
 
-/**
- * Previsualización de la pantalla de inicio.
- */
 @Preview(showBackground = true)
 @Composable
 fun InicioPagePreview() {
     MaterialTheme {
         val navController = rememberNavController()
-        //InicioPage(navController)
     }
 }

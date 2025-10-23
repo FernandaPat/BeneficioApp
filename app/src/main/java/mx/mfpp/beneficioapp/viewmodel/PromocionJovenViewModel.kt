@@ -18,7 +18,6 @@ class PromocionJovenViewModel: ViewModel() {
     private val _promocionesExpiracion = MutableStateFlow<List<PromocionJoven>>(emptyList())
     val promocionesExpiracion: StateFlow<List<PromocionJoven>> = _promocionesExpiracion.asStateFlow()
 
-    // NUEVO: StateFlow para todas las promociones
     private val _todasPromociones = MutableStateFlow<List<PromocionJoven>>(emptyList())
     val todasPromociones: StateFlow<List<PromocionJoven>> = _todasPromociones.asStateFlow()
 
@@ -28,8 +27,9 @@ class PromocionJovenViewModel: ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // Formato de fecha para parsear las fechas del API
-    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    private val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
+        timeZone = TimeZone.getTimeZone("America/Mexico_City")
+    }
 
     init {
         cargarPromocionesDelBackend()
@@ -88,7 +88,7 @@ class PromocionJovenViewModel: ViewModel() {
     private fun esPromocionReciente(fechaCreacion: String): Boolean {
         return try {
             val fechaCreacionDate = dateFormatter.parse(fechaCreacion)
-            val hoy = Calendar.getInstance().time
+            val hoy = obtenerFechaActualSinHora()
             val diferenciaDias = calcularDiferenciaDias(fechaCreacionDate, hoy)
             diferenciaDias <= 10
         } catch (e: Exception) {
@@ -99,7 +99,7 @@ class PromocionJovenViewModel: ViewModel() {
     fun diasHastaExpiracion(fechaExpiracion: String): Long {
         return try {
             val fechaExpiracionDate = dateFormatter.parse(fechaExpiracion)
-            val hoy = Calendar.getInstance().time
+            val hoy = obtenerFechaActualSinHora()
             calcularDiferenciaDias(hoy, fechaExpiracionDate)
         } catch (e: Exception) {
             -1
@@ -107,8 +107,33 @@ class PromocionJovenViewModel: ViewModel() {
     }
 
     private fun calcularDiferenciaDias(fechaInicio: Date, fechaFin: Date): Long {
-        val diferenciaMillis = fechaFin.time - fechaInicio.time
+        val calInicio = Calendar.getInstance().apply {
+            time = fechaInicio
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val calFin = Calendar.getInstance().apply {
+            time = fechaFin
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        val diferenciaMillis = calFin.timeInMillis - calInicio.timeInMillis
         return diferenciaMillis / (1000 * 60 * 60 * 24)
+    }
+
+    private fun obtenerFechaActualSinHora(): Date {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 0)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        return cal.time
     }
 
     fun formatearTextoExpiracion(fechaExpiracion: String): String {
@@ -128,19 +153,5 @@ class PromocionJovenViewModel: ViewModel() {
 
     fun clearError() {
         _error.value = null
-    }
-
-    fun diasDesdeCreacion(fechaCreacion: String): Long {
-        return try {
-            val calendarioHoy = Calendar.getInstance()
-            val calendarioCreacion = Calendar.getInstance()
-            val fechaCreacionDate = dateFormatter.parse(fechaCreacion)
-
-            calendarioCreacion.time = fechaCreacionDate
-            val diferenciaMillis = calendarioHoy.timeInMillis - calendarioCreacion.timeInMillis
-            diferenciaMillis / (1000 * 60 * 60 * 24)
-        } catch (e: Exception) {
-            -1
-        }
     }
 }

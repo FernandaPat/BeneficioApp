@@ -83,7 +83,7 @@ fun ActividadPage(
                 error != null -> {
                     Text(
                         text = error ?: "Error desconocido",
-                        color = Color.Red,
+                        color = Color.Red, // Este se mantiene en rojo porque es un error real
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -94,7 +94,7 @@ fun ActividadPage(
                 historial.isEmpty() -> {
                     Text(
                         text = "No hay promociones registradas para este negocio.",
-                        color = Color.Gray,
+                        color = Color.Gray, // Cambiado de Color.Red a Color.Gray
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -247,7 +247,6 @@ private fun HistorialListItem(
         )
     }
 }
-
 
 private fun formatearFechaCorta(fecha: String): String {
     return try {
