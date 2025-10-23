@@ -1,5 +1,6 @@
 package mx.mfpp.beneficioapp.view
 
+import MapaPage
 import NegocioDetallePage
 import android.os.Bundle
 import androidx.activity.ComponentActivity

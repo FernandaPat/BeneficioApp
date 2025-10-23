@@ -1,4 +1,3 @@
-// mx.mfpp.beneficioapp.viewmodel.MapaViewModel
 package mx.mfpp.beneficioapp.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -11,6 +10,14 @@ import mx.mfpp.beneficioapp.model.Establecimiento
 import com.google.android.gms.maps.model.LatLng
 import mx.mfpp.beneficioapp.mode.ServicioRemotoEstablecimiento
 import kotlin.math.*
+
+// ✅ AGREGADO: Estados específicos para la UI
+sealed class MapaUiState {
+    object Loading : MapaUiState()
+    object Empty : MapaUiState()
+    data class Success(val establecimientos: List<Establecimiento>) : MapaUiState()
+    data class Error(val message: String) : MapaUiState()
+}
 
 class MapaViewModel : ViewModel() {
 
@@ -29,6 +36,13 @@ class MapaViewModel : ViewModel() {
     // Ubicación actual para calcular distancias
     private var _ubicacionActual = MutableStateFlow<LatLng?>(null)
     val ubicacionActual: StateFlow<LatLng?> = _ubicacionActual.asStateFlow()
+
+    // ✅ MEJORADO: Estado más específico para la UI
+    private val _uiState = MutableStateFlow<MapaUiState>(MapaUiState.Loading)
+    val uiState: StateFlow<MapaUiState> = _uiState.asStateFlow()
+
+    private val _establecimientosOrdenados = MutableStateFlow<List<Establecimiento>>(emptyList())
+    val establecimientosOrdenados: StateFlow<List<Establecimiento>> = _establecimientosOrdenados.asStateFlow()
 
     // Solo establecimientos con coordenadas válidas
     val establecimientosConCoordenadas: List<Establecimiento>
@@ -58,46 +72,65 @@ class MapaViewModel : ViewModel() {
         cargarEstablecimientos()
     }
 
-
-
     fun cargarEstablecimientos() {
         _isLoading.value = true
         _error.value = null
+        _uiState.value = MapaUiState.Loading
 
         viewModelScope.launch {
             try {
+                // ✅ MEJORADO: Simular un pequeño retraso para mostrar el loading (opcional)
+                kotlinx.coroutines.delay(500)
+
                 val todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos()
 
                 _establecimientos.value = todosEstablecimientos
                 _establecimientosFiltrados.value = todosEstablecimientos
+                _establecimientosOrdenados.value = todosEstablecimientos
 
-                // 🔧 Agregamos un pequeño delay para asegurar actualización del flujo
+                // Actualizar estado basado en el resultado
+                if (todosEstablecimientos.isEmpty()) {
+                    _uiState.value = MapaUiState.Empty
+                } else {
+                    _uiState.value = MapaUiState.Success(todosEstablecimientos)
+
+                    // ✅ MEJORADO: Ordenar establecimientos si ya tenemos ubicación
+                    _ubicacionActual.value?.let { ubicacion ->
+                        actualizarUbicacionActual(ubicacion)
+                    }
+                }
+
+                // 🔧 Delay para asegurar actualización del flujo
                 kotlinx.coroutines.delay(300)
 
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
+                _uiState.value = MapaUiState.Error(e.message ?: "Error desconocido")
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private val _establecimientosOrdenados = MutableStateFlow<List<Establecimiento>>(emptyList())
-    val establecimientosOrdenados: StateFlow<List<Establecimiento>> = _establecimientosOrdenados.asStateFlow()
-
     fun actualizarUbicacionActual(latLng: LatLng) {
         _ubicacionActual.value = latLng
-        _establecimientosFiltrados.value = _establecimientosFiltrados.value.sortedBy {
-            if (it.latitud != null && it.longitud != null)
-                calcularDistancia(latLng, LatLng(it.latitud!!, it.longitud!!))
-            else Double.MAX_VALUE
+
+        // ✅ MEJORADO: Ordenar establecimientos por distancia a la nueva ubicación
+        val establecimientosOrdenados = _establecimientosFiltrados.value.sortedBy { establecimiento ->
+            if (establecimiento.latitud != null && establecimiento.longitud != null) {
+                calcularDistancia(latLng, LatLng(establecimiento.latitud!!, establecimiento.longitud!!))
+            } else {
+                Double.MAX_VALUE
+            }
         }
-        _establecimientosOrdenados.value = _establecimientosFiltrados.value
+
+        _establecimientosOrdenados.value = establecimientosOrdenados
     }
 
     fun filtrarEstablecimientos(query: String) {
         if (query.isEmpty()) {
             _establecimientosFiltrados.value = _establecimientos.value
+            _establecimientosOrdenados.value = _establecimientos.value
         } else {
             val filtrados = _establecimientos.value.filter { establecimiento ->
                 establecimiento.nombre.contains(query, ignoreCase = true) ||
@@ -105,6 +138,20 @@ class MapaViewModel : ViewModel() {
                         establecimiento.colonia.contains(query, ignoreCase = true)
             }
             _establecimientosFiltrados.value = filtrados
+
+            // ✅ MEJORADO: Re-ordenar los resultados filtrados
+            _ubicacionActual.value?.let { ubicacion ->
+                val ordenados = filtrados.sortedBy { establecimiento ->
+                    if (establecimiento.latitud != null && establecimiento.longitud != null) {
+                        calcularDistancia(ubicacion, LatLng(establecimiento.latitud!!, establecimiento.longitud!!))
+                    } else {
+                        Double.MAX_VALUE
+                    }
+                }
+                _establecimientosOrdenados.value = ordenados
+            } ?: run {
+                _establecimientosOrdenados.value = filtrados
+            }
         }
     }
 
@@ -114,6 +161,12 @@ class MapaViewModel : ViewModel() {
 
     fun clearError() {
         _error.value = null
+        // ✅ MEJORADO: Restaurar estado anterior después de limpiar error
+        if (_establecimientos.value.isNotEmpty()) {
+            _uiState.value = MapaUiState.Success(_establecimientos.value)
+        } else if (_establecimientos.value.isEmpty()) {
+            _uiState.value = MapaUiState.Empty
+        }
     }
 
     // Función para calcular distancia entre dos puntos en metros
@@ -144,5 +197,4 @@ class MapaViewModel : ViewModel() {
 
     // Extensión para formatear decimales
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
-
 }
