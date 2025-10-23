@@ -135,7 +135,6 @@ fun AppPrincipal(
         Pantalla.RUTA_CAMBIARCONTRASENA_APP,
         Pantalla.RUTA_DATOSPERSONALES_APP,
         Pantalla.RUTA_RECUPERAR_CONTRASENA,
-        Pantalla.RUTA_TERMINOS_CONDICIONES,
         Pantalla.RUTA_DATOSNEGOCIO_APP,
         Pantalla.RUTA_QR_SCANNER_SCREEN
     )
@@ -233,10 +232,6 @@ fun AppNavHost(
         }
         composable(Pantalla.RUTA_AYUDA_APP) {
             AyudaPage(navController)
-        }
-
-        composable(Pantalla.RUTA_TERMINOS_CONDICIONES){
-            TerminosYCondicionesPage(navController)
         }
         composable(Pantalla.RUTA_DATOSPERSONALES_APP) {
             VerDatosPersonalesPage(navController)
