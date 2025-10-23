@@ -1,9 +1,6 @@
+package mx.mfpp.beneficioapp.model
+
 import android.util.Log
-import mx.mfpp.beneficioapp.model.GenerarQRRequest
-import mx.mfpp.beneficioapp.model.QRAPI
-import mx.mfpp.beneficioapp.model.QRTokenResponse
-import mx.mfpp.beneficioapp.model.QRValidationResponse
-import mx.mfpp.beneficioapp.model.ValidarQRRequest
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -11,7 +8,9 @@ object ServicioRemotoQR {
 
     private const val URL_BASE_GENERAR = "https://generar-qr-819994103285.us-central1.run.app/"
     private const val URL_BASE_VALIDAR = "https://validar-qr-819994103285.us-central1.run.app/"
+    private const val URL_BASE_APLICAR = "https://aplicar-promocion-819994103285.us-central1.run.app/" // ✅ AGREGAR
 
+    // Retrofit Generar
     private val retrofitGenerar: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(URL_BASE_GENERAR)
@@ -19,9 +18,18 @@ object ServicioRemotoQR {
             .build()
     }
 
+    // Retrofit Validar
     private val retrofitValidar: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(URL_BASE_VALIDAR)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    // ✅ AGREGAR: Retrofit Aplicar
+    private val retrofitAplicar: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(URL_BASE_APLICAR)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -30,7 +38,15 @@ object ServicioRemotoQR {
         retrofitGenerar.create(QRAPI::class.java)
     }
 
-    // Retén la función existente para generar (sin tocar)
+    private val apiValidar: QRAPI by lazy {
+        retrofitValidar.create(QRAPI::class.java)
+    }
+
+    // ✅ AGREGAR: API Aplicar
+    private val apiAplicar: QRAPI by lazy {
+        retrofitAplicar.create(QRAPI::class.java)
+    }
+
     suspend fun generarQR(idJoven: Int, idPromocion: Int): QRTokenResponse? {
         return try {
             Log.d("SERVICIO_QR", "Generando QR para joven $idJoven y promoción $idPromocion")
@@ -48,11 +64,6 @@ object ServicioRemotoQR {
         }
     }
 
-    // NUEVA: validarQR usando la base de validar-qr
-    private val apiValidar: QRAPI by lazy {
-        retrofitValidar.create(QRAPI::class.java)
-    }
-
     suspend fun validarQR(token: String, idEstablecimiento: Int): QRValidationResponse? {
         return try {
             Log.d("SERVICIO_QR", "Validando QR en establecimiento $idEstablecimiento")
@@ -66,6 +77,30 @@ object ServicioRemotoQR {
             }
         } catch (e: Exception) {
             Log.e("SERVICIO_QR", "Excepción validarQR: ${e.message}", e)
+            null
+        }
+    }
+
+    // ✅ AGREGAR: Función para aplicar promoción
+    suspend fun aplicarPromocion(
+        idTarjeta: Int,
+        idPromocion: Int,
+        idEstablecimiento: Int
+    ): AplicarPromocionResponse? {
+        return try {
+            Log.d("SERVICIO_QR", "Aplicando promoción: tarjeta=$idTarjeta, promocion=$idPromocion, establecimiento=$idEstablecimiento")
+            val response = apiAplicar.aplicarPromocion(
+                AplicarPromocionRequest(idTarjeta, idPromocion, idEstablecimiento)
+            )
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("SERVICIO_QR", "Error aplicarPromocion: ${response.code()} - $errorBody")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e("SERVICIO_QR", "Excepción aplicarPromocion: ${e.message}", e)
             null
         }
     }

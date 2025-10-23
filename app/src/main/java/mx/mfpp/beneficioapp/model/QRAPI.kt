@@ -10,4 +10,7 @@ interface QRAPI {
 
     @POST("validar-qr")
     suspend fun validarQR(@Body request: ValidarQRRequest): Response<QRValidationResponse>
+
+    @POST("aplicar-promocion")
+    suspend fun aplicarPromocion(@Body request: AplicarPromocionRequest): Response<AplicarPromocionResponse>
 }

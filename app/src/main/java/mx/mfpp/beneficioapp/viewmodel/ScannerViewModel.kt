@@ -6,36 +6,28 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import mx.mfpp.beneficioapp.model.PromocionData
-import mx.mfpp.beneficioapp.model.QrScanResult
+import mx.mfpp.beneficioapp.model.QRValidationResponse
+import mx.mfpp.beneficioapp.model.ServicioRemotoQR
 import org.json.JSONObject
 
-/**
- * ViewModel para manejar la funcionalidad de escaneo QR
- */
 class ScannerViewModel : ViewModel() {
     var lastScannedValue: String? = null
-
-    private val _qrScanResults = MutableStateFlow<List<QrScanResult>>(emptyList())
-    val qrScanResults: StateFlow<List<QrScanResult>> = _qrScanResults.asStateFlow()
 
     private val _showScanner = MutableStateFlow(false)
     val showScanner: StateFlow<Boolean> = _showScanner.asStateFlow()
 
-    fun processScannedQR(content: String): PromocionData? {
-        return try {
-            val json = JSONObject(content) // <-- Sin decodificar
-            PromocionData(
-                numeroTarjeta = json.optString("numeroTarjeta", "N/A"),
-                fecha = json.optString("fecha", "N/A"),
-                nombrePromocion = json.optString("nombrePromocion", "Promoción desconocida")
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
+    // Estados para la validación y aplicación
+    private val _validationResult = MutableStateFlow<QRValidationResponse?>(null)
+    val validationResult: StateFlow<QRValidationResponse?> = _validationResult.asStateFlow()
 
+    private val _isApplying = MutableStateFlow(false)
+    val isApplying: StateFlow<Boolean> = _isApplying.asStateFlow()
+
+    private val _applyResult = MutableStateFlow<Boolean?>(null)
+    val applyResult: StateFlow<Boolean?> = _applyResult.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     fun showScanner() {
         _showScanner.value = true
@@ -45,26 +37,15 @@ class ScannerViewModel : ViewModel() {
         _showScanner.value = false
     }
 
-    fun addQrScanResult(content: String) {
-        val newList = _qrScanResults.value.toMutableList()
-        newList.add(QrScanResult(content))
-        _qrScanResults.value = newList
-    }
-
-    fun deleteQrScanResult(result: QrScanResult) {
-        val newList = _qrScanResults.value.toMutableList()
-        newList.remove(result)
-        _qrScanResults.value = newList
-    }
-
-    fun getTotalScans(): Int {
-        return _qrScanResults.value.size
-    }
     fun resetScannerState() {
         _showScanner.value = false
         lastScannedValue = null
+        _validationResult.value = null
+        _applyResult.value = null
+        _errorMessage.value = null
     }
 
+    // Validar QR remoto
     fun validarQrRemoto(
         token: String,
         idEstablecimiento: Int,
@@ -80,8 +61,7 @@ class ScannerViewModel : ViewModel() {
                 }
 
                 if (!response.success) {
-                    // backend puede devolver message explicativo
-                    onError(response.message)
+                    onError(response.message ?: "Error al validar QR")
                     return@launch
                 }
 
@@ -91,20 +71,61 @@ class ScannerViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Construimos un JSON simple compatible con tu DetallePromocionScreen actual:
-                // { "numeroTarjeta": "<folio_digital>", "fecha": "<generado>", "nombrePromocion": "<nombre>" }
-                val json = org.json.JSONObject().apply {
+                // Guardar el resultado de validación para usarlo después
+                _validationResult.value = response
+
+                // Construir JSON para la pantalla de detalles
+                val json = JSONObject().apply {
                     put("numeroTarjeta", datos.joven.folio_digital)
                     put("fecha", datos.token_info.generado)
                     put("nombrePromocion", datos.promocion.nombre)
+                    // Agregar datos adicionales que necesitaremos para aplicar la promoción
+                    put("id_tarjeta", datos.joven.id_tarjeta)
+                    put("id_promocion", datos.promocion.id_promocion)
+                    put("id_establecimiento", idEstablecimiento)
                 }.toString()
 
-                // Codifica para pasar por la navRoute (igual que hacías antes)
                 val encoded = java.net.URLEncoder.encode(json, "UTF-8")
                 onSuccess(encoded)
             } catch (e: Exception) {
                 e.printStackTrace()
-                onError("Excepción: ${e.message ?: "Desconocida"}")
+                onError("Error de conexión: ${e.message ?: "Intenta nuevamente"}")
+            }
+        }
+    }
+
+    // ✅ AGREGAR: Aplicar promoción
+    fun aplicarPromocion(
+        idTarjeta: Int,
+        idPromocion: Int,
+        idEstablecimiento: Int,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isApplying.value = true
+            _errorMessage.value = null
+
+            try {
+                val response = ServicioRemotoQR.aplicarPromocion(
+                    idTarjeta,
+                    idPromocion,
+                    idEstablecimiento
+                )
+
+                if (response != null && response.success) {
+                    _applyResult.value = true
+                    onSuccess()
+                } else {
+                    _applyResult.value = false
+                    onError("No se pudo aplicar la promoción")
+                }
+            } catch (e: Exception) {
+                _applyResult.value = false
+                _errorMessage.value = e.message
+                onError("Error: ${e.message ?: "Intenta nuevamente"}")
+            } finally {
+                _isApplying.value = false
             }
         }
     }

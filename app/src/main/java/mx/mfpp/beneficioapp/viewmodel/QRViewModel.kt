@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.QRTokenResponse
+import mx.mfpp.beneficioapp.model.ServicioRemotoQR
 import java.util.EnumMap
 
 class QRViewModel : ViewModel() {

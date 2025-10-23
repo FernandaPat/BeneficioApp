@@ -1,13 +1,5 @@
 package mx.mfpp.beneficioapp.model
 
-data class PromocionData(
-    val numeroTarjeta: String,
-    val fecha: String,
-    val nombrePromocion: String
-)
-
-// BORRAR ARRIBA CUANDO SE NECECITE LA PROMOCION DATA
-
 // Request para generar QR
 data class GenerarQRRequest(
     val id_joven: Int,
