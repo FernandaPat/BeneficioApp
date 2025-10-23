@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilNegocioViewModel
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
+import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
 
 /**
  * Pantalla de perfil del negocio que permite gestionar la información y configuración de la cuenta.
@@ -70,6 +72,18 @@ fun PerfilNegocioPage(navController: NavController) {
             }
         }
     }
+    val vmDatos: VerDatosNegocioViewModel = viewModel()
+    val negocio = vmDatos.negocio.collectAsState()
+    val cargando = vmDatos.cargando.collectAsState()
+    val error = vmDatos.error.collectAsState()
+    val context = LocalContext.current
+
+
+    LaunchedEffect(Unit) {
+        vmDatos.cargarDatos(context)
+    }
+
+
 
     val moradoClaro = Color(0xFFE9D4FF)
     val moradoBoton = Color(0xFFD5A8FF)
@@ -172,12 +186,27 @@ fun PerfilNegocioPage(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(100.dp))
-            Text(
-                text = "Nombre Negocio",
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                fontSize = 20.sp,
-            )
+            when {
+                cargando.value -> {
+                    CircularProgressIndicator(color = Color(0xFF9605F7))
+                }
+                error.value != null -> {
+                    Text(
+                        text = "⚠️ ${error.value}",
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    )
+                }
+                negocio.value != null -> {
+                    Text(
+                        text = negocio.value!!.nombre,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        fontSize = 20.sp,
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(25.dp))
 
             SeccionNOpciones(

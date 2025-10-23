@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
+import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
 
 /**
  * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
@@ -70,6 +72,16 @@ fun PerfilPage(navController: NavController) {
             }
         }
     }
+    val vmDatos: VerDatosPersonalesViewModel = viewModel()
+    val joven = vmDatos.joven.collectAsState()
+    val cargando = vmDatos.cargando.collectAsState()
+    val error = vmDatos.error.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        vmDatos.cargarDatos(context)
+    }
+
 
     val moradoClaro = Color(0xFFE9D4FF)
     val moradoTexto = Color(0xFF9605F7)
@@ -126,12 +138,27 @@ fun PerfilPage(navController: NavController) {
             }
 
             Spacer(Modifier.height(100.dp))
-            Text(
-                text = "Nombre completo",
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                fontSize = 20.sp
-            )
+            when {
+                cargando.value -> {
+                    CircularProgressIndicator(color = Color(0xFF9605F7))
+                }
+                error.value != null -> {
+                    Text(
+                        text = "⚠️ ${error.value}",
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    )
+                }
+                joven.value != null -> {
+                    Text(
+                        text = joven.value!!.nombre,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        fontSize = 20.sp
+                    )
+                }
+            }
+
             Spacer(Modifier.height(25.dp))
 
             // Sección: Ajustes de cuenta

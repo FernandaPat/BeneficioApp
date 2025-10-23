@@ -22,6 +22,7 @@ fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesV
     val cargando = vm.cargando.collectAsState()
     val error = vm.error.collectAsState()
 
+
     // ✅ Llamar automáticamente al cargar la pantalla
     LaunchedEffect(Unit) {
         vm.cargarDatos(context)
