@@ -42,6 +42,7 @@ import mx.mfpp.beneficioapp.utils.normalizarUrlImagen
 import mx.mfpp.beneficioapp.viewmodel.BusquedaViewModel
 import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
 import mx.mfpp.beneficioapp.viewmodel.PromocionJovenViewModel
+import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -96,6 +97,13 @@ fun InicioPage(
     var favoritosLoading by remember { mutableStateOf(false) }
 
     val fotoPerfil = sessionManager.getFotoPerfil()
+
+    val vmDatosJoven: VerDatosPersonalesViewModel = viewModel()
+    
+
+    LaunchedEffect(Unit) {
+        vmDatosJoven.cargarDatos(context)
+    }
 
     // Cargar favoritos cuando el usuario esté logueado
     LaunchedEffect(Unit) {
