@@ -11,7 +11,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.R
+import mx.mfpp.beneficioapp.data.local.AppDatabase
+import mx.mfpp.beneficioapp.data.local.NotificacionEntity
 import mx.mfpp.beneficioapp.view.MainActivity
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
@@ -31,9 +36,26 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         // ✅ LEER DATOS (ahora título y mensaje están en data)
         val idPromocion = message.data["id_promocion"]
+        val idEstablecimiento = message.data["id_establecimiento"]
         val nombreEstablecimiento = message.data["nombre_establecimiento"]
-        val titulo = message.data["titulo"] ?: "Nueva promoción"  // ← Desde data
-        val cuerpo = message.data["mensaje"] ?: ""                 // ← Desde data
+        val titulo = message.data["titulo"] ?: "Nueva promoción"
+        val cuerpo = message.data["mensaje"] ?: ""
+        val tipo = message.data["tipo"] ?: "promocion"
+
+
+        Log.d(TAG, "📬 Notificación recibida")
+        Log.d(TAG, "📝 Título: $titulo")
+        Log.d(TAG, "📝 Mensaje: $cuerpo")
+        Log.d(TAG, "🏪 Establecimiento: $nombreEstablecimiento")
+
+        guardarNotificacionEnRoom(
+            titulo = titulo,
+            mensaje = cuerpo,
+            tipo = tipo,
+            idPromocion = idPromocion,
+            idEstablecimiento = idEstablecimiento,
+            nombreEstablecimiento = nombreEstablecimiento
+        )
 
         // ✅ MOSTRAR NOTIFICACIÓN (siempre, en cualquier estado de la app)
         mostrarNotificacion(
@@ -42,6 +64,36 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             idPromocion = idPromocion,
             nombreEstablecimiento = nombreEstablecimiento
         )
+    }
+
+    private fun guardarNotificacionEnRoom(
+        titulo: String,
+        mensaje: String,
+        tipo: String,
+        idPromocion: String?,
+        idEstablecimiento: String?,
+        nombreEstablecimiento: String?
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val db = AppDatabase.getDatabase(applicationContext)
+                val notificacion = NotificacionEntity(
+                    titulo = titulo,
+                    mensaje = mensaje,
+                    tipo = tipo,
+                    idPromocion = idPromocion,
+                    idEstablecimiento = idEstablecimiento,
+                    nombreEstablecimiento = nombreEstablecimiento,
+                    timestamp = System.currentTimeMillis(),
+                    leida = false
+                )
+
+                val id = db.notificacionDao().insertar(notificacion)
+                Log.d(TAG, "✅ Notificación guardada en Room con ID: $id")
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ Error al guardar en Room: ${e.message}", e)
+            }
+        }
     }
 
     private fun mostrarNotificacion(
