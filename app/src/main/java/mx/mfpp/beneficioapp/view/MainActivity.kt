@@ -441,6 +441,9 @@ fun AppNavHost(
         composable(Pantalla.RUTA_NOTIFICACIONES_APP) {
             NotificacionPage(navController)
         }
+        composable(Pantalla.RUTA_DATOSNEGOCIO_APP) {
+            VerDatosNegocioPage(navController)
+        }
     }
 }
 

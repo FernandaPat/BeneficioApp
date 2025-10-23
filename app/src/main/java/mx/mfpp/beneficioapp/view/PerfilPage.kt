@@ -144,7 +144,6 @@ fun PerfilPage(navController: NavController) {
                     OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
                         navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
                     },
-                    OpcionData(R.drawable.user, "Editar datos personales"),
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
                 )
             )
