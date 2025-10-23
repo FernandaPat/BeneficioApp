@@ -34,47 +34,39 @@ class QRViewModel : ViewModel() {
         _error.value = null
 
         viewModelScope.launch {
-            try {
-                val response = ServicioRemotoQR.generarQR(idJoven, idPromocion)
-                if (response != null && response.success) {
-                    _qrTokenResponse.value = response
-                    _qrBitmap.value = generateQRCodeNoMargin(response.token)
-                } else {
-                    _error.value = "No se pudo generar el QR"
-                }
-            } catch (e: Exception) {
-                _error.value = "Error al generar QR: ${e.message}"
-            } finally {
-                _isLoading.value = false
+            val (response, errorMessage) = ServicioRemotoQR.generarQR(idJoven, idPromocion)
+
+            if (response != null) {
+                _qrTokenResponse.value = response
+                _qrBitmap.value = generateQRCodeNoMargin(response.token)
+            } else {
+                _error.value = errorMessage ?: "No se pudo generar el QR."
             }
+
+            _isLoading.value = false
         }
     }
 
+
     private fun generateQRCodeNoMargin(token: String): Bitmap {
-        // Configuración con MARGEN MUY PEQUEÑO
-        val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java)
-        hints[EncodeHintType.ERROR_CORRECTION] = ErrorCorrectionLevel.L
-        hints[EncodeHintType.MARGIN] = 1 // MARGEN MUY PEQUEÑO (1 pixel)
-        hints[EncodeHintType.CHARACTER_SET] = "UTF-8"
+        val size = 500 // tamaño final del QR (ajústalo a gusto)
+        val hints = mapOf(
+            EncodeHintType.MARGIN to 1, // un poco de aire alrededor
+            EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
+            EncodeHintType.CHARACTER_SET to "UTF-8"
+        )
 
-        // Tamaño de matriz
-        val matrixSize = 100
-
-        val writer = QRCodeWriter()
-        val bitMatrix = writer.encode(token, BarcodeFormat.QR_CODE, matrixSize, matrixSize, hints)
-
-        // Crear bitmap directamente desde la matriz
-        val bitmap = Bitmap.createBitmap(matrixSize, matrixSize, Bitmap.Config.ARGB_8888)
+        val bitMatrix = QRCodeWriter().encode(token, BarcodeFormat.QR_CODE, size, size, hints)
         val moradoColor = 0xFF9605F7.toInt()
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
 
-        for (x in 0 until matrixSize) {
-            for (y in 0 until matrixSize) {
+        for (x in 0 until size) {
+            for (y in 0 until size) {
                 bitmap.setPixel(x, y, if (bitMatrix[x, y]) moradoColor else 0xFFFFFFFF.toInt())
             }
         }
 
-        // Escalar al tamaño final
-        return Bitmap.createScaledBitmap(bitmap, 512, 512, true)
+        return bitmap
     }
 
     fun clear() {

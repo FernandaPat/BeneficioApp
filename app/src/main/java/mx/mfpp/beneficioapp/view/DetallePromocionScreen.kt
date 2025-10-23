@@ -62,33 +62,33 @@ fun DetallePromocionScreen(
                 title = {
                     Text(
                         if (applyResult == true) "Promoción Aplicada"
-                        else "Detalles de promoción"
+                        else "Detalles de promoción",
+                        fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        navController.popBackStack()
-                    }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     titleContentColor = Color.Black
-                )
+                ),
+                scrollBehavior = null
             )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color(0xFFFDFDFD))
                 .padding(padding)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             when {
                 isApplying -> {
-                    // Estado: Aplicando promoción
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -110,46 +110,43 @@ fun DetallePromocionScreen(
                 }
 
                 applyResult == true -> {
-                    // Estado: Éxito - Promoción aplicada
                     Column(
                         modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = "Éxito",
                             tint = Color(0xFF4CAF50),
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(bottom = 16.dp)
+                            modifier = Modifier.size(90.dp)
                         )
 
                         Text(
                             text = "¡Promoción Aplicada!",
-                            fontSize = 24.sp,
+                            fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF4CAF50),
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                            textAlign = TextAlign.Center
                         )
-
-                        Spacer(modifier = Modifier.height(32.dp))
 
                         if (promocionData != null) {
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF))
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF)),
+                                elevation = CardDefaults.cardElevation(8.dp)
                             ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
                                     Text(
                                         text = promocionData["nombrePromocion"] as String,
-                                        fontSize = 20.sp,
+                                        fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF9605F7)
                                     )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
 
                                     InfoRow("Número de tarjeta:", "•••• ${(promocionData["numeroTarjeta"] as String).takeLast(4)}")
                                     InfoRow("Fecha:", promocionData["fecha"] as String)
@@ -158,86 +155,87 @@ fun DetallePromocionScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
-
                         Button(
-                            onClick = {
-                                navController.popBackStack()
-                            },
-                            modifier = Modifier.fillMaxWidth(),
+                            onClick = { navController.popBackStack() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF9605F7),
-                                contentColor = Color.White
+                                containerColor = Color(0xFFE9d4ff),
+                                contentColor = Color(0xFF9605f7)
                             ),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(30.dp)
                         ) {
-                            Text("Aceptar", fontSize = 16.sp)
+                            Text("Aceptar", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 applyResult == false -> {
-                    // Estado: Error
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Error,
                             contentDescription = "Error",
                             tint = Color.Red,
-                            modifier = Modifier.size(80.dp)
+                            modifier = Modifier.size(90.dp)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Error al activar promoción",
                             color = Color.Red,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             errorMessage ?: "No se pudo activar la promoción",
                             color = Color.Gray,
                             textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = {
                                 viewModel.resetScannerState()
                                 navController.popBackStack()
-                            }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF9605F7),
+                                contentColor = Color.White
+                            )
                         ) {
-                            Text("Volver")
+                            Text("Volver", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 else -> {
-                    // Estado inicial - Mostrar detalles y botón Activar
                     if (promocionData != null) {
                         Column(
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
-                            // Información de la promoción
                             Card(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF))
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F5FF)),
+                                elevation = CardDefaults.cardElevation(8.dp)
                             ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(24.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
                                     Text(
                                         text = promocionData["nombrePromocion"] as String,
-                                        fontSize = 20.sp,
+                                        fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF9605F7)
                                     )
-
-                                    Spacer(modifier = Modifier.height(16.dp))
 
                                     InfoRow("Número de tarjeta:", "•••• ${(promocionData["numeroTarjeta"] as String).takeLast(4)}")
                                     InfoRow("Fecha:", promocionData["fecha"] as String)
@@ -247,67 +245,65 @@ fun DetallePromocionScreen(
 
                             Spacer(modifier = Modifier.weight(1f))
 
-                            // Botón Activar
                             Button(
                                 onClick = {
-                                    // Llamar al endpoint para aplicar la promoción
                                     viewModel.aplicarPromocion(
                                         idTarjeta = promocionData["id_tarjeta"] as Int,
                                         idPromocion = promocionData["id_promocion"] as Int,
                                         idEstablecimiento = promocionData["id_establecimiento"] as Int,
-                                        onSuccess = {
-                                            // Éxito - el estado se actualiza automáticamente
-                                        },
-                                        onError = {
-                                            // Error - el estado se actualiza automáticamente
-                                        }
+                                        onSuccess = {},
+                                        onError = {}
                                     )
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
+                                    .padding(15.dp)
                                     .height(56.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF9605F7),
-                                    contentColor = Color.White
+                                    containerColor = Color(0xFFE9d4ff),
+                                    contentColor = Color(0xFF9605f7)
                                 ),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(30.dp)
                             ) {
-                                Text("Activar Promoción", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text("Activar Promoción", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
-                        // Datos inválidos
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Error,
                                 contentDescription = "Error",
                                 tint = Color.Red,
-                                modifier = Modifier.size(80.dp)
+                                modifier = Modifier.size(90.dp)
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 "Error al leer datos del QR",
                                 color = Color.Red,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
                                 "El código QR escaneado no es válido",
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(24.dp))
                             Button(
-                                onClick = { navController.popBackStack() }
+                                onClick = { navController.popBackStack() },
+                                modifier = Modifier.fillMaxWidth().padding(15.dp),
+                                shape = RoundedCornerShape(30.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFE9d4ff),
+                                    contentColor = Color(0xFF9605f7)
+                                )
                             ) {
-                                Text("Volver al escáner")
+                                Text("Volver al escáner", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -319,11 +315,10 @@ fun DetallePromocionScreen(
 
 @Composable
 fun InfoRow(label: String, value: String) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(vertical = 8.dp)
     ) {
         Text(
             text = label,
@@ -331,6 +326,7 @@ fun InfoRow(label: String, value: String) {
             color = Color.Gray,
             fontSize = 16.sp
         )
+        Spacer(modifier = Modifier.height(4.dp)) // espacio pequeño
         Text(
             text = value,
             fontWeight = FontWeight.SemiBold,
