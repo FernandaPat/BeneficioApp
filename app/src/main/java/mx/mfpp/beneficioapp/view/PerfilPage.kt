@@ -1,30 +1,27 @@
 package mx.mfpp.beneficioapp.view
 
-import android.app.Dialog
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -41,53 +38,30 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
-import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
-import android.widget.Toast
-import androidx.compose.material.icons.filled.Save
-import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.SubirFotoJovenViewModel
+import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
 
-/**
- * Pantalla de perfil de usuario que permite gestionar la información personal y configuración de la cuenta.
- *
- * Esta pantalla incluye funcionalidades para:
- * - Cambiar la imagen de perfil del usuario
- * - Gestionar ajustes de cuenta (contraseña, datos personales)
- * - Cerrar sesión con diálogo de confirmación
- * - Acceder a información adicional y ayuda
- *
- * Utiliza un diseño con encabezado morado, imagen de perfil circular editable y secciones
- * organizadas en tarjetas para las diferentes opciones de configuración.
- *
- * @param navController Controlador de navegación utilizado para manejar la navegación entre pantallas
- *
- * @see SeccionOpciones Componente reutilizable para mostrar listas de opciones en secciones
- * @see OpcionData Clase de datos que representa una opción en las secciones
- */
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
     val viewModel: PerfilViewModel = viewModel()
     val vmSubirFoto: SubirFotoJovenViewModel = viewModel()
+    val vmDatos: VerDatosPersonalesViewModel = viewModel()
 
+    val joven = vmDatos.joven.collectAsState()
+    val cargando = vmDatos.cargando.collectAsState()
+    val error = vmDatos.error.collectAsState()
+    val context = LocalContext.current
 
+    // 🔄 Cargar datos iniciales del joven
     LaunchedEffect(Unit) {
+        vmDatos.cargarDatos(context)
         viewModel.logoutEvent.collect {
             navController.navigate(Pantalla.RUTA_JN_APP) {
                 popUpTo(0)
             }
         }
     }
-    val vmDatos: VerDatosPersonalesViewModel = viewModel()
-    val joven = vmDatos.joven.collectAsState()
-    val cargando = vmDatos.cargando.collectAsState()
-    val error = vmDatos.error.collectAsState()
-    val context = LocalContext.current
-
-    LaunchedEffect(Unit) {
-        vmDatos.cargarDatos()
-    }
-
 
     val moradoClaro = Color(0xFFE9D4FF)
     val moradoTexto = Color(0xFF9605F7)
@@ -97,10 +71,9 @@ fun PerfilPage(navController: NavController) {
         uri = result
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().background(Color.White)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
             // === ENCABEZADO ===
             Box(
                 modifier = Modifier.fillMaxWidth().background(moradoClaro).height(180.dp)
@@ -124,7 +97,7 @@ fun PerfilPage(navController: NavController) {
                         .offset(y = 80.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Fondo redondeado
+                    // Fondo circular
                     Box(
                         modifier = Modifier
                             .matchParentSize()
@@ -132,10 +105,7 @@ fun PerfilPage(navController: NavController) {
                             .background(Color(0xFFF5F5F5))
                     )
 
-                    // 🔄 Mostrar imagen en el siguiente orden de prioridad:
-                    // 1. Nueva seleccionada (uri)
-                    // 2. Foto del backend (joven.value?.foto)
-                    // 3. Botón para agregar
+                    // Mostrar imagen (1. Nueva, 2. API, 3. Placeholder)
                     when {
                         uri != null -> {
                             AsyncImage(
@@ -148,7 +118,7 @@ fun PerfilPage(navController: NavController) {
                         joven.value?.foto?.isNotBlank() == true -> {
                             AsyncImage(
                                 model = joven.value!!.foto,
-                                contentDescription = "Foto actual del perfil",
+                                contentDescription = "Foto actual del joven",
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier.matchParentSize().clip(CircleShape)
                             )
@@ -167,7 +137,7 @@ fun PerfilPage(navController: NavController) {
                         }
                     }
 
-                    // 🟣 Botón flotante de edición arriba a la derecha
+                    // 🟣 Botón flotante editar
                     IconButton(
                         onClick = { pickImage.launch("image/*") },
                         modifier = Modifier
@@ -185,41 +155,30 @@ fun PerfilPage(navController: NavController) {
                         )
                     }
                 }
-
             }
 
             Spacer(Modifier.height(100.dp))
             when {
-                cargando.value -> {
-                    CircularProgressIndicator(color = Color(0xFF9605F7))
-                }
-                error.value != null -> {
-                    Text(
-                        text = "⚠️ ${error.value}",
-                        color = Color.Red,
-                        fontSize = 16.sp
-                    )
-                }
-                joven.value != null -> {
-                    Text(
-                        text = joven.value!!.nombre,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.Black,
-                        fontSize = 20.sp
-                    )
-                }
+                cargando.value -> CircularProgressIndicator(color = moradoTexto)
+                error.value != null -> Text("⚠️ ${error.value}", color = Color.Red, fontSize = 16.sp)
+                joven.value != null -> Text(
+                    text = joven.value!!.nombre,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black,
+                    fontSize = 20.sp
+                )
             }
 
             Spacer(Modifier.height(25.dp))
 
-            // Sección: Ajustes de cuenta
+            // === SECCIÓN AJUSTES DE CUENTA ===
             SeccionOpciones(
                 titulo = "Ajustes de cuenta",
                 opciones = listOf(
                     OpcionData(R.drawable.lock, "Cambiar Contraseña") {
                         navController.navigate(Pantalla.RUTA_RECUPERAR_CONTRASENA)
                     },
-                    OpcionData(R.drawable.user, "Ver datos personales") { // <--- cambio de "Editar" a "Ver"
+                    OpcionData(R.drawable.user, "Ver datos personales") {
                         navController.navigate(Pantalla.RUTA_DATOSPERSONALES_APP)
                     },
                     OpcionData(R.drawable.logout, "Cerrar Sesión") { mostrarDialogo = true }
@@ -228,7 +187,7 @@ fun PerfilPage(navController: NavController) {
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // Sección: Más información
+            // === SECCIÓN MÁS INFORMACIÓN ===
             SeccionOpciones(
                 titulo = "Más información",
                 opciones = listOf(
@@ -242,11 +201,9 @@ fun PerfilPage(navController: NavController) {
             )
         }
 
-        // === DIÁLOGO DE CIERRE DE SESIÓN ===
+        // === DIÁLOGO CIERRE DE SESIÓN ===
         if (mostrarDialogo) {
-            Dialog(
-                onDismissRequest = { mostrarDialogo = false }
-            ) {
+            Dialog(onDismissRequest = { mostrarDialogo = false }) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = Color.White,
@@ -258,7 +215,6 @@ fun PerfilPage(navController: NavController) {
                             .widthIn(min = 280.dp, max = 360.dp)
                             .padding(bottom = 16.dp)
                     ) {
-                        // Parte superior decorativa
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -269,7 +225,6 @@ fun PerfilPage(navController: NavController) {
 
                         Spacer(Modifier.height(16.dp))
 
-                        // Texto de confirmación
                         Text(
                             text = "¿Quieres cerrar la sesión?",
                             color = Color.Black,
@@ -282,7 +237,6 @@ fun PerfilPage(navController: NavController) {
 
                         Spacer(Modifier.height(24.dp))
 
-                        // Botones
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -323,7 +277,8 @@ fun PerfilPage(navController: NavController) {
                 }
             }
         }
-        // === BOTÓN FLOTANTE GUARDAR ===
+
+        // === BOTÓN FLOTANTE GUARDAR FOTO ===
         val mensaje by vmSubirFoto.mensaje.collectAsState()
         val subiendo by vmSubirFoto.subiendo.collectAsState()
 
@@ -331,6 +286,7 @@ fun PerfilPage(navController: NavController) {
             LaunchedEffect(it) {
                 Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                 vmSubirFoto.limpiarMensaje()
+                vmDatos.cargarDatos(context) // 🔄 refresca datos después de subir
                 uri = null
             }
         }
@@ -356,7 +312,6 @@ fun PerfilPage(navController: NavController) {
                     .padding(32.dp)
             )
         }
-
     }
 }
 

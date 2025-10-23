@@ -1,7 +1,7 @@
 package mx.mfpp.beneficioapp.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.Context
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +10,7 @@ import mx.mfpp.beneficioapp.model.Joven
 import mx.mfpp.beneficioapp.model.ServicioRemotoObtenerDatosJoven
 import mx.mfpp.beneficioapp.model.SessionManager
 
-class VerDatosPersonalesViewModel(application: Application) : AndroidViewModel(application) {
+class VerDatosPersonalesViewModel : ViewModel() {
 
     private val _joven = MutableStateFlow<Joven?>(null)
     val joven: StateFlow<Joven?> = _joven
@@ -21,26 +21,24 @@ class VerDatosPersonalesViewModel(application: Application) : AndroidViewModel(a
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    fun cargarDatos() {
+    fun cargarDatos(context: Context) {
         viewModelScope.launch {
             try {
-                val session = SessionManager(getApplication())
+                val session = SessionManager(context)
                 val idUsuario = session.getJovenId()
 
                 if (idUsuario == null) {
-                    _error.value = "No se encontró ID de usuario en sesión."
+                    _error.value = "No se encontró ID del usuario en sesión."
                     _cargando.value = false
                     return@launch
                 }
 
                 val datos = ServicioRemotoObtenerDatosJoven.obtenerDatosJoven(idUsuario)
-
                 if (datos != null) {
                     _joven.value = datos
 
-                    // ✅ Guarda la URL de la foto directamente en la sesión
-                    val sessionManager = SessionManager(getApplication())
-                    sessionManager.setFotoPerfil(datos.foto)
+                    // ✅ Guarda la URL de la foto directamente en la sesión (igual que en negocio)
+                    session.setFotoPerfil(datos.foto)
                 } else {
                     _error.value = "No se pudieron cargar los datos del joven."
                 }

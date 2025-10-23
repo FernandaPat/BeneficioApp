@@ -25,12 +25,14 @@ class SubirFotoJovenViewModel(application: Application) : AndroidViewModel(appli
         viewModelScope.launch {
             try {
                 _subiendo.value = true
-                val idUsuario = session.getJovenId()     ?: 0
+                val idUsuario = session.getJovenId() ?: 0
                 val base64 = repo.convertirUriABase64(uri)
                 val exito = repo.subirFotoJoven(base64, idUsuario)
 
-
-
+                _mensaje.value = if (exito)
+                    "✅ Foto actualizada correctamente"
+                else
+                    "❌ Error al subir la foto"
             } catch (e: Exception) {
                 e.printStackTrace()
                 _mensaje.value = "⚠️ Error inesperado"

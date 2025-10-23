@@ -16,18 +16,19 @@ import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
 
 @Composable
-fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesViewModel = viewModel()) {
+fun VerDatosPersonalesPage(
+    navController: NavController,
+    vm: VerDatosPersonalesViewModel = viewModel()
+) {
     val context = LocalContext.current
     val joven = vm.joven.collectAsState()
     val cargando = vm.cargando.collectAsState()
     val error = vm.error.collectAsState()
 
-
-    // ✅ Llamar automáticamente al cargar la pantalla
+    // ✅ Carga automática al entrar en pantalla (ahora igual que en negocio)
     LaunchedEffect(Unit) {
-        vm.cargarDatos()
+        vm.cargarDatos(context)
     }
-
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Datos Personales") },
@@ -52,7 +53,7 @@ fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesV
 
                 joven.value != null -> {
                     Text(
-                        text = "Consulta tu información registrada.",
+                        text = "Consulta la información registrada de tu cuenta.",
                         color = Color(0xFF5B5B5B),
                         fontSize = 16.sp
                     )
@@ -70,7 +71,6 @@ fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesV
                             DatoPersonalItem("Dirección", joven.value!!.direccion)
                         }
                     }
-
                 }
             }
         }
