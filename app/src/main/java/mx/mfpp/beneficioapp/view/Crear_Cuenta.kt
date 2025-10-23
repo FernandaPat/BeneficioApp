@@ -59,15 +59,22 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import mx.mfpp.beneficioapp.viewmodel.CrearCuentaViewModel
 import androidx.compose.ui.text.style.TextDecoration
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
+import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 
 /**
@@ -91,7 +98,7 @@ fun Crear_Cuenta(
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-    var aceptado by remember { mutableStateOf(false) }
+    var mostrarDialogo by remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -168,52 +175,42 @@ fun Crear_Cuenta(
                     )
                 )
             }
+            Spacer(Modifier.height(25.dp))
             // === CONSENTIMIENTO ===
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 30.dp)
+                    .padding(horizontal = 15.dp)
             ) {
                 Checkbox(
-                    checked = aceptado,
-                    onCheckedChange = { isChecked ->
-                        aceptado = isChecked
-                        if (isChecked) {
-                            // 🔹 Navega automáticamente a Términos al marcar el checkbox
-                            navController.navigate(Pantalla.RUTA_TERMINOS_CONDICIONES)
+                    checked = usuario.consentimientoAceptado,
+                    onCheckedChange = { checked ->
+                        if (!usuario.consentimientoAceptado && checked) {
+                            mostrarDialogo = true // muestra el diálogo solo si intenta aceptarlo
+                        } else {
+                            viewModel.onConsentimientoChange(false) // si lo desmarca manualmente
                         }
-                    }
+                    },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Color(0xFFE9d4ff),      // color de la palomita cuando está marcado
+                        checkmarkColor = Color(0xFF9605f7),    // color de la palomita misma si quieres más contraste
+                        uncheckedColor = Color(0xFFE9d4ff)     // color del borde cuando no está marcado
+                    )
                 )
-
                 Text(
                     buildAnnotatedString {
-                        append("He leído y acepto los ")
-                        withStyle(
-                            style = SpanStyle(
-                                color = MaterialTheme.colorScheme.primary,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        ) {
-                            append("Términos y Condiciones")
-                        }
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
-                            append(" *")
+                        append("He leído y acepto los Términos y Condiciones ")
+                        withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                            append("*")
                         }
                     },
                     fontSize = 13.sp,
-                    color = Color.Black,
-                    modifier = Modifier
-                        .clickable {
-                            // 🔹 También puede navegar si toca el texto
-                            navController.navigate(Pantalla.RUTA_TERMINOS_CONDICIONES)
-                        }
+                    modifier = Modifier.clickable { mostrarDialogo = true }
                 )
             }
 
-
-
-            Spacer(Modifier.height(5.dp))
+            Spacer(Modifier.height(20.dp))
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -273,6 +270,18 @@ fun Crear_Cuenta(
             Spacer(Modifier.height(60.dp))
         }
     }
+    // --- Diálogo modular de Términos ---
+    TerminosDialog(
+        mostrar = mostrarDialogo,
+        onAceptar = {
+            viewModel.onConsentimientoChange(true)
+            mostrarDialogo = false
+        },
+        onCancelar = {
+            viewModel.onConsentimientoChange(false)
+            mostrarDialogo = false
+        }
+    )
 }
 /**
  * Extensión de [Modifier] para aplicar un estilo de entrada uniforme
@@ -291,6 +300,150 @@ fun Modifier.beneficioInput(): Modifier = this
  * @param modifier Modificador opcional para el diseño del contenedor.
  * @param onAddressChange Callback que devuelve la dirección actualizada.
  */
+@Composable
+fun TerminosDialog(
+    mostrar: Boolean,
+    onAceptar: () -> Unit,
+    onCancelar: () -> Unit
+) {
+    if (mostrar) {
+        Dialog(onDismissRequest = { onCancelar() }) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = Color.White,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .padding(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Términos y Condiciones de Uso – Atizapp",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF9605F7)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = "Última actualización: octubre 2025",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                    Spacer(Modifier.height(16.dp))
+
+                    // === Contenido completo seccionado ===
+                    Text(
+                        text = """
+Bienvenido(a) a Atizapp, una aplicación desarrollada en colaboración con el Municipio de Atizapán de Zaragoza con el propósito de ofrecer beneficios, descuentos y promociones a jóvenes registrados dentro del programa Beneficio Joven. 
+Al utilizar esta aplicación, usted acepta los siguientes Términos y Condiciones. 
+Si no está de acuerdo con alguno de ellos, deberá abstenerse de usar la plataforma.
+                        """.trimIndent(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+
+                    Text("1. Definiciones", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Atizapp: Plataforma móvil que digitaliza la Tarjeta Beneficio Joven.
+• Usuario Joven: Persona de entre 12 y 29 años registrada en el programa Beneficio Joven.
+• Usuario Negocio: Establecimiento o comercio afiliado que ofrece beneficios a los jóvenes registrados.
+• Administrador: Personal autorizado por el Municipio para supervisar, validar y gestionar la aplicación.
+                    """.trimIndent())
+
+                    Text("2. Condiciones de Uso", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• El uso de Atizapp es gratuito para los jóvenes y negocios participantes.
+• El usuario se compromete a utilizar la aplicación de manera responsable, lícita y conforme a estos Términos y Condiciones.
+• El acceso a los beneficios está condicionado al registro con datos verídicos y validación del CURP.
+• Cada usuario tendrá una cuenta única, personal e intransferible.
+                    """.trimIndent())
+
+                    Text("3. Registro y Autenticación", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• El usuario deberá proporcionar datos personales verídicos.
+• La información será protegida conforme a la Ley General de Protección de Datos Personales.
+• Atizapp no solicitará contraseñas por medios distintos a la propia aplicación.
+                    """.trimIndent())
+
+                    Text("4. Promociones y Beneficios", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Las promociones publicadas son responsabilidad de los comercios afiliados.
+• El Municipio y Atizapp no se hacen responsables por la disponibilidad o cumplimiento de las promociones.
+• El usuario podrá redimir beneficios mediante la lectura de su código QR en el establecimiento correspondiente.
+                    """.trimIndent())
+
+                    Text("5. Privacidad y Protección de Datos", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Atizapp recopila únicamente la información necesaria para su funcionamiento.
+• Los datos personales no serán vendidos ni transferidos sin autorización expresa.
+• El usuario puede solicitar la eliminación de sus datos enviando un correo al área responsable del programa Beneficio Joven.
+                    """.trimIndent())
+
+                    Text("6. Uso Indebido y Sanciones", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Se prohíbe el uso de la aplicación para fines fraudulentos o ilegales.
+• Cualquier intento de manipulación del sistema o uso de identidades falsas podrá resultar en la suspensión de la cuenta.
+                    """.trimIndent())
+
+                    Text("7. Limitación de Responsabilidad", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Atizapp no se responsabiliza por fallos técnicos, interrupciones del servicio o pérdida de información ocasionada por factores externos.
+• El Municipio y los desarrolladores no garantizan la disponibilidad continua de la plataforma.
+                    """.trimIndent())
+
+                    Text("8. Propiedad Intelectual", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Todos los derechos sobre el diseño, código fuente, logotipos y contenido pertenecen al Municipio de Atizapán o sus desarrolladores autorizados.
+• Queda prohibida la reproducción total o parcial sin consentimiento previo por escrito.
+                    """.trimIndent())
+
+                    Text("9. Modificaciones", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+• Los presentes Términos y Condiciones podrán ser modificados en cualquier momento.
+• Las actualizaciones se notificarán a través de la aplicación o en el sitio web oficial del Municipio.
+                    """.trimIndent())
+
+                    Text("10. Contacto", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("""
+Para dudas, comentarios o solicitudes relacionadas con estos Términos y Condiciones, puede comunicarse a:
+beneficiojoven@atizapan.gob.mx
+Dirección de Juventud – Municipio de Atizapán de Zaragoza
+                    """.trimIndent(), textAlign = TextAlign.Start)
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // --- Botones ---
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(onClick = { onCancelar() }) {
+                            Text("Cancelar", color = Color.Gray)
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Button(
+                            onClick = { onAceptar() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFFE9D4FF)
+                            )
+                        ) {
+                            Text(
+                                text = "Aceptar",
+                                color = Color(0xFF9605F7),
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 @Composable
 fun SeccionDireccion(
     modifier: Modifier = Modifier,

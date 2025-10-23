@@ -16,6 +16,8 @@ zxing = "3.4.1"
 googleServices = "4.4.2"
 firebaseBom = "33.7.0"
 lifecycleViewmodelKtx = "2.9.4"
+foundationLayout = "1.9.3"
+material3 = "1.4.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +44,8 @@ play-services-maps = { module = "com.google.android.gms:play-services-maps", ver
 
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
+androidx-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
+material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
