@@ -16,20 +16,32 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,17 +62,47 @@ import mx.mfpp.beneficioapp.viewmodel.CategoriasViewModel
  * @param categoriasViewModel ViewModel para categorías
  * @param busquedaViewModel ViewModel para búsqueda
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ExplorarPage(
     navController: NavController,
     categoriasViewModel: CategoriasViewModel = viewModel(),
-    busquedaViewModel: BusquedaViewModel = viewModel() // Asegúrate de usar el mismo ViewModel
+    busquedaViewModel: BusquedaViewModel = viewModel()
 ) {
     val categorias by categoriasViewModel.categorias.collectAsState()
     val categoriasLoading by categoriasViewModel.isLoading.collectAsState()
     val categoriasError by categoriasViewModel.error.collectAsState()
 
     val searchText by busquedaViewModel.textoBusqueda.collectAsState()
+
+    // Estado local para el texto temporal de búsqueda
+    var tempSearchText by remember { mutableStateOf("") }
+    var shouldNavigateToSearch by remember { mutableStateOf(false) }
+
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    val context = LocalContext.current
+
+    // Cargar establecimientos al iniciar
+    LaunchedEffect(Unit) {
+        busquedaViewModel.cargarEstablecimientos(context)
+        // Inicializar el texto temporal con el texto actual del ViewModel
+        tempSearchText = searchText
+    }
+
+    // Navegar a resultados cuando se active la bandera
+    LaunchedEffect(shouldNavigateToSearch) {
+        if (shouldNavigateToSearch && tempSearchText.isNotEmpty()) {
+            // Actualizar el ViewModel con el texto final
+            busquedaViewModel.actualizarTextoBusqueda(tempSearchText)
+            // Navegar a resultados
+            navController.navigate("${Pantalla.RUTA_RESULTADOS_CON_TEXTO.replace("{query}", tempSearchText)}")
+            shouldNavigateToSearch = false
+            // Ocultar teclado
+            keyboardController?.hide()
+        }
+    }
 
     Scaffold { paddingValues ->
         Column(
@@ -72,8 +114,17 @@ fun ExplorarPage(
             Spacer(modifier = Modifier.height(60.dp))
 
             SearchBar(
-                searchText = searchText,
-                onSearchTextChanged = { busquedaViewModel.actualizarTextoBusqueda(it) },
+                searchText = tempSearchText,
+                onSearchTextChanged = {
+                    tempSearchText = it
+                    // Solo actualizar el ViewModel localmente, sin navegar
+                },
+                onSearchExecute = {
+                    if (tempSearchText.isNotEmpty()) {
+                        shouldNavigateToSearch = true
+                    }
+                },
+                focusRequester = focusRequester,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -146,7 +197,7 @@ fun ExplorarPage(
                                 onCategoryClicked = {
                                     println("🎯 ExplorarPage: Navegando a resultados con categoría: ${categoria.nombre}")
                                     busquedaViewModel.seleccionarCategoria(categoria.nombre)
-                                    navController.navigate("${Pantalla.RUTA_RESULTADOS_APP}/${categoria.nombre}")
+                                    navController.navigate("${Pantalla.RUTA_RESULTADOS_CON_CATEGORIA.replace("{categoria}", categoria.nombre)}")
                                 }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
@@ -182,7 +233,6 @@ fun CategoryButton(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Usa el icono específico de la categoría en lugar del circulestar genérico
             Icon(
                 painter = painterResource(id = categoria.iconoResId),
                 contentDescription = "Categoría ${categoria.nombre}",
@@ -207,14 +257,21 @@ fun CategoryButton(
  *
  * @param searchText Texto actual de búsqueda
  * @param onSearchTextChanged Callback invocado cuando cambia el texto de búsqueda
+ * @param onSearchExecute Callback invocado cuando se ejecuta la búsqueda (Enter o botón)
+ * @param focusRequester Para manejar el foco del teclado
  * @param modifier Modificador de Composable para personalizar el layout
  */
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SearchBar(
     searchText: String,
     onSearchTextChanged: (String) -> Unit,
+    onSearchExecute: () -> Unit = {},
+    focusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Box(
         modifier = modifier
             .height(50.dp)
@@ -239,8 +296,15 @@ fun SearchBar(
                 onValueChange = onSearchTextChanged,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.Transparent),
+                    .background(Color.Transparent)
+                    .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        onSearchExecute()
+                    }
+                ),
                 decorationBox = { innerTextField ->
                     if (searchText.isEmpty()) {
                         Text(
