@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    kotlin("kapt")
 }
 
 android {
@@ -91,6 +92,11 @@ dependencies {
     //Librerias para notificaciones
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
+
+    //librerias Room (Notificaciones locales)
+    implementation("androidx.room:room-runtime:2.7.0-alpha11")
+    implementation("androidx.room:room-ktx:2.7.0-alpha11")
+    kapt("androidx.room:room-compiler:2.7.0-alpha11")
 
     implementation(libs.zxing.core)
     implementation(libs.play.services.location)
