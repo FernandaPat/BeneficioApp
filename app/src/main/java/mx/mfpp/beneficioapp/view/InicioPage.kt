@@ -93,6 +93,12 @@ fun InicioPage(
     var listaFavoritos by remember { mutableStateOf<List<FavoritoDetalle>>(emptyList()) }
     var favoritosLoading by remember { mutableStateOf(false) }
 
+    // ✅ NUEVO: Limpiar filtros cuando se entra al InicioPage
+    LaunchedEffect(Unit) {
+        Log.d("INICIO_PAGE", "🧹 Limpiando filtros al entrar a InicioPage")
+        busquedaViewModel.limpiarFiltrosCompletamente()
+    }
+
     // Cargar favoritos cuando el usuario esté logueado
     LaunchedEffect(Unit) {
         val idUsuario = sessionManager.getJovenId()

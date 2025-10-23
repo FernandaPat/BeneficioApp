@@ -1,22 +1,11 @@
-package mx.mfpp.beneficioapp.view
-
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Looper
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,6 +30,13 @@ import com.google.maps.android.compose.*
 import kotlin.math.*
 import mx.mfpp.beneficioapp.model.Establecimiento
 import mx.mfpp.beneficioapp.viewmodel.MapaViewModel
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Close
+import mx.mfpp.beneficioapp.view.Pantalla
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -113,8 +109,6 @@ fun MapaPage(
         }
     }
 
-    var query by remember { mutableStateOf("") }
-
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             hasLocationPermission = isGranted
@@ -122,7 +116,7 @@ fun MapaPage(
                 fusedLocationClient.requestLocationUpdates(
                     locationRequest,
                     locationCallback,
-                    Looper.getMainLooper()
+                    null
                 )
                 fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
                     loc?.let {
@@ -146,7 +140,7 @@ fun MapaPage(
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
-                Looper.getMainLooper()
+                null
             )
             fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
                 loc?.let {
@@ -159,8 +153,6 @@ fun MapaPage(
             permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
-
-    LaunchedEffect(query) { viewModel.filtrarEstablecimientos(query) }
 
     LaunchedEffect(error) {
         error?.let {
@@ -219,29 +211,64 @@ fun MapaPage(
                     )
                 }
 
+                // ✅ CORREGIDO: Mejor manejo de estados de carga
                 when {
-                    isLoading -> item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(100.dp),
-                            contentAlignment = Alignment.Center
-                        ) { CircularProgressIndicator() }
+                    isLoading -> {
+                        // Muestra indicador de carga
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(120.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(32.dp),
+                                        color = Color(0xFF6200EE),
+                                        strokeWidth = 3.dp
+                                    )
+                                    Text(
+                                        text = "Cargando establecimientos...",
+                                        color = Color.Gray,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
                     }
-                    listaParaSheet.isEmpty() -> item {
-                        Text(
-                            text = "No hay establecimientos disponibles",
-                            color = Color.Gray,
-                            modifier = Modifier.fillMaxWidth().padding(16.dp)
-                        )
+                    listaParaSheet.isEmpty() -> {
+                        // Solo muestra "no disponibles" cuando NO está cargando y la lista está vacía
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No hay establecimientos disponibles",
+                                    color = Color.Gray,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
                     }
-                    else -> items(listaParaSheet, key = { it.id_establecimiento }) { est ->
-                        EstablecimientoCard(
-                            establecimiento = est,
-                            ubicacionActual = ubicacionActual,
-                            onItemClick = {
-                                navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${est.id_establecimiento}")
-                            },
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
+                    else -> {
+                        // Muestra la lista cuando hay datos
+                        items(listaParaSheet, key = { it.id_establecimiento }) { est ->
+                            EstablecimientoCard(
+                                establecimiento = est,
+                                ubicacionActual = ubicacionActual,
+                                onItemClick = {
+                                    navController.navigate("${Pantalla.RUTA_NEGOCIODETALLE_APP}/${est.id_establecimiento}")
+                                },
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -262,15 +289,18 @@ fun MapaPage(
                         icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
                     )
                 } else {
-                    establecimientosOrdenados.forEach { est ->
-                        est.latitud?.let { la ->
-                            est.longitud?.let { lo ->
-                                Marker(
-                                    state = MarkerState(LatLng(la, lo)),
-                                    title = est.nombre,
-                                    snippet = "${est.nombre_categoria} • ${est.colonia}",
-                                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
-                                )
+                    // ✅ MEJORADO: Solo renderizar marcadores cuando no está cargando
+                    if (!isLoading) {
+                        establecimientosOrdenados.forEach { est ->
+                            est.latitud?.let { la ->
+                                est.longitud?.let { lo ->
+                                    Marker(
+                                        state = MarkerState(LatLng(la, lo)),
+                                        title = est.nombre,
+                                        snippet = "${est.nombre_categoria} • ${est.colonia}",
+                                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+                                    )
+                                }
                             }
                         }
                     }
@@ -285,55 +315,101 @@ fun MapaPage(
                 }
             }
 
-            // ---------------------- Search Bar ----------------------
-            SearchBar2(
-                searchText = query,
-                onSearchTextChanged = { query = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .align(Alignment.TopCenter)
-            )
-        }
-    }
-}
-
-// -------------------- Auxiliares / UI --------------------
-
-@Composable
-fun SearchBar2(
-    searchText: String,
-    onSearchTextChanged: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(50.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFFE0E4ED))
-            .padding(horizontal = 16.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Buscar",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            BasicTextField(
-                value = searchText,
-                onValueChange = onSearchTextChanged,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                decorationBox = { innerTextField ->
-                    if (searchText.isEmpty()) {
-                        Text("Buscar establecimientos...", color = Color.Gray, fontSize = 16.sp)
+            // ✅ AGREGADO: Indicador de carga sobre el mapa
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = Color(0xFF6200EE),
+                            strokeWidth = 4.dp
+                        )
+                        Text(
+                            text = "Buscando establecimientos cercanos...",
+                            color = Color.White,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.background(
+                                color = Color.Black.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(8.dp)
+                            ).padding(12.dp)
+                        )
                     }
-                    innerTextField()
                 }
-            )
+            }
+
+            // ✅ AGREGADO: Botón de recarga para casos de error o timeout
+            if (!isLoading && error == null && establecimientosOrdenados.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(
+                        onClick = { viewModel.refrescarEstablecimientos() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF6200EE)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Recargar",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Reintentar carga")
+                    }
+                }
+            }
+
+            // ✅ AGREGADO: Mostrar error específico en el mapa
+            error?.let { errorMessage ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFFFE6E6)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = errorMessage,
+                                color = Color.Red,
+                                fontSize = 14.sp,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = { viewModel.clearError() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Cerrar error",
+                                    tint = Color.Red
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -345,8 +421,6 @@ fun EstablecimientoCard(
     onItemClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var esFavorito by remember { mutableStateOf(false) }
-
     val distanciaTexto = remember(establecimiento, ubicacionActual) {
         if (ubicacionActual != null && establecimiento.latitud != null && establecimiento.longitud != null) {
             val distancia = calcularDistancia(
@@ -392,17 +466,6 @@ fun EstablecimientoCard(
                     text = "${establecimiento.nombre_categoria} • ${establecimiento.colonia} $distanciaTexto",
                     color = Color.Gray,
                     fontSize = 13.sp
-                )
-            }
-            IconButton(
-                onClick = { esFavorito = !esFavorito },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = if (esFavorito) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = "Favorito",
-                    tint = if (esFavorito) Color.Red else Color.Gray,
-                    modifier = Modifier.size(28.dp)
                 )
             }
         }

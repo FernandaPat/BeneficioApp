@@ -15,7 +15,6 @@ import mx.mfpp.beneficioapp.model.Establecimiento
 /**
  * ViewModel para manejar búsqueda y filtrado de establecimientos
  */
-
 class BusquedaViewModel : ViewModel() {
 
     private val _establecimientos = MutableStateFlow<List<Establecimiento>>(emptyList())
@@ -69,6 +68,15 @@ class BusquedaViewModel : ViewModel() {
     fun refrescarEstablecimientos(context: Context? = null) {
         Log.d("BUSQUEDA_VM", "🔄 Refrescando establecimientos")
         cargarEstablecimientos(context)
+    }
+
+    // ✅ NUEVO: Función para limpiar completamente los filtros
+    fun limpiarFiltrosCompletamente() {
+        Log.d("BUSQUEDA_VM", "🧹 Limpiando TODOS los filtros")
+        _categoriaSeleccionada.value = null
+        _textoBusqueda.value = ""
+        // Aplicar filtros para mostrar todos los establecimientos
+        aplicarFiltros()
     }
 
     fun limpiarBusqueda() {
