@@ -99,10 +99,12 @@ fun InicioPage(
     val fotoPerfil = sessionManager.getFotoPerfil()
 
     val vmDatosJoven: VerDatosPersonalesViewModel = viewModel()
-    
 
     LaunchedEffect(Unit) {
         vmDatosJoven.cargarDatos(context)
+
+        Log.d("INICIO_PAGE", "🧹 Limpiando filtros al entrar a InicioPage")
+        busquedaViewModel.limpiarFiltrosCompletamente()
     }
 
     // Cargar favoritos cuando el usuario esté logueado
