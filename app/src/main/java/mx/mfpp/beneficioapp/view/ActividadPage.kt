@@ -39,10 +39,13 @@ fun ActividadPage(
     val isLoading by historialViewModel.isLoading.collectAsState()
     val error by historialViewModel.error.collectAsState()
 
+    // Cargar historial cuando se inicia la pantalla
     LaunchedEffect(Unit) {
-        val idUsuario = sessionManager.getJovenId() ?: 0
-        if (idUsuario != 0) {
+        val idUsuario = sessionManager.getJovenId()
+        if (idUsuario != null) {
             historialViewModel.cargarHistorialUsuario(idUsuario)
+        } else {
+            historialViewModel.clearError()
         }
     }
 
@@ -114,7 +117,7 @@ fun ActividadPage(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Cupones Canjeados",
+                                    text = "Cupones Canjeados (${historial.size})", // ✅ Con contador
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 16.sp,
                                     color = Color.Gray
@@ -170,7 +173,7 @@ private fun HistorialListItem(
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
-                    model = historialItem.foto_url ?: "https://picsum.photos/200",
+                    model = historialItem.foto_url ?: "https://via.placeholder.com/200",
                     contentDescription = historialItem.titulo_promocion,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -198,6 +201,15 @@ private fun HistorialListItem(
                     fontSize = 14.sp,
                     color = Color.Gray,
                     maxLines = 2
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = historialItem.nombre_establecimiento, // ✅ SIN EMOJI
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    maxLines = 1
                 )
             }
 
@@ -235,6 +247,7 @@ private fun HistorialListItem(
         )
     }
 }
+
 
 private fun formatearFechaCorta(fecha: String): String {
     return try {

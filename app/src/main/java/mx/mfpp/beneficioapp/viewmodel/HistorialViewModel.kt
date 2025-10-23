@@ -1,4 +1,3 @@
-// mx.mfpp.beneficioapp.viewmodel.HistorialViewModel.kt
 package mx.mfpp.beneficioapp.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -28,6 +27,11 @@ class HistorialViewModel : ViewModel() {
      * Carga el historial de promociones usadas por un usuario
      */
     fun cargarHistorialUsuario(idUsuario: Int) {
+        if (idUsuario == 0) {
+            _error.value = "ID de usuario no válido"
+            return
+        }
+
         _isLoading.value = true
         _error.value = null
 
@@ -37,33 +41,10 @@ class HistorialViewModel : ViewModel() {
                 _historial.value = historialData
 
                 if (historialData.isEmpty()) {
-                    _error.value = "No hay historial de promociones usadas"
+                    _error.value = "No tienes promociones usadas aún"
                 }
             } catch (e: Exception) {
-                _error.value = "Error al cargar historial: ${e.message}"
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
-    /**
-     * Carga el historial de promociones de un establecimiento (opcional)
-     */
-    fun cargarHistorialEstablecimiento(idEstablecimiento: Int) {
-        _isLoading.value = true
-        _error.value = null
-
-        viewModelScope.launch {
-            try {
-                val historialData = ServicioRemotoHistorial.obtenerHistorialUsuario(idEstablecimiento)
-                _historial.value = historialData
-
-                if (historialData.isEmpty()) {
-                    _error.value = "No hay historial de promociones para este establecimiento"
-                }
-            } catch (e: Exception) {
-                _error.value = "Error al cargar historial: ${e.message}"
+                _error.value = "Error al cargar historial: ${e.message ?: "Verifica tu conexión"}"
             } finally {
                 _isLoading.value = false
             }

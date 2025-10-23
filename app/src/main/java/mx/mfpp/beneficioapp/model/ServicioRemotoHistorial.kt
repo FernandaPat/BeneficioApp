@@ -24,9 +24,17 @@ object ServicioRemotoHistorial {
             Log.d("HISTORIAL_SERVICIO", "📖 Obteniendo historial para usuario: $idUsuario")
             val response = servicio.obtenerHistorialUsuario(idUsuario)
             if (response.isSuccessful) {
-                response.body()?.data ?: emptyList()
+                val body = response.body()
+                if (body != null && body.success) {
+                    Log.d("HISTORIAL_SERVICIO", "✅ Historial obtenido: ${body.data.size} elementos")
+                    body.data
+                } else {
+                    Log.e("HISTORIAL_SERVICIO", "❌ Respuesta no exitosa: ${body?.success}")
+                    emptyList()
+                }
             } else {
-                Log.e("HISTORIAL_SERVICIO", "❌ Error: ${response.code()} - ${response.message()}")
+                val errorBody = response.errorBody()?.string()
+                Log.e("HISTORIAL_SERVICIO", "❌ Error HTTP ${response.code()}: $errorBody")
                 emptyList()
             }
         } catch (e: Exception) {
@@ -35,4 +43,3 @@ object ServicioRemotoHistorial {
         }
     }
 }
-
