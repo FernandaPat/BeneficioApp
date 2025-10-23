@@ -25,19 +25,20 @@ class VerDatosNegocioViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val session = SessionManager(context)
-                val idEstablecimiento = session.getNegocioId()  // 🔹 Se usa el ID guardado en la sesión
+                val idNegocio = session.getNegocioId()
 
-                if (idEstablecimiento == null) {
+                if (idNegocio == null) {
                     _error.value = "No se encontró ID del negocio en sesión."
                     _cargando.value = false
                     return@launch
                 }
 
-                println("🟣 ID ESTABLECIMIENTO EN SESIÓN → $idEstablecimiento")
-
-                val datos = ServicioRemotoObtenerDatosNegocio.obtenerDatosNegocio(idEstablecimiento)
+                val datos = ServicioRemotoObtenerDatosNegocio.obtenerDatosNegocio(idNegocio)
                 if (datos != null) {
                     _negocio.value = datos
+
+                    // ✅ Guarda la foto en sesión para mostrarla en el InicioNegocioPage
+                    session.setFotoPerfil(datos.foto)
                 } else {
                     _error.value = "No se pudieron cargar los datos del negocio."
                 }

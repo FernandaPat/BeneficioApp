@@ -8,10 +8,10 @@ import java.net.URL
 
 object ServicioRemotoObtenerDatosNegocio {
 
-    suspend fun obtenerDatosNegocio(idEstablecimiento: Int): Negocio? {
+    suspend fun obtenerDatosNegocio(idNegocio: Int): Negocio? {
         return withContext(Dispatchers.IO) {
             try {
-                val url = URL("https://obtener-datos-negocio-819994103285.us-central1.run.app/?id_establecimiento=$idEstablecimiento")
+                val url = URL("https://obtener-datos-negocio-819994103285.us-central1.run.app/?id_establecimiento=$idNegocio")
                 val connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connect()
@@ -23,19 +23,19 @@ object ServicioRemotoObtenerDatosNegocio {
                 }
 
                 val response = connection.inputStream.bufferedReader().use { it.readText() }
-                println("🟣 RESPUESTA NEGOCIO → $response")
+                println("🟣 RESPUESTA API NEGOCIO → $response")
 
                 val json = JSONObject(response)
                 val data = json.optJSONObject("data") ?: return@withContext null
 
                 return@withContext Negocio(
-                    id = data.optInt("id"),
-                    nombre = data.optString("nombre", ""),
-                    correo = data.optString("correo", ""),
-                    telefono = data.optString("numero_de_telefono", ""),
-                    direccion = data.optString("direccion", ""),
-                    categoria = data.optString("categoria", ""),
-                    foto = data.optString("foto", "") // 🟣 NUEVO: URL de la foto
+                    id = idNegocio,
+                    nombre = data.optString("nombre"),
+                    correo = data.optString("correo"),
+                    telefono = data.optString("numero_de_telefono"),
+                    direccion = data.optString("direccion"),
+                    categoria = data.optString("categoria"),
+                    foto = data.optString("foto") // 👈 IMPORTANTE: foto del backend
                 )
             } catch (e: Exception) {
                 println("❌ Error al obtener datos del negocio: ${e.localizedMessage}")

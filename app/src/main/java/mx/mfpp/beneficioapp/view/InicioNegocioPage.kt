@@ -29,6 +29,7 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import mx.mfpp.beneficioapp.model.SessionManager
+import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
 
 @Composable
 fun InicioNegocioPage(navController: NavController) {
@@ -45,14 +46,19 @@ fun InicioNegocioPage(navController: NavController) {
     // 🧩 Estado de promociones
     val promociones by promocionesViewModel.promociones.collectAsState()
 
-    // 🧩 Cargar promociones con ID dinámico
+    // 🧩 ViewModel para datos del negocio (foto, nombre, etc.)
+    val vmDatosNegocio: VerDatosNegocioViewModel = viewModel()
+    val negocio = vmDatosNegocio.negocio.collectAsState()
+
+    // 🔄 Cargar datos del negocio (incluye la foto)
     LaunchedEffect(Unit) {
+        vmDatosNegocio.cargarDatos(context)
         val idNegocio = sessionManager.getNegocioId() ?: 0
         promocionesViewModel.cargarPromociones(idNegocio)
     }
 
     // 🧾 Nombre del negocio dinámico
-    val nombreNegocio = sessionManager.getNombreNegocio() ?: "Negocio"
+    val nombreNegocio = negocio.value?.nombre ?: sessionManager.getNombreNegocio() ?: "Negocio"
 
     Scaffold(
         containerColor = Color.White
@@ -75,17 +81,30 @@ fun InicioNegocioPage(navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        // 🟣 FOTO DE PERFIL DEL NEGOCIO
                         IconButton(
                             onClick = { navController.navigate(Pantalla.RUTA_PERFIL_NEGOCIO) },
                             modifier = Modifier.size(60.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.AccountCircle,
-                                contentDescription = "Foto de perfil",
-                                modifier = Modifier.size(60.dp),
-                                tint = Color.LightGray
-                            )
+                            if (negocio.value?.foto?.isNotEmpty() == true) {
+                                AsyncImage(
+                                    model = negocio.value!!.foto,
+                                    contentDescription = "Foto del negocio",
+                                    modifier = Modifier
+                                        .size(60.dp)
+                                        .clip(RoundedCornerShape(50.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.AccountCircle,
+                                    contentDescription = "Foto de perfil",
+                                    modifier = Modifier.size(60.dp),
+                                    tint = Color.LightGray
+                                )
+                            }
                         }
+
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = nombreNegocio,

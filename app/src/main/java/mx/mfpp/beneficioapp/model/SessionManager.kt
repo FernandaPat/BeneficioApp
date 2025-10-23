@@ -42,12 +42,15 @@ class SessionManager(context: Context) {
             putString("apellidos", apellidos)
         }
     }
+
+
     // 🔹 Guarda la URL de la foto del perfil del joven
     fun setFotoPerfil(fotoUrl: String?) {
         sharedPreferences.edit {
             putString("foto_perfil", fotoUrl ?: "")
         }
     }
+
 
     // 🔹 Recupera la URL de la foto del perfil del joven
     fun getFotoPerfil(): String? {
