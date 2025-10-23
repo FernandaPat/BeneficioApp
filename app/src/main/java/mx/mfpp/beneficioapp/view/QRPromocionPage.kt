@@ -130,27 +130,6 @@ fun QRPromocionPage(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(16.dp)
                         )
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Button(
-                            onClick = {
-                                viewModel.clear()
-                                navController.popBackStack()
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = fondoBoton,
-                                contentColor = textoBoton
-                            ),
-                            shape = RoundedCornerShape(50.dp),
-                            modifier = Modifier
-                                .fillMaxWidth(0.8f)
-                                .height(56.dp)
-                        ) {
-                            Text(
-                                text = "Volver",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                        }
                     }
                 }
 

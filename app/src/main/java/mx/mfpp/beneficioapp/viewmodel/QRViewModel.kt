@@ -34,21 +34,19 @@ class QRViewModel : ViewModel() {
         _error.value = null
 
         viewModelScope.launch {
-            try {
-                val response = ServicioRemotoQR.generarQR(idJoven, idPromocion)
-                if (response != null && response.success) {
-                    _qrTokenResponse.value = response
-                    _qrBitmap.value = generateQRCodeNoMargin(response.token)
-                } else {
-                    _error.value = "No se pudo generar el QR"
-                }
-            } catch (e: Exception) {
-                _error.value = "Error al generar QR: ${e.message}"
-            } finally {
-                _isLoading.value = false
+            val (response, errorMessage) = ServicioRemotoQR.generarQR(idJoven, idPromocion)
+
+            if (response != null) {
+                _qrTokenResponse.value = response
+                _qrBitmap.value = generateQRCodeNoMargin(response.token)
+            } else {
+                _error.value = errorMessage ?: "No se pudo generar el QR."
             }
+
+            _isLoading.value = false
         }
     }
+
 
     private fun generateQRCodeNoMargin(token: String): Bitmap {
         val size = 500 // tamaño final del QR (ajústalo a gusto)
