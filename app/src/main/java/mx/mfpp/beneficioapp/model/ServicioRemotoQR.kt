@@ -1,14 +1,32 @@
+/**
+ * Archivo: ServicioRemotoQR.kt
+ *
+ * Define el servicio remoto responsable de generar, validar y aplicar códigos QR
+ * relacionados con promociones dentro de la aplicación.
+ *
+ * Utiliza Retrofit con Gson para realizar solicitudes HTTP hacia los servicios
+ * desplegados en Google Cloud Run.
+ */
 package mx.mfpp.beneficioapp.model
 
 import android.util.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+/**
+ * Objeto singleton encargado de la comunicación con los tres servicios remotos
+ * vinculados al flujo de uso de códigos QR:
+ *
+ * - **Generar QR**: crea un token único para canjear una promoción.
+ * - **Validar QR**: verifica la validez del token escaneado.
+ * - **Aplicar promoción**: registra el canje de una promoción validada.
+ *
+ * Cada operación utiliza su propia instancia de Retrofit configurada con su URL base.
+ */
 object ServicioRemotoQR {
 
     private const val URL_BASE_GENERAR = "https://generar-qr-819994103285.us-central1.run.app/"
     private const val URL_BASE_VALIDAR = "https://validar-qr-819994103285.us-central1.run.app/"
-    private const val URL_BASE_APLICAR = "https://aplicar-promocion-819994103285.us-central1.run.app/" // ✅ AGREGAR
+    private const val URL_BASE_APLICAR = "https://aplicar-promocion-819994103285.us-central1.run.app/"
 
     // Retrofit Generar
     private val retrofitGenerar: Retrofit by lazy {
@@ -26,7 +44,7 @@ object ServicioRemotoQR {
             .build()
     }
 
-    // ✅ AGREGAR: Retrofit Aplicar
+    // Retrofit Aplicar
     private val retrofitAplicar: Retrofit by lazy {
         Retrofit.Builder()
             .baseUrl(URL_BASE_APLICAR)
@@ -42,11 +60,18 @@ object ServicioRemotoQR {
         retrofitValidar.create(QRAPI::class.java)
     }
 
-    // ✅ AGREGAR: API Aplicar
+    // API Aplicar
     private val apiAplicar: QRAPI by lazy {
         retrofitAplicar.create(QRAPI::class.java)
     }
-
+    /**
+     * Genera un código QR para un usuario joven y una promoción específica.
+     *
+     * @param idJoven Identificador del usuario joven.
+     * @param idPromocion Identificador de la promoción a canjear.
+     * @return Par compuesto por el objeto [QRTokenResponse] si la solicitud es exitosa,
+     * y un mensaje de error en caso contrario.
+     */
     suspend fun generarQR(idJoven: Int, idPromocion: Int): Pair<QRTokenResponse?, String?> {
         return try {
             val response = apiGenerar.generarQR(GenerarQRRequest(idJoven, idPromocion))
@@ -69,7 +94,13 @@ object ServicioRemotoQR {
             Pair(null, "Error de conexión: ${e.localizedMessage ?: "No se pudo conectar al servidor."}")
         }
     }
-
+    /**
+     * Valida un token QR escaneado en un establecimiento.
+     *
+     * @param token Código QR generado previamente.
+     * @param idEstablecimiento Identificador del establecimiento que realiza la validación.
+     * @return Objeto [QRValidationResponse] con el resultado de la validación, o `null` si falla.
+     */
 
     suspend fun validarQR(token: String, idEstablecimiento: Int): QRValidationResponse? {
         return try {
@@ -88,7 +119,17 @@ object ServicioRemotoQR {
         }
     }
 
-    // ✅ AGREGAR: Función para aplicar promoción
+    /**
+     * Aplica una promoción validada para un usuario joven en un establecimiento.
+     *
+     * Envía al servidor la información de la tarjeta, la promoción y el establecimiento,
+     * registrando el canje de la promoción.
+     *
+     * @param idTarjeta Identificador de la tarjeta digital del usuario.
+     * @param idPromocion Identificador de la promoción aplicada.
+     * @param idEstablecimiento Identificador del establecimiento donde se aplica la promoción.
+     * @return Objeto [AplicarPromocionResponse] con los detalles del registro, o `null` si ocurre un error.
+     */
     suspend fun aplicarPromocion(
         idTarjeta: Int,
         idPromocion: Int,

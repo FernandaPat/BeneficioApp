@@ -1,3 +1,8 @@
+/**
+ * Archivo: InicioPage.kt
+ * Descripción: Contiene los componentes principales de la pantalla de inicio del módulo Joven.
+ * Incluye la lógica de carga de categorías, promociones, establecimientos y favoritos.
+ */
 package mx.mfpp.beneficioapp.view
 
 import android.util.Log
@@ -129,7 +134,13 @@ fun InicioPage(
     val scrollState = rememberScrollState()
     var canTriggerRefresh by remember { mutableStateOf(true) }
 
-    // Función para recargar todos los datos - CORREGIDA: Incluir favoritos
+    /**
+     * Recarga todos los datos de la pantalla de inicio:
+     * categorías, promociones, establecimientos y lista de favoritos.
+     *
+     * Se ejecuta cuando el usuario realiza un gesto de actualización (scroll arriba)
+     * o cuando ocurre un evento de reintento tras un error.
+     */
     fun recargarTodosLosDatos() {
         coroutineScope.launch {
             Log.d("INICIO_PAGE", "🔄 Recargando todos los datos...")
@@ -313,6 +324,17 @@ fun InicioPage(
     }
 }
 
+/**
+ * Componente que muestra una sección horizontal de establecimientos.
+ *
+ * Cada establecimiento se representa con una tarjeta rectangular con imagen y datos breves.
+ *
+ * @param titulo Título de la sección
+ * @param establecimientos Lista de establecimientos a mostrar
+ * @param onItemClick Acción a ejecutar al seleccionar un establecimiento
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
+
 @Composable
 fun SeccionHorizontalEstablecimientos(
     titulo: String,
@@ -359,7 +381,15 @@ fun SeccionHorizontalEstablecimientos(
     }
 }
 
-// NUEVO COMPONENTE: Card para establecimientos (similar al de promociones)
+/**
+ * Tarjeta individual que muestra información breve de un establecimiento.
+ *
+ * Incluye imagen, nombre, categoría y colonia.
+ *
+ * @param establecimiento Datos del establecimiento
+ * @param onItemClick Acción al hacer clic en la tarjeta
+ */
+
 @Composable
 fun CardEstablecimientoHorizontal(
     establecimiento: Establecimiento,
@@ -484,15 +514,18 @@ fun EstadoError(mensajeError: String, onReintentar: () -> Unit) {
 }
 
 /**
- * Componente que muestra una sección horizontal de items.
+ * Componente que muestra una sección horizontal de promociones.
  *
  * Presenta una lista de promociones en un scroll horizontal con un título.
+ * Reutiliza el componente [CardItemHorizontal] para renderizar cada tarjeta.
  *
  * @param titulo Título descriptivo de la sección
  * @param items Lista de promociones a mostrar en la sección
+ * @param promocionesViewModel ViewModel para formatear fechas y estados
  * @param onItemClick Callback invocado cuando se hace clic en un item
  * @param modifier Modificador de Composable para personalizar el layout
  */
+
 
 @Composable
 fun SeccionHorizontal(
@@ -542,6 +575,16 @@ fun SeccionHorizontal(
         }
     }
 }
+/**
+ * Tarjeta individual que representa una promoción dentro de una sección horizontal.
+ *
+ * Muestra imagen, título, nombre del establecimiento y una etiqueta de estado (nueva o próxima a expirar).
+ *
+ * @param promocion Datos de la promoción a mostrar
+ * @param promocionesViewModel ViewModel para calcular fechas de creación y expiración
+ * @param esNuevaSeccion Indica si pertenece a la sección "Nuevas Promociones"
+ * @param onItemClick Acción al hacer clic en la tarjeta
+ */
 
 @Composable
 fun CardItemHorizontal(
@@ -749,11 +792,10 @@ fun Categorias(
 
 
 /**
- * Componente que representa un item individual de categoría en forma circular.
+ * Ícono circular que representa una categoría con su respectivo icono.
  *
- * Muestra el icono de la categoría en un card circular.
- *
- * @param categoria Datos de la categoría a mostrar
+ * @param categoria Categoría a mostrar
+ * @param onClick Acción al seleccionar la categoría
  */
 @Composable
 fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
@@ -780,9 +822,12 @@ fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
  *
  * Muestra el perfil del usuario y acceso a notificaciones.
  *
+ * @param nombreJoven Nombre del usuario joven para mostrar en saludo
+ * @param fotoPerfil URL o ruta de la foto de perfil (opcional)
  * @param navController Controlador de navegación para manejar la navegación
  * @param modifier Modificador de Composable para personalizar el layout
  */
+
 @Composable
 fun HomeTopBar(
     nombreJoven: String,
@@ -857,6 +902,15 @@ fun HomeTopBar(
     }
 }
 
+/**
+ * Sección horizontal que muestra los establecimientos marcados como favoritos por el usuario.
+ *
+ * @param titulo Título de la sección
+ * @param favoritos Lista de favoritos del usuario
+ * @param isLoading Indica si la lista está cargando
+ * @param onItemClick Acción al seleccionar un favorito
+ * @param modifier Modificador de Composable para personalizar el layout
+ */
 
 @Composable
 fun SeccionHorizontalFavoritos(
@@ -909,6 +963,12 @@ fun SeccionHorizontalFavoritos(
         }
     }
 }
+/**
+ * Tarjeta individual que representa un establecimiento favorito.
+ *
+ * @param favorito Datos del establecimiento favorito
+ * @param onItemClick Acción al hacer clic en la tarjeta
+ */
 
 @Composable
 fun CardFavoritoHorizontal(
@@ -973,7 +1033,9 @@ fun CardFavoritoHorizontal(
 }
 
 /**
- * Previsualización de la pantalla de inicio.
+ * Previsualización de la pantalla de inicio para modo diseño.
+ *
+ * Permite visualizar la estructura sin necesidad de datos reales.
  */
 @Preview(showBackground = true)
 @Composable

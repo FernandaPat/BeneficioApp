@@ -1,3 +1,12 @@
+/**
+ * Archivo: ServicioRemotoObtenerPromocion.kt
+ *
+ * Define un servicio remoto encargado de obtener los datos detallados
+ * de una promoción específica a partir de su identificador.
+ *
+ * Utiliza `HttpURLConnection` para realizar una solicitud HTTP GET
+ * y corrutinas con `Dispatchers.IO` para ejecutar la operación en un hilo de E/S.
+ */
 package mx.mfpp.beneficioapp.model
 
 import kotlinx.coroutines.Dispatchers
@@ -5,9 +14,26 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-
+/**
+ * Objeto singleton responsable de la comunicación con el servicio remoto
+ * para obtener los detalles de una promoción específica.
+ *
+ * Permite recuperar la información completa de una promoción filtrando
+ * por su ID dentro de la lista de promociones disponibles.
+ */
 object ServicioRemotoObtenerPromocion {
 
+    /**
+     * Obtiene una promoción específica desde el servidor según su identificador único.
+     *
+     * Realiza una solicitud HTTP GET al endpoint de promociones y busca dentro del arreglo
+     * de datos la coincidencia con el ID proporcionado. Si encuentra la promoción,
+     * construye y devuelve un objeto [Promocion].
+     *
+     * @param idPromocion Identificador único de la promoción a obtener.
+     * @return Objeto [Promocion] con los datos de la promoción si se encuentra;
+     * devuelve `null` en caso de error o si no existe una coincidencia.
+     */
     suspend fun obtenerPromocionPorId(idPromocion: Int): Promocion? = withContext(Dispatchers.IO) {
         try {
             val urlString = "https://listar-promociones-819994103285.us-central1.run.app"

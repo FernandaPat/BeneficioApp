@@ -17,7 +17,7 @@ import java.net.URL
  */
 object ServicioRemotoRecuperarContrasena {
 
-    // 🔧 URL de la Cloud Function - CAMBIAR POR TU URL REAL
+
     private const val CLOUD_FUNCTION_URL = "https://obtener-email-joven-819994103285.us-central1.run.app"
     private const val TAG = "RecuperarRepository"
 

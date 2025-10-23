@@ -1,10 +1,22 @@
-// mx.mfpp.beneficioapp.model.ServicioRemotoFavoritos
+/**
+ * Archivo: ServicioRemotoFavoritos.kt
+ *
+ * Define un servicio remoto encargado de gestionar las operaciones
+ * relacionadas con los favoritos del usuario dentro de la aplicación.
+ *
+ * Incluye métodos para agregar, eliminar y obtener establecimientos marcados como favoritos.
+ * Utiliza Retrofit con Gson para la comunicación con la API alojada en AWS API Gateway.
+ */
 package mx.mfpp.beneficioapp.model
 
 import android.util.Log
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+/**
+ * Objeto singleton que administra las operaciones de red relacionadas con los favoritos.
+ *
+ * Crea y expone una instancia de Retrofit configurada para conectarse con la API de favoritos.
+ */
 object ServicioRemotoFavoritos {
     private const val URL_BASE = "https://rs2xlkq5el.execute-api.us-east-1.amazonaws.com/default/"
 
@@ -18,7 +30,13 @@ object ServicioRemotoFavoritos {
     private val servicio: FavoritosAPI by lazy {
         retrofit.create(FavoritosAPI::class.java)
     }
-
+    /**
+     * Agrega un establecimiento a la lista de favoritos del usuario.
+     *
+     * @param idUsuario Identificador del usuario que agrega el favorito
+     * @param idEstablecimiento Identificador del establecimiento a marcar como favorito
+     * @return Resultado exitoso con mensaje de confirmación o fallo con la excepción correspondiente
+     */
     suspend fun agregarFavorito(idUsuario: Int, idEstablecimiento: Int): Result<String> {
         return try {
             val request = FavoritoRequest(idUsuario, idEstablecimiento)
@@ -42,7 +60,13 @@ object ServicioRemotoFavoritos {
             Result.failure(e)
         }
     }
-
+    /**
+     * Elimina un establecimiento de la lista de favoritos del usuario.
+     *
+     * @param idUsuario Identificador del usuario que elimina el favorito
+     * @param idEstablecimiento Identificador del establecimiento a eliminar de favoritos
+     * @return Resultado exitoso con mensaje de confirmación o fallo con la excepción correspondiente
+     */
     suspend fun eliminarFavorito(idUsuario: Int, idEstablecimiento: Int): Result<String> {
         return try {
             val request = FavoritoRequest(idUsuario, idEstablecimiento)
@@ -62,7 +86,12 @@ object ServicioRemotoFavoritos {
             Result.failure(e)
         }
     }
-
+    /**
+     * Obtiene la lista de establecimientos marcados como favoritos por el usuario.
+     *
+     * @param idUsuario Identificador del usuario del cual se obtendrán los favoritos
+     * @return Resultado exitoso con una lista de [FavoritoDetalle] o fallo con la excepción correspondiente
+     */
     suspend fun obtenerFavoritos(idUsuario: Int): Result<List<FavoritoDetalle>> {
         return try {
             val response = servicio.obtenerFavoritos(idUsuario)

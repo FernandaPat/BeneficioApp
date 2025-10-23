@@ -1,4 +1,13 @@
-package mx.mfpp.beneficioapp.mode
+
+/**
+ * Archivo: ServicioRemotoEstablecimiento.kt
+ *
+ * Define un servicio remoto responsable de obtener la lista de establecimientos
+ * desde el servidor mediante una solicitud HTTP GET.
+ *
+ * Este servicio no utiliza Retrofit, sino `HttpURLConnection`, y realiza la petición
+ * de forma asíncrona utilizando corrutinas con `Dispatchers.IO`.
+ */package mx.mfpp.beneficioapp.mode
 
 
 import android.content.Context
@@ -10,7 +19,12 @@ import mx.mfpp.beneficioapp.model.SessionManager
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-
+/**
+ * Objeto singleton que gestiona las solicitudes remotas relacionadas con establecimientos.
+ *
+ * Permite obtener la lista de establecimientos asociados al usuario actual o a la base general,
+ * manejando distintas estructuras posibles en la respuesta del backend.
+ */
 object ServicioRemotoEstablecimiento {
 
     private const val BASE_URL =

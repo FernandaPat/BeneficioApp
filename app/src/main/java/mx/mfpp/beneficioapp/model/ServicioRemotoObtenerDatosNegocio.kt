@@ -1,3 +1,12 @@
+/**
+ * Archivo: ServicioRemotoObtenerDatosNegocio.kt
+ *
+ * Define un servicio remoto encargado de obtener la información detallada
+ * de un negocio o establecimiento específico desde el servidor.
+ *
+ * Utiliza `HttpURLConnection` y corrutinas con `Dispatchers.IO` para realizar
+ * la operación de forma asíncrona y eficiente.
+ */
 package mx.mfpp.beneficioapp.model
 
 import kotlinx.coroutines.Dispatchers
@@ -5,9 +14,24 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
-
+/**
+ * Objeto singleton responsable de la comunicación con el servicio remoto
+ * que devuelve la información de un negocio específico.
+ *
+ * Realiza solicitudes HTTP GET hacia el endpoint remoto de Google Cloud Run,
+ * maneja errores y convierte la respuesta JSON en un objeto [Negocio].
+ */
 object ServicioRemotoObtenerDatosNegocio {
-
+    /**
+     * Obtiene los datos completos de un negocio según su identificador.
+     *
+     * Realiza una solicitud HTTP GET al endpoint del servidor y construye un objeto [Negocio]
+     * a partir de la respuesta JSON. En caso de error o respuesta inválida,
+     * devuelve `null`.
+     *
+     * @param idNegocio Identificador único del establecimiento que se desea consultar.
+     * @return Objeto [Negocio] con la información obtenida del servidor o `null` si ocurre un error.
+     */
     suspend fun obtenerDatosNegocio(idNegocio: Int): Negocio? {
         return withContext(Dispatchers.IO) {
             try {

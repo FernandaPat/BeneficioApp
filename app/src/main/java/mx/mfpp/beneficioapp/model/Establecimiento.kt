@@ -1,4 +1,3 @@
-// mx.mfpp.beneficioapp.model.Establecimiento
 package mx.mfpp.beneficioapp.model
 
 /**
