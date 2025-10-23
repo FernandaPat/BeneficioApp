@@ -56,7 +56,7 @@ class ScannerViewModel : ViewModel() {
             try {
                 val response = ServicioRemotoQR.validarQR(token, idEstablecimiento)
                 if (response == null) {
-                    onError("Error comunicándose con el servidor")
+                    onError("Error al escanear QR")
                     return@launch
                 }
 

@@ -136,10 +136,11 @@ fun QRPromocionPage(
                 qrBitmap != null -> {
                     Card(
                         modifier = Modifier
-                            .size(300.dp)
-                            .padding(16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .padding(5.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 16.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -152,7 +153,7 @@ fun QRPromocionPage(
                                 contentDescription = "Código QR",
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(8.dp)
+                                    .padding(7.dp)
                             )
                         }
                     }
