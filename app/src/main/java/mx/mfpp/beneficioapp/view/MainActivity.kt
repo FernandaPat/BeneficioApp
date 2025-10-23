@@ -191,7 +191,7 @@ fun AppPrincipal(
 fun AppNavHost(
     startDestination: String,
     categoriasViewModel: CategoriasViewModel,
-    promocionesViewModel: PromocionJovenViewModel, // CAMBIAR AQUÍ
+    promocionesViewModel: PromocionJovenViewModel,
     busquedaViewModel: BusquedaViewModel,
     scannerViewModel: ScannerViewModel,
     qrViewModel: QRViewModel,
@@ -328,7 +328,6 @@ fun AppNavHost(
             )
         }
 
-
         composable(
             route = "${Pantalla.RUTA_DETALLEPROMOCION_APP}/{qrData}",
             arguments = listOf(navArgument("qrData") { type = NavType.StringType })
@@ -343,8 +342,13 @@ fun AppNavHost(
             )
         }
 
-        // Rutas de búsqueda y resultados
-        composable(Pantalla.RUTA_RESULTADOS_CON_CATEGORIA) { backStackEntry ->
+        // ✅ RUTAS DE BÚSQUEDA ACTUALIZADAS
+
+        // Ruta para búsqueda por categoría
+        composable(
+            route = Pantalla.RUTA_RESULTADOS_CON_CATEGORIA,
+            arguments = listOf(navArgument("categoria") { type = NavType.StringType })
+        ) { backStackEntry ->
             val categoria = backStackEntry.arguments?.getString("categoria")
             ResultadosPage(
                 navController = navController,
@@ -354,6 +358,26 @@ fun AppNavHost(
             )
         }
 
+        // ✅ NUEVA: Ruta para búsqueda por texto
+        composable(
+            route = Pantalla.RUTA_RESULTADOS_CON_TEXTO,
+            arguments = listOf(navArgument("query") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val query = backStackEntry.arguments?.getString("query") ?: ""
+
+            // Establecer el texto de búsqueda en el ViewModel
+            LaunchedEffect(Unit) {
+                busquedaViewModel.actualizarTextoBusqueda(query)
+            }
+
+            ResultadosPage(
+                navController = navController,
+                busquedaViewModel = busquedaViewModel,
+                categoriasViewModel = categoriasViewModel
+            )
+        }
+
+        // Ruta legacy (mantener por compatibilidad)
         composable(
             route = "${Pantalla.RUTA_RESULTADOS_APP}/{categoriaSeleccionada}",
             arguments = listOf(navArgument("categoriaSeleccionada") { type = NavType.StringType })
@@ -376,7 +400,6 @@ fun AppNavHost(
             )
         }
 
-
         // Ruta simple para resultados sin categoría
         composable(Pantalla.RUTA_RESULTADOS_APP) {
             ResultadosPage(
@@ -393,7 +416,6 @@ fun AppNavHost(
         composable(Pantalla.RUTA_PROMOCIONES_NEGOCIO) {
             Promociones(navController)
         }
-
 
         composable(
             route = "MapaPage?lat={lat}&lng={lng}",

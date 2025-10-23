@@ -74,10 +74,14 @@ sealed class Pantalla(
         const val RUTA_NEGOCIODETALLE_APP = "NegocioDetallePage"
         const val RUTA_NOTIFICACIONES_NEGOCIO = "TerminosYcondiciones"
 
+        const val RUTA_RESULTADOS_CON_CATEGORIA = "resultados_app/{categoria}"
+
+        // ✅ NUEVA: Ruta para búsqueda por texto
+        const val RUTA_RESULTADOS_CON_TEXTO = "resultados_app/search/{query}"
+
         /**
          * Ruta parametrizada para resultados con categoría específica.
          */
-        const val RUTA_RESULTADOS_CON_CATEGORIA = "resultados_app/{categoria}"
 
         // Rutas para negocio
         const val RUTA_INICIO_NEGOCIO = "inicio_negocio"
