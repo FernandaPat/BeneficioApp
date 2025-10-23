@@ -1,9 +1,11 @@
 package mx.mfpp.beneficioapp.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.PromocionData
 import mx.mfpp.beneficioapp.model.QrScanResult
 import org.json.JSONObject
@@ -63,4 +65,47 @@ class ScannerViewModel : ViewModel() {
         lastScannedValue = null
     }
 
+    fun validarQrRemoto(
+        token: String,
+        idEstablecimiento: Int,
+        onSuccess: (encodedQrData: String) -> Unit,
+        onError: (errorMsg: String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val response = ServicioRemotoQR.validarQR(token, idEstablecimiento)
+                if (response == null) {
+                    onError("Error comunicándose con el servidor")
+                    return@launch
+                }
+
+                if (!response.success) {
+                    // backend puede devolver message explicativo
+                    onError(response.message)
+                    return@launch
+                }
+
+                val datos = response.datos
+                if (datos == null) {
+                    onError("Respuesta inválida del servidor")
+                    return@launch
+                }
+
+                // Construimos un JSON simple compatible con tu DetallePromocionScreen actual:
+                // { "numeroTarjeta": "<folio_digital>", "fecha": "<generado>", "nombrePromocion": "<nombre>" }
+                val json = org.json.JSONObject().apply {
+                    put("numeroTarjeta", datos.joven.folio_digital)
+                    put("fecha", datos.token_info.generado)
+                    put("nombrePromocion", datos.promocion.nombre)
+                }.toString()
+
+                // Codifica para pasar por la navRoute (igual que hacías antes)
+                val encoded = java.net.URLEncoder.encode(json, "UTF-8")
+                onSuccess(encoded)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onError("Excepción: ${e.message ?: "Desconocida"}")
+            }
+        }
+    }
 }

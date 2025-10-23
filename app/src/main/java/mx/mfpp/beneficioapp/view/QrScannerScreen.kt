@@ -2,7 +2,6 @@ package mx.mfpp.beneficioapp.view
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,13 +34,13 @@ import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import java.net.URLEncoder
 import java.util.concurrent.Executors
 
-
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrScannerScreen(
     navController: NavController,
-    viewModel: ScannerViewModel = viewModel(),
+    idEstablecimiento: Int,
+    viewModel: ScannerViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -68,7 +67,6 @@ fun QrScannerScreen(
         }
     }
 
-    // Estado para controlar si ya procesamos un QR
     var isProcessing by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -117,64 +115,53 @@ fun QrScannerScreen(
                                 .build()
 
                             imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
-                                if (isProcessing) {
+                                val mediaImage = imageProxy.image
+                                if (mediaImage == null) {
                                     imageProxy.close()
                                     return@setAnalyzer
                                 }
 
-                                val mediaImage = imageProxy.image
-                                if (mediaImage != null) {
-                                    val image = InputImage.fromMediaImage(
-                                        mediaImage,
-                                        imageProxy.imageInfo.rotationDegrees
-                                    )
+                                val image = InputImage.fromMediaImage(
+                                    mediaImage,
+                                    imageProxy.imageInfo.rotationDegrees
+                                )
 
-                                    barcodeScanner.process(image)
-                                        .addOnSuccessListener { barcodes ->
-                                            barcodes.firstOrNull()?.rawValue?.let { qrContent ->
-                                                if (!isProcessing) {
-                                                    isProcessing = true
+                                barcodeScanner.process(image)
+                                    .addOnSuccessListener { barcodes ->
+                                        barcodes.firstOrNull()?.rawValue?.let { qrContent ->
+                                            if (!isProcessing) {
+                                                isProcessing = true
 
-                                                    // Procesar el contenido del QR
-                                                    val promocionData = viewModel.processScannedQR(qrContent)
-
-                                                    if (promocionData != null) {
-                                                        // QR válido - navegar a detalles
-                                                        viewModel.addQrScanResult(qrContent)
+                                                // ✅ Validar QR en remoto
+                                                viewModel.validarQrRemoto(
+                                                    token = qrContent,
+                                                    idEstablecimiento = idEstablecimiento,
+                                                    onSuccess = { encodedQrData ->
                                                         coroutineScope.launch {
-                                                            // Pequeño delay para evitar múltiples escaneos
-                                                            delay(1000)
-                                                            val encodedQrContent = URLEncoder.encode(qrContent, "UTF-8")
-                                                            navController.navigate("${Pantalla.RUTA_DETALLEPROMOCION_APP}/$encodedQrContent") {
+                                                            delay(500)
+                                                            viewModel.addQrScanResult(qrContent)
+                                                            navController.navigate("${Pantalla.RUTA_DETALLEPROMOCION_APP}/$encodedQrData") {
                                                                 popUpTo(Pantalla.RUTA_QR_SCANNER_SCREEN) { inclusive = true }
                                                             }
                                                         }
-                                                    } else {
-                                                        // QR inválido - mostrar error y permitir nuevo escaneo
+                                                    },
+                                                    onError = { errorMsg ->
                                                         coroutineScope.launch {
-                                                            Toast.makeText(
-                                                                context,
-                                                                "QR no válido",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
+                                                            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
                                                             delay(2000)
                                                             isProcessing = false
                                                         }
                                                     }
-                                                }
+                                                )
                                             }
                                         }
-                                        .addOnFailureListener {
-                                            // Error en el análisis, continuar escaneando
-                                            imageProxy.close()
-                                        }
-                                        .addOnCompleteListener {
-                                            imageProxy.close()
-                                            isProcessing = false
-                                        }
-                                } else {
-                                    imageProxy.close()
-                                }
+                                    }
+                                    .addOnFailureListener {
+                                        imageProxy.close()
+                                    }
+                                    .addOnCompleteListener {
+                                        imageProxy.close()
+                                    }
                             }
 
                             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -195,7 +182,7 @@ fun QrScannerScreen(
                     }
                 )
 
-                // Overlay para ayudar al usuario
+                // Overlay del marco QR
                 Box(
                     modifier = Modifier
                         .size(250.dp)
@@ -212,15 +199,21 @@ fun QrScannerScreen(
                         .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(8.dp))
                         .padding(8.dp)
                 )
+
+                // Indicador de carga mientras valida QR
+                if (isProcessing) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF9605F7),
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text("Se necesita permiso de cámara")
-                    Button(
-                        onClick = { launcher.launch(Manifest.permission.CAMERA) }
-                    ) {
+                    Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
                         Text("Conceder permiso")
                     }
                 }

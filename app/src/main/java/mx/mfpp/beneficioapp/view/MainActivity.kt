@@ -319,9 +319,20 @@ fun AppNavHost(
         composable(Pantalla.RUTA_ACTIVIDAD_APP) {
             ActividadPage(navController)
         }
-        composable(Pantalla.RUTA_QR_SCANNER_SCREEN) {
-            QrScannerScreen(navController)
+
+        composable(Pantalla.RUTA_SCANER_NEGOCIO) {
+            val context = LocalContext.current
+            val sessionManager = SessionManager(context)
+            val idEstablecimiento = sessionManager.getNegocioId() ?: 0
+
+            QrScannerScreen(
+                navController = navController,
+                idEstablecimiento = idEstablecimiento,
+                viewModel = scannerViewModel
+            )
         }
+
+
         composable(
             route = "${Pantalla.RUTA_DETALLEPROMOCION_APP}/{qrData}",
             arguments = listOf(navArgument("qrData") { type = NavType.StringType })
@@ -387,26 +398,6 @@ fun AppNavHost(
             Promociones(navController)
         }
 
-        composable(Pantalla.RUTA_SCANER_NEGOCIO) {
-            val showScanner by scannerViewModel.showScanner.collectAsState()
-
-            if (showScanner) {
-                ScannerQrScreen(
-                    onQrScanned = { qrContent ->
-                        scannerViewModel.addQrScanResult(qrContent)
-                    },
-                    onBack = {
-                        scannerViewModel.hideScanner()
-                    },
-                    navController = navController
-                )
-            } else {
-                HistorialScannerScreen(
-                    navController = navController,
-                    viewModel = scannerViewModel
-                )
-            }
-        }
 
         composable(
             route = "MapaPage?lat={lat}&lng={lng}",
