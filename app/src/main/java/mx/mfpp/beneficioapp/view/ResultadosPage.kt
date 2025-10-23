@@ -71,6 +71,8 @@ fun ResultadosPage(
     val sessionManager = remember { SessionManager(context) }
     val favoritosViewModel = remember { FavoritosViewModel(sessionManager) }
     val mensajeFavoritos by favoritosViewModel.mensaje.collectAsState()
+    val fotoPerfil = sessionManager.getFotoPerfil()
+
 
     // 🔹 CORRECCIÓN: Recargar favoritos al entrar a la pantalla
     LaunchedEffect(Unit) {
@@ -94,7 +96,9 @@ fun ResultadosPage(
 
     val nombreJoven = sessionManager.getNombreJoven() ?: "Joven"
 
-    Scaffold(topBar = { HomeTopBar(nombreJoven, navController) }) { paddingValues ->
+    Scaffold(
+        topBar = { HomeTopBar(nombreJoven, fotoPerfil, navController) }
+    ) { paddingValues ->
         when {
             isLoading -> Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),

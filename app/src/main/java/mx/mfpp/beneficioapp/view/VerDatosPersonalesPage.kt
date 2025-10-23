@@ -25,8 +25,9 @@ fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesV
 
     // ✅ Llamar automáticamente al cargar la pantalla
     LaunchedEffect(Unit) {
-        vm.cargarDatos(context)
+        vm.cargarDatos()
     }
+
 
     Scaffold(
         topBar = { ArrowTopBar(navController, "Datos Personales") },
@@ -69,6 +70,7 @@ fun VerDatosPersonalesPage(navController: NavController, vm: VerDatosPersonalesV
                             DatoPersonalItem("Dirección", joven.value!!.direccion)
                         }
                     }
+
                 }
             }
         }

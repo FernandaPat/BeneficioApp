@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -14,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -92,6 +94,8 @@ fun InicioPage(
     // Estado para los favoritos - CORREGIDO: No usar produceState aquí
     var listaFavoritos by remember { mutableStateOf<List<FavoritoDetalle>>(emptyList()) }
     var favoritosLoading by remember { mutableStateOf(false) }
+
+    val fotoPerfil = sessionManager.getFotoPerfil()
 
     // Cargar favoritos cuando el usuario esté logueado
     LaunchedEffect(Unit) {
@@ -182,7 +186,7 @@ fun InicioPage(
         }
     }
     Scaffold(
-        topBar = { HomeTopBar(nombreJoven, navController) }
+        topBar = { HomeTopBar(nombreJoven, fotoPerfil, navController) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -772,8 +776,10 @@ fun ItemCategoriaCirculo(categoria: Categoria, onClick: () -> Unit) {
 @Composable
 fun HomeTopBar(
     nombreJoven: String,
+    fotoPerfil: String?,
     navController: NavController,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -789,20 +795,34 @@ fun HomeTopBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+
                 IconButton(
                     onClick = {
                         navController.navigate(Pantalla.RUTA_PERFIL_APP)
                     },
                     modifier = Modifier.size(60.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Foto de perfil",
-                        modifier = Modifier.size(60.dp),
-                        tint = Color.LightGray
-                    )
+                    if (!fotoPerfil.isNullOrBlank()) {
+                        AsyncImage(
+                            model = fotoPerfil.replace(" ", "%20"),
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier.size(60.dp),
+                            tint = Color.LightGray
+                        )
+                    }
                 }
+
                 Spacer(modifier = Modifier.width(10.dp))
+
                 Text(
                     text = "Hola, $nombreJoven",
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -826,6 +846,7 @@ fun HomeTopBar(
         }
     }
 }
+
 
 @Composable
 fun SeccionHorizontalFavoritos(

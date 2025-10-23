@@ -36,6 +36,7 @@ object ServicioRemotoObtenerDatosJoven {
                     telefono = data.optString("telefono", ""),
                     direccion = if (data.has("direccion")) data.optString("direccion") else "",
                     foto = data.optString("foto", "")
+
                 )
 
             } catch (e: Exception) {

@@ -85,7 +85,7 @@ fun PerfilPage(navController: NavController) {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        vmDatos.cargarDatos(context)
+        vmDatos.cargarDatos()
     }
 
 
