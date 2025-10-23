@@ -136,7 +136,8 @@ fun AppPrincipal(
         Pantalla.RUTA_DATOSPERSONALES_APP,
         Pantalla.RUTA_RECUPERAR_CONTRASENA,
         Pantalla.RUTA_DATOSNEGOCIO_APP,
-        Pantalla.RUTA_QR_SCANNER_SCREEN
+        Pantalla.RUTA_QR_SCANNER_SCREEN,
+        Pantalla.RUTA_SCANER_NEGOCIO
     )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
