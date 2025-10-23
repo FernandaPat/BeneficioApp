@@ -29,12 +29,13 @@ object ServicioRemotoObtenerDatosNegocio {
                 val data = json.optJSONObject("data") ?: return@withContext null
 
                 return@withContext Negocio(
-                    id = data.optInt("id", 0),
-                    nombre = data.optString("nombre"),
+                    id = data.optInt("id"),
+                    nombre = data.optString("nombre", ""),
                     correo = data.optString("correo", ""),
                     telefono = data.optString("numero_de_telefono", ""),
-                    direccion = data.optString("direccion"),
-                    categoria = data.optString("categoria", "")
+                    direccion = data.optString("direccion", ""),
+                    categoria = data.optString("categoria", ""),
+                    foto = data.optString("foto", "") // 🟣 NUEVO: URL de la foto
                 )
             } catch (e: Exception) {
                 println("❌ Error al obtener datos del negocio: ${e.localizedMessage}")

@@ -42,6 +42,11 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilNegocioViewModel
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Save
+import kotlinx.coroutines.launch
+import mx.mfpp.beneficioapp.viewmodel.SubirFotoNegocioViewModel
+
 
 /**
  * Pantalla de perfil del negocio que permite gestionar la información y configuración de la cuenta.
@@ -64,6 +69,8 @@ import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
 fun PerfilNegocioPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
     val viewModel: PerfilNegocioViewModel = viewModel ()
+    val vmSubirFoto: SubirFotoNegocioViewModel = viewModel()
+
 
     LaunchedEffect(Unit) {
         viewModel.logoutEvent.collect {
@@ -131,7 +138,7 @@ fun PerfilNegocioPage(navController: NavController) {
                         .offset(y = 80.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Fondo redondeado
+                    // Fondo circular
                     Box(
                         modifier = Modifier
                             .matchParentSize()
@@ -139,50 +146,60 @@ fun PerfilNegocioPage(navController: NavController) {
                             .background(Color(0xFFF5F5F5))
                     )
 
-                    if (uri == null) {
-                        IconButton(
-                            onClick = { pickImage.launch("image/*") },
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = Color.Transparent,
-                                contentColor = Color(0xFF9605F7)
-                            ),
-                            modifier = Modifier
-                                .size(160.dp)
-                                .clip(CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Add,
-                                contentDescription = "Seleccionar imagen"
+                    // Mostrar imagen en este orden:
+                    // 1. Nueva seleccionada (uri)
+                    // 2. Foto actual del backend (negocio.value?.foto)
+                    // 3. Botón agregar si no hay foto
+                    when {
+                        uri != null -> {
+                            AsyncImage(
+                                model = uri,
+                                contentDescription = "Nueva imagen seleccionada",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize().clip(CircleShape)
                             )
                         }
-                    } else {
-                        AsyncImage(
-                            model = uri,
-                            contentDescription = "Imagen de la promoción",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                        )
-
-                        IconButton(
-                            onClick = { pickImage.launch("image/*") },
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.Black.copy(alpha = 0.6f))
-                                .zIndex(1f)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Edit,
-                                contentDescription = "Cambiar imagen",
-                                tint = Color.White
+                        negocio.value?.foto?.isNotBlank() == true -> {
+                            AsyncImage(
+                                model = negocio.value!!.foto,
+                                contentDescription = "Foto actual del negocio",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize().clip(CircleShape)
                             )
+                        }
+                        else -> {
+                            IconButton(
+                                onClick = { pickImage.launch("image/*") },
+                                modifier = Modifier.size(160.dp).clip(CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Seleccionar imagen",
+                                    tint = moradoTexto
+                                )
+                            }
                         }
                     }
+
+                    // Botón flotante de editar arriba a la derecha
+                    IconButton(
+                        onClick = { pickImage.launch("image/*") },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .zIndex(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Cambiar imagen",
+                            tint = Color.White
+                        )
+                    }
                 }
+
             }
 
             Spacer(modifier = Modifier.height(100.dp))
@@ -311,6 +328,40 @@ fun PerfilNegocioPage(navController: NavController) {
                 }
             }
         }
+        val mensaje by vmSubirFoto.mensaje.collectAsState()
+        val subiendo by vmSubirFoto.subiendo.collectAsState()
+
+        mensaje?.let {
+            LaunchedEffect(it) {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+                vmSubirFoto.limpiarMensaje()
+                vmDatos.cargarDatos(context) // 🔄 refresca datos tras subir
+                uri = null
+            }
+        }
+
+        if (uri != null && !subiendo) {
+            FloatingActionButton(
+                onClick = { vmSubirFoto.subirFoto(uri!!) },
+                containerColor = moradoTexto,
+                contentColor = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(20.dp)
+            ) {
+                Icon(Icons.Filled.Save, contentDescription = "Guardar foto")
+            }
+        }
+
+        if (subiendo) {
+            CircularProgressIndicator(
+                color = moradoTexto,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(32.dp)
+            )
+        }
+
     }
 }
 

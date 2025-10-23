@@ -6,5 +6,6 @@ data class Negocio(
     val correo: String,
     val telefono: String,
     val direccion: String,
-    val categoria: String
+    val categoria: String,
+    val foto: String?
 )
