@@ -19,8 +19,27 @@ import mx.mfpp.beneficioapp.data.local.AppDatabase
 import mx.mfpp.beneficioapp.data.local.NotificacionEntity
 import mx.mfpp.beneficioapp.view.MainActivity
 
+/**
+ * Servicio que extiende [FirebaseMessagingService] para manejar la recepción
+ * de notificaciones push de Firebase Cloud Messaging (FCM).
+ *
+ * Es responsable de:
+ * 1. Recibir nuevos tokens de registro de FCM ([onNewToken]).
+ * 2. Procesar mensajes de datos entrantes ([onMessageReceived]).
+ * 3. Guardar las notificaciones recibidas en la base de datos local (Room).
+ * 4. Mostrar una notificación visible al usuario en la barra de estado.
+ */
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
+    /**
+     * Se llama cuando FCM genera un nuevo token de registro para el dispositivo
+     * o cuando el token existente es invalidado.
+     *
+     * El nuevo token se guarda en [SharedPreferences] (modo privado, "fcm")
+     * para su uso posterior (ej. enviarlo al servidor backend).
+     *
+     * @param token El nuevo token de registro del dispositivo.
+     */
     override fun onNewToken(token: String) {
         super.onNewToken(token)
 
@@ -31,10 +50,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     }
 
+    /**
+     * Se llama cuando se recibe un mensaje de datos (data message) de FCM
+     * mientras la app está en primer plano o en segundo plano.
+     *
+     * Extrae los datos personalizados del payload (`message.data`),
+     * los guarda en la base de datos Room y luego muestra una
+     * notificación al usuario.
+     *
+     * @param message El objeto [RemoteMessage] que contiene los datos de la notificación.
+     */
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        // ✅ LEER DATOS (ahora título y mensaje están en data)
+        // Extrae los campos del payload de 'data'
         val idPromocion = message.data["id_promocion"]
         val idEstablecimiento = message.data["id_establecimiento"]
         val nombreEstablecimiento = message.data["nombre_establecimiento"]
@@ -48,6 +77,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         Log.d(TAG, "📝 Mensaje: $cuerpo")
         Log.d(TAG, "🏪 Establecimiento: $nombreEstablecimiento")
 
+        // Persiste la notificación en la base de datos local
         guardarNotificacionEnRoom(
             titulo = titulo,
             mensaje = cuerpo,
@@ -57,7 +87,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             nombreEstablecimiento = nombreEstablecimiento
         )
 
-        // ✅ MOSTRAR NOTIFICACIÓN (siempre, en cualquier estado de la app)
+        // Muestra la notificación en la barra de estado
         mostrarNotificacion(
             titulo = titulo,
             mensaje = cuerpo,
@@ -66,6 +96,17 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         )
     }
 
+    /**
+     * Guarda los detalles de la notificación recibida en la base de datos Room
+     * [AppDatabase] usando una corutina en [Dispatchers.IO].
+     *
+     * @param titulo El título de la notificación.
+     * @param mensaje El cuerpo (mensaje) de la notificación.
+     * @param tipo El tipo de notificación (ej. "promocion").
+     * @param idPromocion El ID de la promoción asociada (opcional).
+     * @param idEstablecimiento El ID del establecimiento asociado (opcional).
+     * @param nombreEstablecimiento El nombre del establecimiento (opcional).
+     */
     private fun guardarNotificacionEnRoom(
         titulo: String,
         mensaje: String,
@@ -96,6 +137,20 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         }
     }
 
+    /**
+     * Construye y muestra una notificación en la barra de estado del sistema.
+     *
+     * Crea un [NotificationChannel] (requerido para Android 8.0+).
+     * Define un [PendingIntent] para abrir [MainActivity] cuando el usuario
+     * toque la notificación, pasando extras (como `id_promocion`).
+     *
+     * @param titulo El título a mostrar en la notificación.
+     * @param mensaje El cuerpo (mensaje) a mostrar.
+     * @param idPromocion El ID de la promoción (opcional) para pasarlo como extra
+     * al [PendingIntent].
+     * @param nombreEstablecimiento El nombre del establecimiento (opcional)
+     * para pasarlo como extra.
+     */
     private fun mostrarNotificacion(
         titulo: String,
         mensaje: String,
@@ -137,7 +192,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
         // Crear notificación
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground) // Cambiar por tu icono
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Icono de la app
             .setContentTitle(titulo)
             .setContentText(mensaje)
             .setStyle(NotificationCompat.BigTextStyle().bigText(mensaje))
@@ -149,13 +204,16 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .setDefaults(NotificationCompat.DEFAULT_ALL)
             .build()
 
+        // ID único para la notificación (basado en el tiempo)
         val notificationId = System.currentTimeMillis().toInt()
         notificationManager.notify(notificationId, notification)
 
     }
 
     companion object {
+        /** Etiqueta para los logs de este servicio. */
         private const val TAG = "FCMService"
+        /** ID único para el canal de notificaciones de promociones. */
         private const val CHANNEL_ID = "promociones_channel"
     }
 }
