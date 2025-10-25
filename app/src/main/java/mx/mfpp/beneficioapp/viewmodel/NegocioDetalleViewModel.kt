@@ -11,19 +11,32 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.PromocionJoven
 import mx.mfpp.beneficioapp.model.ServicioRemotoNegocioDetalle
 
+/**
+ * ViewModel para manejar los detalles de un negocio y sus promociones activas.
+ *
+ * @param establecimientoId ID del establecimiento cuyo detalle se desea cargar
+ */
 class NegocioDetalleViewModel(
     private val establecimientoId: Int
 ) : ViewModel() {
 
+    /** Lista de promociones activas del negocio */
     private val _promociones = MutableStateFlow<List<PromocionJoven>>(emptyList())
     val promociones: StateFlow<List<PromocionJoven>> = _promociones.asStateFlow()
 
+    /** Indica si se está cargando información */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Mensaje de error actual */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /**
+     * Carga las promociones activas del establecimiento desde el servicio remoto.
+     *
+     * Actualiza los estados de carga y error automáticamente.
+     */
     fun cargarDatos() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -40,6 +53,11 @@ class NegocioDetalleViewModel(
         }
     }
 
+    /**
+     * Factory para crear instancias de [NegocioDetalleViewModel] con parámetros.
+     *
+     * @param establecimientoId ID del establecimiento a pasar al ViewModel
+     */
     class NegocioDetalleViewModelFactory(
         private val establecimientoId: Int
     ) : ViewModelProvider.Factory {

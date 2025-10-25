@@ -10,21 +10,29 @@ import mx.mfpp.beneficioapp.model.HistorialPromocionUsuario
 import mx.mfpp.beneficioapp.model.ServicioRemotoHistorial
 
 /**
- * ViewModel para manejar el historial de promociones usadas
+ * ViewModel para manejar el historial de promociones usadas por un usuario.
+ *
+ * Gestiona la carga de datos desde el servidor, control de estado de carga
+ * y manejo de errores.
  */
 class HistorialViewModel : ViewModel() {
 
+    /** Lista del historial de promociones usadas por el usuario */
     private val _historial = MutableStateFlow<List<HistorialPromocionUsuario>>(emptyList())
     val historial: StateFlow<List<HistorialPromocionUsuario>> = _historial.asStateFlow()
 
+    /** Indica si se está realizando alguna operación de carga */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Mensaje de error en caso de fallo al cargar el historial */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
     /**
-     * Carga el historial de promociones usadas por un usuario
+     * Carga el historial de promociones usadas por un usuario desde el servidor.
+     *
+     * @param idUsuario ID del usuario cuyo historial se desea cargar.
      */
     fun cargarHistorialUsuario(idUsuario: Int) {
         if (idUsuario == 0) {
@@ -52,12 +60,17 @@ class HistorialViewModel : ViewModel() {
     }
 
     /**
-     * Refresca el historial
+     * Refresca el historial del usuario recargando los datos desde el servidor.
+     *
+     * @param idUsuario ID del usuario cuyo historial se desea refrescar.
      */
     fun refrescarHistorial(idUsuario: Int) {
         cargarHistorialUsuario(idUsuario)
     }
 
+    /**
+     * Limpia cualquier mensaje de error actual.
+     */
     fun clearError() {
         _error.value = null
     }

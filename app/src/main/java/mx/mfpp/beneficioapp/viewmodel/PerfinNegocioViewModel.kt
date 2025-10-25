@@ -14,24 +14,34 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.SessionManager
 
-// ✅ CORREGIDO: 'aplication' a 'application'
+/**
+ * ViewModel para manejar el perfil del negocio, incluyendo cierre de sesión.
+ *
+ * @param application Contexto de la aplicación necesario para SessionManager y Auth0
+ */
 class PerfilNegocioViewModel(application: Application) : AndroidViewModel(application) {
 
+    /** Evento que se emite cuando el negocio cierra sesión */
     private val _logoutEvent = MutableSharedFlow<Unit>()
-    // ✅ CORREGIDO: 'logoutEcent' a 'logoutEvent'
     val logoutEvent = _logoutEvent.asSharedFlow()
 
+    /** Cliente Auth0 para manejar revocación de tokens */
     private val authClient: AuthenticationAPIClient
 
     init {
         val auth0 = Auth0(
-            // ✅ CORREGIDO: 'aplication' a 'application'
             application.getString(R.string.com_auth0_client_id),
             application.getString(R.string.com_auth0_domain)
         )
         authClient = AuthenticationAPIClient(auth0)
     }
 
+    /**
+     * Cierra sesión del negocio.
+     *
+     * Revoca el refresh token en Auth0 si existe, limpia la sesión local
+     * y emite el evento de logout para la UI.
+     */
     fun cerrarSesion() {
         viewModelScope.launch {
             val sessionManager = SessionManager(getApplication())
@@ -42,7 +52,9 @@ class PerfilNegocioViewModel(application: Application) : AndroidViewModel(applic
                 authClient.revokeToken(refreshToken)
                     .start(object : Callback<Void?, AuthenticationException> {
                         override fun onSuccess(result: Void?) {
+                            // Token revocado correctamente
                         }
+
                         override fun onFailure(error: AuthenticationException) {
                             Log.w("AUTH0_LOGOUT", "No se pudo revocar el refresh token: ${error.getDescription()}")
                         }

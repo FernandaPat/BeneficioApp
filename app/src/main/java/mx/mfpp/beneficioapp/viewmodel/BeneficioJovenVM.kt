@@ -8,19 +8,33 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel principal que coordina los demás ViewModels
- * Mantiene solo el estado global y la coordinación entre módulos
+ * ViewModel que maneja el estado global de la aplicación para jóvenes.
+ *
+ * Gestiona la carga inicial de datos, refresco y manejo de errores globales.
  */
 class BeneficioJovenVM : ViewModel() {
-
-    private val _estadoCargandoGlobal = MutableStateFlow(false)
-    val estadoCargandoGlobal: StateFlow<Boolean> = _estadoCargandoGlobal.asStateFlow()
-
-    private val _errorGlobal = MutableStateFlow<String?>(null)
-    val errorGlobal: StateFlow<String?> = _errorGlobal.asStateFlow()
-
     /**
-     * Carga todos los datos iniciales de la aplicación
+     * Estado que indica si hay una operación de carga global en progreso.
+     */
+    private val _estadoCargandoGlobal = MutableStateFlow(false)
+    /**
+     * Exposición de solo lectura del estado de carga global.
+     */
+    val estadoCargandoGlobal: StateFlow<Boolean> = _estadoCargandoGlobal.asStateFlow()
+    /**
+     * Estado que contiene el mensaje de error global, si existe alguno.
+     */
+    private val _errorGlobal = MutableStateFlow<String?>(null)
+    /**
+     * Exposición de solo lectura del error global.
+     */
+    val errorGlobal: StateFlow<String?> = _errorGlobal.asStateFlow()
+    /**
+     * Carga todos los datos iniciales de la aplicación.
+     *
+     * Marca el estado de carga global como `true` y limpia cualquier error previo.
+     * Luego simula la carga de datos de todos los ViewModels y actualiza el estado de carga.
+     * En caso de error, se actualiza [errorGlobal] con el mensaje correspondiente.
      */
     fun cargarDatosIniciales() {
         _estadoCargandoGlobal.value = true

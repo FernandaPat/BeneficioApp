@@ -11,46 +11,72 @@ import com.google.android.gms.maps.model.LatLng
 import mx.mfpp.beneficioapp.mode.ServicioRemotoEstablecimiento
 import kotlin.math.*
 
-// ✅ AGREGADO: Estados específicos para la UI
+/**
+ * Estados de UI para el mapa de establecimientos.
+ */
 sealed class MapaUiState {
+    /** Estado de carga inicial */
     object Loading : MapaUiState()
+
+    /** Estado cuando no hay establecimientos disponibles */
     object Empty : MapaUiState()
+
+    /**
+     * Estado exitoso con establecimientos cargados
+     * @param establecimientos Lista de establecimientos obtenidos
+     */
     data class Success(val establecimientos: List<Establecimiento>) : MapaUiState()
+
+    /**
+     * Estado de error al cargar establecimientos
+     * @param message Mensaje de error
+     */
     data class Error(val message: String) : MapaUiState()
 }
 
+/**
+ * ViewModel que maneja la lógica de los establecimientos en un mapa.
+ *
+ * Permite cargar, filtrar y ordenar establecimientos por distancia,
+ * manejar errores, estado de carga y la ubicación actual.
+ */
 class MapaViewModel : ViewModel() {
 
+    /** Lista completa de establecimientos */
     private val _establecimientos = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientos: StateFlow<List<Establecimiento>> = _establecimientos.asStateFlow()
 
+    /** Lista filtrada de establecimientos según búsqueda */
     private val _establecimientosFiltrados = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientosFiltrados: StateFlow<List<Establecimiento>> = _establecimientosFiltrados.asStateFlow()
 
+    /** Indica si se está cargando información */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Mensaje de error actual */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // Ubicación actual para calcular distancias
+    /** Ubicación actual del usuario para calcular distancias */
     private var _ubicacionActual = MutableStateFlow<LatLng?>(null)
     val ubicacionActual: StateFlow<LatLng?> = _ubicacionActual.asStateFlow()
 
-    // ✅ MEJORADO: Estado más específico para la UI
+    /** Estado de UI específico para la vista del mapa */
     private val _uiState = MutableStateFlow<MapaUiState>(MapaUiState.Loading)
     val uiState: StateFlow<MapaUiState> = _uiState.asStateFlow()
 
+    /** Lista de establecimientos ordenados (generalmente por distancia) */
     private val _establecimientosOrdenados = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientosOrdenados: StateFlow<List<Establecimiento>> = _establecimientosOrdenados.asStateFlow()
 
-    // Solo establecimientos con coordenadas válidas
+    /** Retorna solo los establecimientos que tienen coordenadas válidas */
     val establecimientosConCoordenadas: List<Establecimiento>
         get() = _establecimientos.value.filter {
             it.latitud != null && it.longitud != null
         }
 
-    // Establecimientos ordenados por distancia (más cercanos primero)
+    /** Retorna establecimientos filtrados y ordenados por distancia a la ubicación actual */
     val establecimientosOrdenadosPorDistancia: List<Establecimiento>
         get() {
             val ubicacion = _ubicacionActual.value
@@ -72,6 +98,11 @@ class MapaViewModel : ViewModel() {
         cargarEstablecimientos()
     }
 
+    /**
+     * Carga los establecimientos desde el servicio remoto.
+     *
+     * Actualiza los estados de UI y las listas internas.
+     */
     fun cargarEstablecimientos() {
         _isLoading.value = true
         _error.value = null
@@ -79,8 +110,7 @@ class MapaViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // ✅ MEJORADO: Simular un pequeño retraso para mostrar el loading (opcional)
-                kotlinx.coroutines.delay(500)
+                kotlinx.coroutines.delay(500) // Simula carga
 
                 val todosEstablecimientos = ServicioRemotoEstablecimiento.obtenerEstablecimientos()
 
@@ -88,20 +118,14 @@ class MapaViewModel : ViewModel() {
                 _establecimientosFiltrados.value = todosEstablecimientos
                 _establecimientosOrdenados.value = todosEstablecimientos
 
-                // Actualizar estado basado en el resultado
                 if (todosEstablecimientos.isEmpty()) {
                     _uiState.value = MapaUiState.Empty
                 } else {
                     _uiState.value = MapaUiState.Success(todosEstablecimientos)
-
-                    // ✅ MEJORADO: Ordenar establecimientos si ya tenemos ubicación
-                    _ubicacionActual.value?.let { ubicacion ->
-                        actualizarUbicacionActual(ubicacion)
-                    }
+                    _ubicacionActual.value?.let { actualizarUbicacionActual(it) }
                 }
 
-                // 🔧 Delay para asegurar actualización del flujo
-                kotlinx.coroutines.delay(300)
+                kotlinx.coroutines.delay(300) // Delay opcional para actualizar flujos
 
             } catch (e: Exception) {
                 _error.value = "Error al cargar establecimientos: ${e.message}"
@@ -112,10 +136,14 @@ class MapaViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Actualiza la ubicación actual y ordena los establecimientos por distancia.
+     *
+     * @param latLng Nueva ubicación del usuario
+     */
     fun actualizarUbicacionActual(latLng: LatLng) {
         _ubicacionActual.value = latLng
 
-        // ✅ MEJORADO: Ordenar establecimientos por distancia a la nueva ubicación
         val establecimientosOrdenados = _establecimientosFiltrados.value.sortedBy { establecimiento ->
             if (establecimiento.latitud != null && establecimiento.longitud != null) {
                 calcularDistancia(latLng, LatLng(establecimiento.latitud!!, establecimiento.longitud!!))
@@ -127,6 +155,11 @@ class MapaViewModel : ViewModel() {
         _establecimientosOrdenados.value = establecimientosOrdenados
     }
 
+    /**
+     * Filtra los establecimientos según una consulta de texto.
+     *
+     * @param query Texto para filtrar por nombre, categoría o colonia
+     */
     fun filtrarEstablecimientos(query: String) {
         if (query.isEmpty()) {
             _establecimientosFiltrados.value = _establecimientos.value
@@ -139,39 +172,44 @@ class MapaViewModel : ViewModel() {
             }
             _establecimientosFiltrados.value = filtrados
 
-            // ✅ MEJORADO: Re-ordenar los resultados filtrados
             _ubicacionActual.value?.let { ubicacion ->
-                val ordenados = filtrados.sortedBy { establecimiento ->
+                _establecimientosOrdenados.value = filtrados.sortedBy { establecimiento ->
                     if (establecimiento.latitud != null && establecimiento.longitud != null) {
                         calcularDistancia(ubicacion, LatLng(establecimiento.latitud!!, establecimiento.longitud!!))
                     } else {
                         Double.MAX_VALUE
                     }
                 }
-                _establecimientosOrdenados.value = ordenados
             } ?: run {
                 _establecimientosOrdenados.value = filtrados
             }
         }
     }
 
+    /** Refresca los establecimientos recargando los datos */
     fun refrescarEstablecimientos() {
         cargarEstablecimientos()
     }
 
+    /** Limpia el mensaje de error y actualiza el estado de UI según corresponda */
     fun clearError() {
         _error.value = null
-        // ✅ MEJORADO: Restaurar estado anterior después de limpiar error
         if (_establecimientos.value.isNotEmpty()) {
             _uiState.value = MapaUiState.Success(_establecimientos.value)
-        } else if (_establecimientos.value.isEmpty()) {
+        } else {
             _uiState.value = MapaUiState.Empty
         }
     }
 
-    // Función para calcular distancia entre dos puntos en metros
+    /**
+     * Calcula la distancia entre dos puntos en metros usando la fórmula de Haversine.
+     *
+     * @param punto1 Primer punto
+     * @param punto2 Segundo punto
+     * @return Distancia en metros
+     */
     private fun calcularDistancia(punto1: LatLng, punto2: LatLng): Double {
-        val radioTierra = 6371000.0 // Radio de la Tierra en metros
+        val radioTierra = 6371000.0
 
         val lat1 = Math.toRadians(punto1.latitude)
         val lon1 = Math.toRadians(punto1.longitude)
@@ -187,7 +225,12 @@ class MapaViewModel : ViewModel() {
         return radioTierra * c
     }
 
-    // Función para formatear distancia en texto amigable
+    /**
+     * Formatea una distancia en metros a un string amigable (m o km).
+     *
+     * @param metros Distancia en metros
+     * @return Distancia formateada
+     */
     fun formatearDistancia(metros: Double): String {
         return when {
             metros < 1000 -> "${metros.toInt()} m"
@@ -195,6 +238,6 @@ class MapaViewModel : ViewModel() {
         }
     }
 
-    // Extensión para formatear decimales
+    /** Extensión para formatear Double con N dígitos decimales */
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 }

@@ -8,21 +8,34 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.*
 import mx.mfpp.beneficioapp.utils.ErrorHandler
-
+/**
+ * ViewModel para manejar las promociones de un negocio.
+ *
+ * Permite cargar las promociones desde el servidor y eliminarlas.
+ */
 class PromocionesViewModel : ViewModel() {
 
+    /** Lista de promociones cargadas */
     private val _promociones = MutableStateFlow<List<Promocion>>(emptyList())
     val promociones: StateFlow<List<Promocion>> = _promociones
 
+    /** Indica si se está cargando información */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    /** Mensaje de error, si ocurre alguno */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
+    /** Estado de eliminación de una promoción */
     private val _isDeleting = MutableStateFlow(false)
     val isDeleting: StateFlow<Boolean> = _isDeleting
 
+    /**
+     * Carga las promociones de un negocio desde el backend.
+     *
+     * @param idNegocio ID del negocio cuyas promociones se desean cargar
+     */
     fun cargarPromociones(idNegocio: Int) {
         viewModelScope.launch {
             try {
@@ -46,8 +59,7 @@ class PromocionesViewModel : ViewModel() {
                             ubicacion = p.nombreEstablecimiento ?: "Sin ubicación",
                             imagenUrl = p.foto ?: "",
                             expiraEn = p.fechaExpiracion ?: "Sin fecha",
-                            esFavorito = false,
-
+                            esFavorito = false
                         )
                     }
 
@@ -66,13 +78,16 @@ class PromocionesViewModel : ViewModel() {
         }
     }
 
-
-
-
+    /**
+     * Elimina una promoción del backend y de la lista local.
+     *
+     * @param idPromocion ID de la promoción a eliminar
+     * @param onResult Callback que indica si la eliminación fue exitosa y un mensaje
+     */
     fun eliminarPromocion(idPromocion: Int, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             try {
-                _isDeleting.value = true // 🔹 Mostrar estado “Cargando...”
+                _isDeleting.value = true // Mostrar estado “Cargando...”
                 val response = ServicioRemotoEliminarPromocion.api.eliminarPromocion(idPromocion)
 
                 if (response.isSuccessful) {
@@ -84,9 +99,8 @@ class PromocionesViewModel : ViewModel() {
             } catch (e: Exception) {
                 onResult(false, "⚠️ Error al eliminar: ${e.localizedMessage}")
             } finally {
-                _isDeleting.value = false // 🔹 Ocultar loading
+                _isDeleting.value = false // Ocultar loading
             }
         }
     }
-
 }

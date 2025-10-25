@@ -9,18 +9,35 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.repository.FotoRepository
-
+/**
+ * ViewModel encargado de subir la foto de un establecimiento.
+ *
+ * @param application Contexto de la aplicación, necesario para repositorios y sesiones.
+ */
 class SubirFotoNegocioViewModel(application: Application) : AndroidViewModel(application) {
 
+    /** Repositorio para operaciones con fotos */
     private val repo = FotoRepository(application.applicationContext)
+
+    /** Administrador de sesión para obtener ID del negocio */
     private val session = SessionManager(application.applicationContext)
 
+    /** Indica si actualmente se está subiendo la foto */
     private val _subiendo = MutableStateFlow(false)
     val subiendo = _subiendo.asStateFlow()
 
+    /** Mensaje de estado o resultado de la operación */
     private val _mensaje = MutableStateFlow<String?>(null)
     val mensaje = _mensaje.asStateFlow()
 
+    /**
+     * Sube la foto del establecimiento.
+     *
+     * @param uri URI de la imagen seleccionada.
+     *
+     * Convierte la imagen a Base64 y la envía al servidor. Actualiza el flujo
+     * [_mensaje] con el resultado de la operación.
+     */
     fun subirFoto(uri: Uri) {
         viewModelScope.launch {
             try {
@@ -42,6 +59,11 @@ class SubirFotoNegocioViewModel(application: Application) : AndroidViewModel(app
         }
     }
 
+    /**
+     * Limpia el mensaje de estado.
+     *
+     * Útil para reiniciar la UI después de mostrar un Toast, Snackbar o alerta.
+     */
     fun limpiarMensaje() {
         _mensaje.value = null
     }

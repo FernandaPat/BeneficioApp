@@ -18,26 +18,53 @@ import mx.mfpp.beneficioapp.model.SessionManager
 import com.auth0.android.jwt.JWT
 import mx.mfpp.beneficioapp.utils.AuthErrorUtils
 import mx.mfpp.beneficioapp.utils.FcmHelper
-
+/**
+ * Representa los distintos estados del login de un usuario joven.
+ */
 sealed class LoginState {
+    /** Estado inicial, sin actividad de login */
     object Idle : LoginState()
+
+    /** Estado de carga durante el login */
     object Loading : LoginState()
-    data class Success(val accessToken: String, val userId: Int) : LoginState() // ✅ AGREGAR userId
+
+    /**
+     * Estado exitoso de login.
+     *
+     * @param accessToken Token de acceso recibido de Auth0.
+     * @param userId ID del usuario joven autenticado.
+     */
+    data class Success(val accessToken: String, val userId: Int) : LoginState()
+
+    /** Estado de error en el login */
     data class Error(val message: String) : LoginState()
 }
 
+/**
+ * ViewModel para manejar el inicio de sesión de usuarios jóvenes.
+ *
+ * Permite actualizar campos de formulario, validar datos, iniciar sesión
+ * con Auth0, guardar la sesión y registrar el token FCM para notificaciones.
+ *
+ * @param application Contexto de la aplicación necesario para obtener recursos y SharedPreferences.
+ */
 class IniciarSesionViewModel(application: Application) : AndroidViewModel(application) {
 
+    /** Datos del formulario de login */
     var login = mutableStateOf(LoginRequest())
         private set
 
+    /** Estado actual del login */
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
     val loginState: StateFlow<LoginState> = _loginState
 
+    /** Instancia de Auth0 */
     private val auth0 = Auth0(
         application.getString(R.string.com_auth0_client_id),
         application.getString(R.string.com_auth0_domain)
     )
+
+    /** Cliente de autenticación de Auth0 */
     private val authClient = AuthenticationAPIClient(auth0)
 
     init {
@@ -45,14 +72,29 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
         Log.d("AUTH0_INIT", "Client ID: ${application.getString(R.string.com_auth0_client_id).take(10)}...")
     }
 
+    /**
+     * Actualiza el correo del formulario de login.
+     *
+     * @param value Correo electrónico ingresado.
+     */
     fun onCorreoChange(value: String) {
         login.value = login.value.copy(correo = value)
     }
 
+    /**
+     * Actualiza la contraseña del formulario de login.
+     *
+     * @param value Contraseña ingresada.
+     */
     fun onPasswordChange(value: String) {
         login.value = login.value.copy(password = value)
     }
 
+    /**
+     * Valida que los campos del formulario estén completos y el correo tenga formato válido.
+     *
+     * @return true si el formulario es válido.
+     */
     fun esFormularioValido(): Boolean {
         val correo = login.value.correo
         val password = login.value.password
@@ -65,6 +107,12 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    /**
+     * Inicia sesión con Auth0 usando los datos del formulario.
+     *
+     * Maneja estados de carga, éxito y error, guarda tokens y datos del usuario en SessionManager,
+     * y registra el token FCM si el usuario es joven.
+     */
     fun iniciarSesion() {
 
         if (!esFormularioValido()) {
@@ -85,19 +133,17 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             .validateClaims()
             .start(object : Callback<Credentials, AuthenticationException> {
                 override fun onSuccess(result: Credentials) {
-
                     val idToken = result.idToken
                     val accessToken = result.accessToken
                     val refreshToken = result.refreshToken
 
-                    // Decodificar JWT para obtener datos del usuario
                     val jwt = JWT(idToken)
                     val namespace = "https://api.beneficiojoven.com/"
                     val userType = jwt.getClaim(namespace + "tipo_usuario").asString()
                     val idJoven = jwt.getClaim(namespace + "id_usuario").asInt() ?: -1
                     val nombreJoven = jwt.getClaim(namespace + "nombre").asString() ?: "Joven"
                     val folioDigital = jwt.getClaim(namespace + "folio_digital").asString() ?: "0"
-                    val apellidos=jwt.getClaim(namespace + "apellidos").asString() ?: "Apellido"
+                    val apellidos = jwt.getClaim(namespace + "apellidos").asString() ?: "Apellido"
 
                     Log.d("AUTH0_SUCCESS", "Tipo de usuario: $userType")
                     Log.d("AUTH0_SUCCESS", "ID joven: $idJoven")
@@ -105,14 +151,12 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
                     Log.d("AUTH0_SUCCESS", "Folio: $folioDigital")
                     Log.d("AUTH0_SUCCESS", "Apellidos: $apellidos")
 
-                    // Guardar sesión
                     val sessionManager = SessionManager(getApplication())
                     sessionManager.saveToken(accessToken, refreshToken, userType)
                     sessionManager.saveJovenData(idJoven, nombreJoven, folioDigital, apellidos)
 
                     Log.d("AUTH0_SUCCESS", "Sesión guardada en SessionManager")
 
-                    // ✅ REGISTRAR TOKEN FCM (SOLO PARA JÓVENES)
                     if (userType == "joven" && idJoven != -1) {
                         Log.d("AUTH0_SUCCESS", "Usuario es JOVEN → Registrando token FCM")
                         FcmHelper.registrarTokenEnServidor(idJoven)
@@ -134,6 +178,11 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
             })
     }
 
+    /**
+     * Guarda un token de acceso de forma segura en SharedPreferences.
+     *
+     * @param token Token de acceso a guardar.
+     */
     private fun saveTokenSecurely(token: String) {
         val prefs = getApplication<Application>().getSharedPreferences("auth", Application.MODE_PRIVATE)
         prefs.edit {
@@ -142,6 +191,9 @@ class IniciarSesionViewModel(application: Application) : AndroidViewModel(applic
         Log.d("AUTH0_TOKEN", "Token guardado")
     }
 
+    /**
+     * Reinicia el estado de login al estado inicial (Idle).
+     */
     fun resetState() {
         _loginState.value = LoginState.Idle
     }

@@ -24,13 +24,15 @@ sealed class RecuperarState {
 }
 
 class RecuperarContrasenaViewModel(application: Application) : AndroidViewModel(application) {
-
+    /** Email ingresado o cargado automáticamente */
     var email = mutableStateOf("")
         private set
 
+    /** Estado de la operación de recuperación */
     private val _recuperarState = MutableStateFlow<RecuperarState>(RecuperarState.Idle)
     val recuperarState: StateFlow<RecuperarState> = _recuperarState
 
+    /** Cliente Auth0 para operaciones de autenticación */
     private val auth0 = Auth0(
         application.getString(R.string.com_auth0_client_id),
         application.getString(R.string.com_auth0_domain)
@@ -44,10 +46,9 @@ class RecuperarContrasenaViewModel(application: Application) : AndroidViewModel(
         // Cargar email del usuario logueado si existe
         cargarEmailDeUsuarioLogueado()
     }
-
     /**
      * Carga el email del usuario logueado desde el servidor.
-     * Utiliza ServicioRemotoRecuperarContrasena para obtener los datos.
+     * Dependiendo del tipo de usuario, llama al servicio correspondiente.
      */
     private fun cargarEmailDeUsuarioLogueado() {
         val tipoUsuario = sessionManager.getUserType()
@@ -94,16 +95,19 @@ class RecuperarContrasenaViewModel(application: Application) : AndroidViewModel(
             }
         }
     }
-
+    /** Actualiza el valor del email ingresado por el usuario */
     fun onEmailChange(value: String) {
         email.value = value
     }
-
+    /** Valida que el email tenga formato correcto */
     fun esEmailValido(): Boolean {
         return email.value.isNotBlank() &&
                 android.util.Patterns.EMAIL_ADDRESS.matcher(email.value).matches()
     }
-
+    /**
+     * Solicita la recuperación de contraseña a Auth0.
+     * Actualiza [_recuperarState] con Loading, Success o Error.
+     */
     fun solicitarRecuperacion() {
         if (!esEmailValido()) {
             _recuperarState.value = RecuperarState.Error("Por favor, ingresa un correo válido")
@@ -140,7 +144,7 @@ class RecuperarContrasenaViewModel(application: Application) : AndroidViewModel(
                 }
             })
     }
-
+    /** Reinicia el estado a Idle */
     fun resetState() {
         _recuperarState.value = RecuperarState.Idle
     }

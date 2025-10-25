@@ -9,34 +9,45 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.QRValidationResponse
 import mx.mfpp.beneficioapp.model.ServicioRemotoQR
 import org.json.JSONObject
-
+/**
+ * ViewModel encargado de la lógica de escaneo, validación y aplicación de códigos QR.
+ */
 class ScannerViewModel : ViewModel() {
+
+    /** Último valor escaneado del QR */
     var lastScannedValue: String? = null
 
+    /** Controla si la UI debe mostrar la cámara para escaneo */
     private val _showScanner = MutableStateFlow(false)
     val showScanner: StateFlow<Boolean> = _showScanner.asStateFlow()
 
-    // Estados para la validación y aplicación
+    /** Resultado de la validación remota del QR */
     private val _validationResult = MutableStateFlow<QRValidationResponse?>(null)
     val validationResult: StateFlow<QRValidationResponse?> = _validationResult.asStateFlow()
 
+    /** Indica si se está aplicando una promoción */
     private val _isApplying = MutableStateFlow(false)
     val isApplying: StateFlow<Boolean> = _isApplying.asStateFlow()
 
+    /** Resultado de la aplicación de promoción (true = éxito, false = fallo) */
     private val _applyResult = MutableStateFlow<Boolean?>(null)
     val applyResult: StateFlow<Boolean?> = _applyResult.asStateFlow()
 
+    /** Mensaje de error actual */
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
+    /** Muestra el scanner */
     fun showScanner() {
         _showScanner.value = true
     }
 
+    /** Oculta el scanner */
     fun hideScanner() {
         _showScanner.value = false
     }
 
+    /** Reinicia todos los estados del scanner */
     fun resetScannerState() {
         _showScanner.value = false
         lastScannedValue = null
@@ -45,7 +56,14 @@ class ScannerViewModel : ViewModel() {
         _errorMessage.value = null
     }
 
-    // Validar QR remoto
+    /**
+     * Valida el QR en el servidor.
+     *
+     * @param token Token del QR escaneado.
+     * @param idEstablecimiento ID del establecimiento.
+     * @param onSuccess Callback con datos codificados si la validación es exitosa.
+     * @param onError Callback con mensaje de error si la validación falla.
+     */
     fun validarQrRemoto(
         token: String,
         idEstablecimiento: Int,
@@ -71,7 +89,7 @@ class ScannerViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Guardar el resultado de validación para usarlo después
+                // Guardar el resultado de validación
                 _validationResult.value = response
 
                 // Construir JSON para la pantalla de detalles
@@ -79,7 +97,6 @@ class ScannerViewModel : ViewModel() {
                     put("numeroTarjeta", datos.joven.folio_digital)
                     put("fecha", datos.token_info.generado)
                     put("nombrePromocion", datos.promocion.nombre)
-                    // Agregar datos adicionales que necesitaremos para aplicar la promoción
                     put("id_tarjeta", datos.joven.id_tarjeta)
                     put("id_promocion", datos.promocion.id_promocion)
                     put("id_establecimiento", idEstablecimiento)
@@ -94,7 +111,15 @@ class ScannerViewModel : ViewModel() {
         }
     }
 
-    // ✅ AGREGAR: Aplicar promoción
+    /**
+     * Aplica la promoción escaneada.
+     *
+     * @param idTarjeta ID de la tarjeta del joven.
+     * @param idPromocion ID de la promoción.
+     * @param idEstablecimiento ID del establecimiento.
+     * @param onSuccess Callback si la aplicación es exitosa.
+     * @param onError Callback con mensaje de error si falla.
+     */
     fun aplicarPromocion(
         idTarjeta: Int,
         idPromocion: Int,

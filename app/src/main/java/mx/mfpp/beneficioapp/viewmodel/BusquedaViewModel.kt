@@ -13,26 +13,46 @@ import mx.mfpp.beneficioapp.mode.ServicioRemotoEstablecimiento
 import mx.mfpp.beneficioapp.model.Establecimiento
 
 /**
- * ViewModel para manejar búsqueda y filtrado de establecimientos
+ * ViewModel encargado de manejar la búsqueda y filtrado de establecimientos.
+ *
+ * Gestiona la lista de establecimientos, filtros por categoría y texto,
+ * estado de carga, errores y favoritos locales.
  */
 class BusquedaViewModel : ViewModel() {
 
+    /**
+     * Lista filtrada de establecimientos para mostrar en la UI.
+     */
     private val _establecimientos = MutableStateFlow<List<Establecimiento>>(emptyList())
     val establecimientos: StateFlow<List<Establecimiento>> = _establecimientos.asStateFlow()
 
+    /**
+     * Categoría seleccionada para filtrar establecimientos.
+     */
     private val _categoriaSeleccionada = MutableStateFlow<String?>(null)
     val categoriaSeleccionada: StateFlow<String?> = _categoriaSeleccionada.asStateFlow()
 
+    /**
+     * Texto de búsqueda ingresado por el usuario para filtrar establecimientos.
+     */
     private val _textoBusqueda = MutableStateFlow("")
     val textoBusqueda: StateFlow<String> = _textoBusqueda.asStateFlow()
 
+    /**
+     * Indica si se está cargando la información de establecimientos.
+     */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /**
+     * Mensaje de error global de la búsqueda, si existe.
+     */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // Lista original completa (sin filtrar)
+    /**
+     * Lista completa de establecimientos sin filtrar.
+     */
     private var todosEstablecimientos: List<Establecimiento> = emptyList()
 
     init {
@@ -40,6 +60,11 @@ class BusquedaViewModel : ViewModel() {
         cargarEstablecimientos()
     }
 
+    /**
+     * Carga los establecimientos desde el servicio remoto y aplica filtros actuales.
+     *
+     * @param context Contexto opcional para la carga de datos remotos.
+     */
     fun cargarEstablecimientos(context: Context? = null) {
         _isLoading.value = true
         _error.value = null
@@ -65,44 +90,67 @@ class BusquedaViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Recarga los establecimientos desde el servicio remoto.
+     *
+     * @param context Contexto opcional para la carga de datos remotos.
+     */
     fun refrescarEstablecimientos(context: Context? = null) {
         Log.d("BUSQUEDA_VM", "🔄 Refrescando establecimientos")
         cargarEstablecimientos(context)
     }
 
-    // ✅ NUEVO: Función para limpiar completamente los filtros
+    /**
+     * Limpia completamente todos los filtros y muestra todos los establecimientos.
+     */
     fun limpiarFiltrosCompletamente() {
         Log.d("BUSQUEDA_VM", "🧹 Limpiando TODOS los filtros")
         _categoriaSeleccionada.value = null
         _textoBusqueda.value = ""
-        // Aplicar filtros para mostrar todos los establecimientos
         aplicarFiltros()
     }
 
+    /**
+     * Limpia los filtros de búsqueda y categoría actuales.
+     */
     fun limpiarBusqueda() {
         _categoriaSeleccionada.value = null
         _textoBusqueda.value = ""
         aplicarFiltros()
     }
 
+    /**
+     * Limpia el mensaje de error global.
+     */
     fun clearError() {
         _error.value = null
     }
 
+    /**
+     * Selecciona una categoría para filtrar establecimientos y limpia el texto de búsqueda.
+     *
+     * @param categoria Nombre de la categoría a seleccionar.
+     */
     fun seleccionarCategoria(categoria: String) {
         Log.d("BUSQUEDA_VM", "🔍 Categoría seleccionada: $categoria")
         Log.d("BUSQUEDA_VM", "📦 Total establecimientos: ${todosEstablecimientos.size}")
         _categoriaSeleccionada.value = categoria
-        _textoBusqueda.value = "" // limpia texto si seleccionas categoría
+        _textoBusqueda.value = ""
         aplicarFiltros()
 
         Log.d("BUSQUEDA_VM", "✅ Después del filtro: ${_establecimientos.value.size} establecimientos")
     }
 
+    /**
+     * Actualiza el texto de búsqueda y aplica filtros.
+     *
+     * Si se ingresa texto, la categoría seleccionada se limpia automáticamente.
+     *
+     * @param texto Texto ingresado por el usuario.
+     */
     fun actualizarTextoBusqueda(texto: String) {
         _textoBusqueda.value = texto
 
-        // Si escribes texto, elimina la categoría
         if (texto.isNotEmpty()) {
             _categoriaSeleccionada.value = null
         }
@@ -110,6 +158,10 @@ class BusquedaViewModel : ViewModel() {
         aplicarFiltros()
     }
 
+    /**
+     * Aplica los filtros de categoría y texto a la lista completa de establecimientos
+     * y actualiza la lista filtrada observable [_establecimientos].
+     */
     private fun aplicarFiltros() {
         val categoria = _categoriaSeleccionada.value
         val texto = _textoBusqueda.value
@@ -132,10 +184,15 @@ class BusquedaViewModel : ViewModel() {
 
         Log.d("BUSQUEDA_VM", "📊 Resultado filtro: ${filtrados.size} establecimientos")
 
-        // Forzar actualización
         _establecimientos.value = filtrados
     }
 
+    /**
+     * Recarga los establecimientos desde el servicio remoto específicamente
+     * para actualizar favoritos.
+     *
+     * @param context Contexto necesario para la carga de datos remotos.
+     */
     fun recargarFavoritos(context: Context) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -151,6 +208,13 @@ class BusquedaViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Actualiza el estado de favorito de un establecimiento localmente,
+     * tanto en la lista filtrada como en la lista completa.
+     *
+     * @param idEstablecimiento ID del establecimiento a actualizar.
+     * @param esFavorito Nuevo estado de favorito (true/false).
+     */
     fun actualizarFavoritoLocal(idEstablecimiento: Int, esFavorito: Boolean) {
         Log.d("BUSQUEDA_VM", "🔄 Actualizando favorito local: $idEstablecimiento -> $esFavorito")
 

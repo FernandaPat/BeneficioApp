@@ -15,20 +15,33 @@ import mx.mfpp.beneficioapp.model.QRTokenResponse
 import mx.mfpp.beneficioapp.model.ServicioRemotoQR
 import java.util.EnumMap
 
+/**
+ * ViewModel encargado de generar códigos QR para promociones.
+ */
 class QRViewModel : ViewModel() {
 
+    /** Respuesta de la API con el token del QR */
     private val _qrTokenResponse = MutableStateFlow<QRTokenResponse?>(null)
     val qrTokenResponse: StateFlow<QRTokenResponse?> = _qrTokenResponse.asStateFlow()
 
+    /** Bitmap del código QR generado */
     private val _qrBitmap = MutableStateFlow<Bitmap?>(null)
     val qrBitmap: StateFlow<Bitmap?> = _qrBitmap.asStateFlow()
 
+    /** Indica si se está generando el QR */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /** Mensaje de error en caso de fallo */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /**
+     * Genera un código QR para un joven y una promoción específicos.
+     *
+     * @param idJoven ID del joven
+     * @param idPromocion ID de la promoción
+     */
     fun generarQR(idJoven: Int, idPromocion: Int) {
         _isLoading.value = true
         _error.value = null
@@ -47,11 +60,16 @@ class QRViewModel : ViewModel() {
         }
     }
 
-
+    /**
+     * Genera un Bitmap de un código QR sin margen.
+     *
+     * @param token Texto a codificar en el QR
+     * @return Bitmap del QR generado
+     */
     private fun generateQRCodeNoMargin(token: String): Bitmap {
-        val size = 500 // tamaño final del QR (ajústalo a gusto)
+        val size = 500 // tamaño del QR
         val hints = mapOf(
-            EncodeHintType.MARGIN to 1, // un poco de aire alrededor
+            EncodeHintType.MARGIN to 1, // margen mínimo
             EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M,
             EncodeHintType.CHARACTER_SET to "UTF-8"
         )
@@ -69,6 +87,9 @@ class QRViewModel : ViewModel() {
         return bitmap
     }
 
+    /**
+     * Limpia los datos del QR y errores.
+     */
     fun clear() {
         _qrTokenResponse.value = null
         _qrBitmap.value = null

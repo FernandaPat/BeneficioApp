@@ -10,23 +10,41 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.model.Categoria
 
 /**
- * ViewModel para manejar datos de categorías
+ * ViewModel encargado de manejar los datos de categorías.
+ *
+ * Gestiona la lista de categorías, el estado de carga y errores.
  */
 class CategoriasViewModel : ViewModel() {
 
+    /**
+     * Lista de categorías disponibles.
+     */
     private val _categorias = MutableStateFlow<List<Categoria>>(emptyList())
     val categorias: StateFlow<List<Categoria>> = _categorias.asStateFlow()
 
+    /**
+     * Indica si se está cargando información de categorías.
+     */
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /**
+     * Mensaje de error al cargar categorías, si existe alguno.
+     */
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
+        // Carga inicial de categorías
         cargarCategorias()
     }
 
+    /**
+     * Carga la lista de categorías desde un origen de datos.
+     *
+     * En este caso, simula la carga con un delay y genera categorías de ejemplo.
+     * Maneja el estado de carga y los posibles errores.
+     */
     fun cargarCategorias() {
         _isLoading.value = true
         _error.value = null
@@ -44,14 +62,25 @@ class CategoriasViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Refresca la lista de categorías recargando los datos.
+     */
     fun refrescarCategorias() {
         cargarCategorias()
     }
 
+    /**
+     * Limpia cualquier mensaje de error existente.
+     */
     fun clearError() {
         _error.value = null
     }
 
+    /**
+     * Genera una lista simulada de categorías para pruebas o UI mock.
+     *
+     * @return Lista de objetos [Categoria] con datos de ejemplo.
+     */
     private fun generarCategoriasMock(): List<Categoria> {
         return listOf(
             Categoria(1, "Belleza", R.drawable.belleza, "#FF6B9C"),
