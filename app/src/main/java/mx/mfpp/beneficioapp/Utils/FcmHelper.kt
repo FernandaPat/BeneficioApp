@@ -9,14 +9,29 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.network.NotificacionesRetrofit
 import mx.mfpp.beneficioapp.network.RegistrarTokenRequest
 
+/**
+ * Objeto (Singleton) de utilidad para gestionar operaciones comunes
+ * de Firebase Cloud Messaging (FCM).
+ *
+ * Proporciona métodos para registrar el token del dispositivo en el backend
+ * y para recuperar el token almacenado localmente.
+ */
 object FcmHelper {
+    /** Etiqueta para los logs de este helper. */
     private const val TAG = "FcmHelper"
 
     /**
-     * Registra el token FCM del dispositivo en el servidor.
-     * Se debe llamar después de un login exitoso.
+     * Registra el token FCM actual del dispositivo en el servidor backend.
      *
-     * @param userId ID del usuario que acaba de hacer login
+     * Obtiene el token más reciente de [FirebaseMessaging] y, si tiene éxito,
+     * lanza una corutina en [Dispatchers.IO] para enviarlo a la API
+     * definida en [NotificacionesRetrofit].
+     *
+     * Esta función maneja internamente las excepciones de red y registra
+     * los errores en Logcat.
+     *
+     * @param userId El ID del usuario (ej. `id_usuario`) que acaba de iniciar sesión,
+     * necesario para asociar el token en el backend.
      */
     fun registrarTokenEnServidor(userId: Int) {
 
@@ -27,10 +42,9 @@ object FcmHelper {
 
             val token = task.result
 
-            // Enviar al servidor usando coroutine
+            // Enviar al servidor usando coroutine en el dispatcher de IO
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-
                     val response = NotificacionesRetrofit.api.registrarToken(
                         RegistrarTokenRequest(
                             id_usuario = userId,
@@ -38,6 +52,8 @@ object FcmHelper {
                             plataforma = "android"
                         )
                     )
+                    // (Opcional) Se podría loguear la respuesta exitosa
+                    // Log.d(TAG, "✅ Token registrado: ${response.body()?.message}")
                 } catch (e: Exception) {
                     Log.e(TAG, "❌ EXCEPCIÓN AL REGISTRAR TOKEN")
                     Log.e(TAG, "❌ Tipo: ${e.javaClass.simpleName}")
@@ -49,8 +65,14 @@ object FcmHelper {
     }
 
     /**
-     * Obtiene el token FCM guardado localmente.
-     * Útil para debugging o verificación.
+     * Obtiene el token FCM guardado localmente desde [SharedPreferences].
+     *
+     * Nota: Este token podría estar desactualizado si [FirebaseMessagingService.onNewToken]
+     * no se ha disparado recientemente o si la app fue reinstalada.
+     * Es principalmente útil para fines de depuración.
+     *
+     * @param context El [Context] de la aplicación para acceder a [SharedPreferences].
+     * @return El token FCM [String] almacenado, o `null` si no se encuentra.
      */
     fun obtenerTokenLocal(context: Context): String? {
         return context.getSharedPreferences("fcm", Context.MODE_PRIVATE)

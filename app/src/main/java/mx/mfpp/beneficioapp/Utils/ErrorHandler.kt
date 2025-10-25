@@ -4,14 +4,31 @@ import retrofit2.HttpException
 import java.io.IOException
 import com.auth0.android.authentication.AuthenticationException
 
+/**
+ * Objeto (Singleton) que centraliza el manejo de excepciones
+ * y las traduce a mensajes legibles para el usuario (en español).
+ *
+ * Especializado en manejar errores comunes de red ([IOException]),
+ * errores HTTP de Retrofit ([HttpException]), y errores de
+ * autenticación de Auth0 ([AuthenticationException]).
+ */
 object ErrorHandler {
 
+    /**
+     * Procesa una [Exception] genérica y devuelve un mensaje [String]
+     * amigable para el usuario.
+     *
+     * @param e La excepción capturada (ej. [IOException], [HttpException],
+     * [AuthenticationException], u otra).
+     * @return Un [String] que describe el error de forma sencilla.
+     */
     fun obtenerMensajeError(e: Exception): String {
         return when (e) {
+            /** Error de red, como falta de conectividad. */
             is IOException -> {
-                // Sin conexión a internet o error de red
                 "Sin conexión a Internet. Por favor verifica tu red e inténtalo nuevamente."
             }
+            /** Error HTTP (respuesta 4xx o 5xx) de Retrofit. */
             is HttpException -> {
                 when (e.code()) {
                     400 -> "Solicitud incorrecta. Verifica los datos ingresados."
@@ -21,8 +38,8 @@ object ErrorHandler {
                     else -> "Error desconocido del servidor (${e.code()})."
                 }
             }
+            /** Error específico de la librería Auth0. */
             is AuthenticationException -> {
-                // Si también usas Auth0 aquí
                 val desc = e.getDescription() ?: ""
                 val code = e.getCode() ?: ""
                 when {
@@ -36,6 +53,7 @@ object ErrorHandler {
                     else -> "Ocurrió un problema al iniciar sesión. Inténtalo más tarde."
                 }
             }
+            /** Cualquier otra excepción no manejada específicamente. */
             else -> {
                 "Ocurrió un error inesperado. Intenta nuevamente."
             }
