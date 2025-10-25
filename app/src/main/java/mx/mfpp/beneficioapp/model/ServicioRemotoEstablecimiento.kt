@@ -11,11 +11,37 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
+/**
+ * Objeto (Singleton) que gestiona la comunicación con un servicio remoto
+ * (posiblemente una Cloud Function) para obtener la lista de establecimientos.
+ *
+ * Utiliza [HttpURLConnection] directamente para realizar la solicitud GET.
+ */
 object ServicioRemotoEstablecimiento {
 
+    /**
+     * URL base del servicio (Cloud Function) que devuelve la
+     * lista de establecimientos.
+     */
     private const val BASE_URL =
         "https://lista-establecimiento-819994103285.us-central1.run.app/establecimientos"
 
+    /**
+     * Obtiene la lista de establecimientos desde el servicio remoto.
+     *
+     * Esta operación se ejecuta en el dispatcher [Dispatchers.IO].
+     *
+     * Intenta obtener el `idUsuario` desde [SessionManager] (si se provee un [Context])
+     * para adjuntarlo como parámetro query (`id_usuario`) en la URL.
+     * Si el contexto es nulo o falla la obtención, se usa `id_usuario=0`.
+     *
+     * Parsea la respuesta JSON y la convierte en una lista de [Establecimiento].
+     *
+     * @param context El [Context] (opcional) de la aplicación, usado para
+     * acceder a [SessionManager] y obtener el ID de usuario.
+     * @return Una [List] de [Establecimiento]. Retorna una lista vacía si
+     * la solicitud falla (error HTTP, excepción de red, o error de parseo).
+     */
     suspend fun obtenerEstablecimientos(context: Context? = null): List<Establecimiento> =
         withContext(Dispatchers.IO) {
             val idUsuario = try {
@@ -48,7 +74,7 @@ object ServicioRemotoEstablecimiento {
                     val lista = (0 until dataArray.length()).map { i ->
                         val item = dataArray.getJSONObject(i)
 
-                        // 🧩 Extraer nombre de categoría (maneja diferentes estructuras del backend)
+                        // Extraer nombre de categoría (maneja diferentes estructuras del backend)
                         val categoriaObj = item.optJSONObject("categoria")
                         val nombreCategoria = when {
                             categoriaObj != null -> categoriaObj.optString("nombre", "")
@@ -70,7 +96,6 @@ object ServicioRemotoEstablecimiento {
                             es_favorito = item.optBoolean("es_favorito", false)
                         )
 
-                        // 🔍 Log de depuración por cada establecimiento
                         Log.d(
                             "SERVICIO_EST",
                             "🏪 ${est.nombre} | 🏷️ ${est.nombre_categoria} | 📍 ${est.colonia} | ❤️ ${est.es_favorito}"
