@@ -37,7 +37,19 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-
+/**
+ * Pantalla de edición de una promoción existente.
+ *
+ * Permite al usuario modificar los detalles de una promoción como el título,
+ * descripción, descuento, imagen y rango de fechas. Los datos se cargan al iniciar
+ * la pantalla según el `idPromocion` recibido, y pueden ser actualizados en el servidor.
+ *
+ * @param navController Controlador de navegación para regresar a la pantalla anterior.
+ * @param idPromocion Identificador único de la promoción a editar.
+ * @param viewModel ViewModel que gestiona el estado y la lógica de edición de la promoción.
+ *
+ * @see EditarPromocionViewModel Maneja las operaciones de carga y actualización de datos.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun Editar_Promociones(
@@ -181,6 +193,17 @@ fun Editar_Promociones(
         }
     }
 }
+/**
+ * Selector de fecha de inicio ("Disponible desde") para promociones.
+ *
+ * Muestra un campo de texto de solo lectura que abre un `DatePickerDialog` al hacer clic.
+ * La fecha seleccionada se devuelve en formato `dd/MM/yyyy` mediante el callback `onChange`.
+ *
+ * @param value Fecha actual mostrada en el campo.
+ * @param onChange Callback que recibe la nueva fecha seleccionada.
+ * @param label Etiqueta mostrada arriba del campo (por defecto: "Disponible desde").
+ * @param modifier Modificador opcional para personalizar el diseño del componente.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -233,6 +256,18 @@ fun FechaDesdePickerE(
         }
     }
 }
+/**
+ * Selector de fecha de finalización ("Hasta") para promociones.
+ *
+ * Permite al usuario seleccionar una fecha que no sea anterior a la fecha "Desde".
+ * Calcula además cuántos días faltan para la fecha seleccionada y devuelve ese valor opcional.
+ *
+ * @param value Fecha actual mostrada en el campo.
+ * @param onChange Callback que devuelve la nueva fecha seleccionada y los días restantes.
+ * @param label Etiqueta del campo (por defecto: "Hasta").
+ * @param minDesde Fecha mínima permitida (usualmente la fecha "Desde").
+ * @param modifier Modificador opcional para personalizar el diseño.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -309,7 +344,17 @@ fun FechaHastaPickerE(
         }
     }
 }
-
+/**
+ * Componente que agrupa dos selectores de fecha: “Disponible desde” y “Hasta”.
+ *
+ * Valida que la fecha final no sea anterior a la inicial, mostrando un mensaje de error
+ * en caso contrario. Ideal para establecer rangos de validez en promociones.
+ *
+ * @param desde Fecha inicial en formato `dd/MM/yyyy`.
+ * @param hasta Fecha final en formato `dd/MM/yyyy`.
+ * @param onDesdeChange Callback que recibe la nueva fecha de inicio.
+ * @param onHastaChange Callback que recibe la nueva fecha final y los días de diferencia.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RangoFechasPickerE(

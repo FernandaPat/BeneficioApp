@@ -14,7 +14,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
-
+/**
+ * Pantalla que muestra los datos registrados de un negocio.
+ *
+ * La pantalla permite al usuario visualizar información básica del negocio,
+ * incluyendo nombre, correo, teléfono y dirección. Maneja estados de carga,
+ * error y muestra la información en tarjetas estilizadas.
+ *
+ * Funcionalidades:
+ * - Carga los datos del negocio usando [VerDatosNegocioViewModel].
+ * - Muestra un indicador de carga mientras se obtienen los datos.
+ * - Muestra un mensaje de error si falla la carga.
+ * - Presenta la información del negocio en una Card con estilo consistente.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param vm ViewModel que maneja la lógica de obtención de los datos del negocio.
+ */
 @Composable
 fun VerDatosNegocioPage(navController: NavController, vm: VerDatosNegocioViewModel = viewModel()) {
     val context = LocalContext.current
@@ -72,7 +87,14 @@ fun VerDatosNegocioPage(navController: NavController, vm: VerDatosNegocioViewMod
         }
     }
 }
-
+/**
+ * Componente reutilizable para mostrar un campo de información del negocio.
+ *
+ * Cada item muestra un label en morado y el valor correspondiente debajo.
+ *
+ * @param label Nombre del campo a mostrar (ej. "Correo electrónico").
+ * @param value Valor asociado al campo.
+ */
 @Composable
 fun DatoNegocioItem(label: String, value: String) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {

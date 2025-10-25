@@ -26,7 +26,24 @@ import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.RecuperarContrasenaViewModel
 import mx.mfpp.beneficioapp.viewmodel.RecuperarState
-
+/**
+ * Pantalla de escaneo de códigos QR para un establecimiento.
+ *
+ * Esta pantalla permite al usuario escanear códigos QR en tiempo real y validar
+ * el código con el backend antes de navegar a los detalles de la promoción.
+ *
+ * Funcionalidades principales:
+ * - Solicita el permiso de cámara si no ha sido otorgado.
+ * - Muestra un PreviewView de la cámara con un marco visual para el QR.
+ * - Detecta códigos QR usando ML Kit Barcode Scanning.
+ * - Valida el QR de manera remota mediante [ScannerViewModel].
+ * - Muestra indicadores de carga y mensajes de error al usuario.
+ * - Navega automáticamente a la pantalla de detalles si el QR es válido.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param idEstablecimiento ID del establecimiento donde se escanea el QR.
+ * @param viewModel ViewModel encargado de la lógica de validación y manejo del QR.
+ */
 @Composable
 fun RecuperarContrasena(
     navController: NavController,

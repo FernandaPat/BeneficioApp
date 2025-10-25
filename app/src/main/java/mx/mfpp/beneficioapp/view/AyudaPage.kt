@@ -21,6 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
+/**
+ * Pantalla de Ayuda que muestra una lista de preguntas frecuentes (FAQ).
+ *
+ * @param navController Controlador de navegación que permite volver a la pantalla anterior.
+ *
+ * Esta pantalla utiliza un [Scaffold] con una barra superior y una lista de
+ * preguntas frecuentes que pueden expandirse para mostrar sus respuestas.
+ * Cada pregunta se representa con el componente [PreguntaFrecuente].
+ */
 @Composable
 fun AyudaPage(navController: NavController) {
     Scaffold(
@@ -77,6 +86,15 @@ fun AyudaPage(navController: NavController) {
     }
 }
 
+/**
+ * Componente reutilizable que muestra una pregunta frecuente con su respuesta.
+ *
+ * @param pregunta Texto de la pregunta que se mostrará en la tarjeta.
+ * @param respuesta Texto de la respuesta que se expandirá al hacer clic.
+ *
+ * Este componente usa una [Card] con animación expandible mediante [AnimatedVisibility].
+ * Al presionar la tarjeta, la respuesta se muestra o se oculta con una transición vertical.
+ */
 @Composable
 fun PreguntaFrecuente(pregunta: String, respuesta: String) {
     var expandido by remember { mutableStateOf(false) }

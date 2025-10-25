@@ -31,38 +31,42 @@ import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.VerDatosNegocioViewModel
 
+/**
+ * Pantalla principal para negocios.
+ *
+ * Muestra información del negocio, permite escanear códigos QR, agregar nuevas promociones
+ * y visualizar las promociones recientes.
+ *
+ * Funcionalidades:
+ * - Mostrar la foto y nombre del negocio.
+ * - Navegar a perfil y notificaciones.
+ * - Botón para escanear QR.
+ * - Botón para agregar nuevas promociones.
+ * - Listado de promociones recientes con opción de editar.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ */
 @Composable
 fun InicioNegocioPage(navController: NavController) {
-    // 🎨 Paleta de colores
     val moradoBoton = Color(0xFFE2C8FF)
     val moradoTexto = Color(0xFF9605F7)
-
-    // 🧠 ViewModels y SessionManager
     val scannerViewModel: ScannerViewModel = viewModel()
     val promocionesViewModel: PromocionesViewModel = viewModel()
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
-
-    // 🧩 Estado de promociones
     val promociones by promocionesViewModel.promociones.collectAsState()
-
-    // 🧩 ViewModel para datos del negocio (foto, nombre, etc.)
     val vmDatosNegocio: VerDatosNegocioViewModel = viewModel()
     val negocio = vmDatosNegocio.negocio.collectAsState()
 
-    // 🔄 Cargar datos del negocio (incluye la foto)
     LaunchedEffect(Unit) {
         vmDatosNegocio.cargarDatos(context)
         val idNegocio = sessionManager.getNegocioId() ?: 0
         promocionesViewModel.cargarPromociones(idNegocio)
     }
 
-    // 🧾 Nombre del negocio dinámico
     val nombreNegocio = negocio.value?.nombre ?: sessionManager.getNombreNegocio() ?: "Negocio"
 
-    Scaffold(
-        containerColor = Color.White
-    ) { innerPadding ->
+    Scaffold(containerColor = Color.White) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
@@ -70,7 +74,6 @@ fun InicioNegocioPage(navController: NavController) {
                 .background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔹 ENCABEZADO
             item {
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(
@@ -81,7 +84,6 @@ fun InicioNegocioPage(navController: NavController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // 🟣 FOTO DE PERFIL DEL NEGOCIO
                         IconButton(
                             onClick = { navController.navigate(Pantalla.RUTA_PERFIL_NEGOCIO) },
                             modifier = Modifier.size(60.dp)
@@ -104,7 +106,6 @@ fun InicioNegocioPage(navController: NavController) {
                                 )
                             }
                         }
-
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = nombreNegocio,
@@ -114,7 +115,6 @@ fun InicioNegocioPage(navController: NavController) {
                             )
                         )
                     }
-
                     IconButton(onClick = {
                         navController.navigate(Pantalla.RUTA_NOTIFICACIONES_NEGOCIO)
                     }) {
@@ -125,16 +125,11 @@ fun InicioNegocioPage(navController: NavController) {
                         )
                     }
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
-
-                // 🔹 BOTÓN ESCANEAR QR
                 Button(
                     onClick = {
                         scannerViewModel.resetScannerState()
-                        navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO) {
-                            launchSingleTop = true
-                        }
+                        navController.navigate(Pantalla.RUTA_SCANER_NEGOCIO) { launchSingleTop = true }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -155,10 +150,7 @@ fun InicioNegocioPage(navController: NavController) {
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-
                 Spacer(modifier = Modifier.height(15.dp))
-
-                // 🔹 BOTÓN AGREGAR PROMOCIÓN
                 Button(
                     onClick = { navController.navigate(Pantalla.RUTA_AGREGAR_PROMOCIONES) },
                     modifier = Modifier
@@ -180,10 +172,7 @@ fun InicioNegocioPage(navController: NavController) {
                         fontWeight = FontWeight.SemiBold
                     )
                 }
-
                 Spacer(modifier = Modifier.height(25.dp))
-
-                // 🔹 TÍTULO SECCIÓN
                 Text(
                     text = "Promociones recientes",
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -197,7 +186,6 @@ fun InicioNegocioPage(navController: NavController) {
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // 🔹 LISTA DE PROMOCIONES
             if (promociones.isEmpty()) {
                 item {
                     Text(
@@ -212,10 +200,7 @@ fun InicioNegocioPage(navController: NavController) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 25.dp, vertical = 10.dp)
-                            .clickable {
-                                println("🟣 Navegando a editarPromocion/${promo.id}")
-                                navController.navigate("editarPromocion/${promo.id}")
-                            }
+                            .clickable { navController.navigate("editarPromocion/${promo.id}") }
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
@@ -244,14 +229,16 @@ fun InicioNegocioPage(navController: NavController) {
                 }
             }
 
-            // 🔹 ESPACIADO FINAL PARA LA BARRA INFERIOR
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
-            }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }
-
+/**
+ * Preview de la pantalla principal de negocio.
+ *
+ * Permite visualizar cómo se verá la UI de InicioNegocioPage
+ * en el editor de Compose sin necesidad de ejecutar la app en un dispositivo.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun InicioNegocioPreview() {

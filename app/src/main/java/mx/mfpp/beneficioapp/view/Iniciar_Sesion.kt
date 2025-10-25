@@ -24,7 +24,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import mx.mfpp.beneficioapp.viewmodel.IniciarSesionViewModel
 import mx.mfpp.beneficioapp.viewmodel.LoginState
-
+/**
+ * Pantalla de inicio de sesión de la aplicación.
+ *
+ * Permite a los usuarios ingresar su correo y contraseña para acceder a su cuenta.
+ * Incluye funcionalidades para:
+ * - Ingresar correo electrónico y contraseña.
+ * - Validar el formulario y habilitar/deshabilitar el botón de inicio de sesión.
+ * - Navegar a la pantalla de recuperación de contraseña.
+ * - Navegar a la pantalla de creación de cuenta si el usuario no tiene cuenta.
+ * - Mostrar mensajes de error en un [Snackbar] cuando el inicio de sesión falla.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param modifier [Modifier] opcional para personalizar la UI.
+ * @param viewModel Instancia de [IniciarSesionViewModel] para manejar el estado y la lógica de inicio de sesión.
+ */
 @Composable
 fun Iniciar_Sesion(
     navController: NavController,
@@ -141,12 +155,21 @@ fun Iniciar_Sesion(
         }
     }
 }
-
-
+/**
+ * Botón personalizado con estilo morado.
+ *
+ * Se utiliza para acciones principales como "Iniciar Sesión".
+ * Cambia su apariencia según esté habilitado o no.
+ *
+ * @param texto Texto a mostrar en el botón.
+ * @param onClick Lambda a ejecutar al presionar el botón.
+ * @param modifier [Modifier] opcional para personalizar la UI del botón.
+ * @param habilitado Determina si el botón es interactivo o no.
+ */
 @Composable
 fun BotonMorado(
     texto: String,
-    onClick: () -> Unit, // 🔹 Ahora es el único responsable de la acción
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     habilitado: Boolean = true
 ) {
@@ -154,7 +177,7 @@ fun BotonMorado(
     val moradoSuave = Color(0xFFE9d4ff)
 
     Button(
-        onClick = onClick, // 🔹 Llama directamente a la función que le pasas
+        onClick = onClick,
         enabled = habilitado,
         colors = ButtonDefaults.buttonColors(containerColor = moradoSuave),
         shape = RoundedCornerShape(50.dp),
@@ -172,6 +195,9 @@ fun BotonMorado(
     }
 }
 
+/**
+ * Vista previa de la pantalla de inicio de sesión.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Iniciar_SesionPreview() {

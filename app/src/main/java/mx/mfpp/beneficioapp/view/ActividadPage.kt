@@ -1,6 +1,7 @@
 package mx.mfpp.beneficioapp.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,6 +27,17 @@ import mx.mfpp.beneficioapp.model.HistorialPromocionUsuario
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.HistorialViewModel
 
+/**
+ * Pantalla principal que muestra el historial de promociones canjeadas por el usuario.
+ *
+ * Esta función obtiene el ID del usuario desde el [SessionManager],
+ * carga su historial de promociones usando el [HistorialViewModel],
+ * y muestra diferentes estados de la UI según si está cargando, si hubo un error,
+ * o si el historial está vacío.
+ *
+ * @param navController Controlador de navegación utilizado para moverse entre pantallas.
+ * @param historialViewModel ViewModel que gestiona los datos del historial del usuario.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActividadPage(
@@ -35,11 +47,15 @@ fun ActividadPage(
     val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
+    // Estado del historial, carga y error desde el ViewModel
     val historial by historialViewModel.historial.collectAsState()
     val isLoading by historialViewModel.isLoading.collectAsState()
     val error by historialViewModel.error.collectAsState()
 
-    // Cargar historial cuando se inicia la pantalla
+    /**
+     * Efecto lanzado al crear la pantalla.
+     * Carga el historial del usuario autenticado, si existe.
+     */
     LaunchedEffect(Unit) {
         val idUsuario = sessionManager.getJovenId()
         if (idUsuario != null) {
@@ -49,6 +65,7 @@ fun ActividadPage(
         }
     }
 
+    // Estructura principal de la pantalla
     Scaffold(
         topBar = {
             TopAppBar(
@@ -73,6 +90,7 @@ fun ActividadPage(
                 .padding(paddingValues)
         ) {
             when {
+                // Estado de carga
                 isLoading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.align(Alignment.Center),
@@ -80,10 +98,11 @@ fun ActividadPage(
                     )
                 }
 
+                // Estado de error
                 error != null -> {
                     Text(
                         text = error ?: "Error desconocido",
-                        color = Color.Red, // Este se mantiene en rojo porque es un error real
+                        color = Color.Red,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -91,10 +110,11 @@ fun ActividadPage(
                     )
                 }
 
+                // Historial vacío
                 historial.isEmpty() -> {
                     Text(
                         text = "No hay promociones registradas para este negocio.",
-                        color = Color.Gray, // Cambiado de Color.Red a Color.Gray
+                        color = Color.Gray,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -102,12 +122,13 @@ fun ActividadPage(
                     )
                 }
 
+                // Mostrar lista de historial
                 else -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 4.dp)
                     ) {
-                        // Encabezado
+                        // Encabezado con conteo de cupones
                         item {
                             Row(
                                 modifier = Modifier
@@ -117,7 +138,7 @@ fun ActividadPage(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Cupones Canjeados (${historial.size})", // ✅ Con contador
+                                    text = "Cupones Canjeados (${historial.size})",
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 16.sp,
                                     color = Color.Gray
@@ -131,6 +152,7 @@ fun ActividadPage(
                             }
                         }
 
+                        // Elementos del historial
                         items(historial, key = { it.id }) { itemHistorial ->
                             HistorialListItem(
                                 historialItem = itemHistorial,
@@ -146,6 +168,16 @@ fun ActividadPage(
     }
 }
 
+/**
+ * Elemento individual de la lista de historial de promociones.
+ *
+ * Muestra la información principal de una promoción canjeada, incluyendo
+ * imagen, nombre, descripción, establecimiento y fecha de canje.
+ *
+ * @param historialItem Objeto que representa una promoción canjeada.
+ * @param onItemClick Acción ejecutada al hacer clic sobre el elemento.
+ * @param modifier Modificador opcional para personalizar la apariencia del contenedor.
+ */
 @Composable
 private fun HistorialListItem(
     historialItem: HistorialPromocionUsuario,
@@ -161,7 +193,8 @@ private fun HistorialListItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
-                .padding(12.dp),
+                .padding(12.dp)
+                .clickable { onItemClick() }, // Se puede agregar interacción
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Imagen de la promoción
@@ -182,7 +215,7 @@ private fun HistorialListItem(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Columna de cupones canjeados
+            // Información textual de la promoción
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.Center
@@ -206,7 +239,7 @@ private fun HistorialListItem(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = historialItem.nombre_establecimiento, // ✅ SIN EMOJI
+                    text = historialItem.nombre_establecimiento,
                     fontSize = 12.sp,
                     color = Color.Gray,
                     maxLines = 1
@@ -238,7 +271,7 @@ private fun HistorialListItem(
             }
         }
 
-        // Línea divisora plana
+        // Separador entre elementos
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
@@ -248,6 +281,15 @@ private fun HistorialListItem(
     }
 }
 
+/**
+ * Formatea una fecha en formato ISO (yyyy-MM-ddTHH:mm:ss)
+ * a un formato corto legible (dd/MM/yy).
+ *
+ * Ejemplo: "2025-10-25T12:00:00" → "25/10/25"
+ *
+ * @param fecha Cadena con la fecha en formato ISO.
+ * @return Fecha formateada o el texto original si ocurre un error.
+ */
 private fun formatearFechaCorta(fecha: String): String {
     return try {
         val partes = fecha.split("T")[0].split("-")
@@ -261,6 +303,11 @@ private fun formatearFechaCorta(fecha: String): String {
     }
 }
 
+/**
+ * Vista previa del composable [ActividadPage] para el modo diseño.
+ *
+ * Permite visualizar la pantalla en el editor sin necesidad de ejecutar la app.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ActividadRecientePreview() {

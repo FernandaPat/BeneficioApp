@@ -19,9 +19,12 @@ import androidx.navigation.NavController
 /**
  * Pantalla que muestra el estado actual de una solicitud de tarjeta física.
  *
- * Permite a los usuarios ver el estado de su solicitud y cancelarla si es necesario.
+ * Esta pantalla permite a los usuarios visualizar el estatus de su solicitud de tarjeta
+ * y brinda la opción de cancelarla en caso necesario. Incluye navegación hacia otras
+ * pantallas a través del [NavController].
  *
- * @param navController Controlador de navegación para manejar la navegación entre pantallas
+ * @param navController Controlador de navegación utilizado para gestionar el flujo
+ * entre pantallas dentro de la aplicación.
  */
 @Composable
 fun EstatusSolicitudPage(navController: NavController) {

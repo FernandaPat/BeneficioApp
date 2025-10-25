@@ -26,10 +26,16 @@ import mx.mfpp.beneficioapp.viewmodel.NotificacionesViewModel
 import mx.mfpp.beneficioapp.viewmodel.NotificacionesViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.*
-
 /**
- * Pantalla de notificaciones con Room Database
- * Muestra notificaciones persistentes localmente
+ * Pantalla que muestra la lista de notificaciones del usuario.
+ *
+ * Funcionalidades principales:
+ * - Muestra el contador de notificaciones no leídas en la barra superior.
+ * - Permite marcar todas como leídas o eliminar todas las notificaciones mediante un menú.
+ * - Muestra un estado vacío cuando no hay notificaciones.
+ * - Muestra la lista de notificaciones con opción de marcar individualmente como leídas o eliminar.
+ *
+ * @param navController Controlador de navegación para moverse a otras pantallas.
  */
 @Composable
 fun NotificacionPage(navController: NavController) {
@@ -162,7 +168,21 @@ fun NotificacionPage(navController: NavController) {
         }
     }
 }
-
+/**
+ * Composable que representa una notificación individual.
+ *
+ * Muestra:
+ * - Indicador visual si la notificación no ha sido leída.
+ * - Ícono según el tipo de notificación (promoción, favorito, general).
+ * - Título y mensaje de la notificación.
+ * - Nombre del establecimiento asociado si aplica.
+ * - Tiempo transcurrido desde que se recibió la notificación.
+ * - Menú contextual para eliminar la notificación.
+ *
+ * @param notificacion Objeto que contiene la información de la notificación.
+ * @param onClick Callback que se ejecuta al presionar la notificación (normalmente para marcarla como leída o navegar a detalles).
+ * @param onDelete Callback que se ejecuta al eliminar la notificación.
+ */
 @Composable
 fun NotificacionItem(
     notificacion: NotificacionEntity,
@@ -273,7 +293,17 @@ fun NotificacionItem(
         }
     }
 }
-
+/**
+ * Formatea un timestamp en un string legible indicando el tiempo transcurrido.
+ *
+ * Ejemplos:
+ * - "Ahora" para notificaciones recientes.
+ * - "5 min", "2 h", "3 días" según el tiempo transcurrido.
+ * - Fecha en formato "dd/MM/yyyy" para notificaciones más antiguas.
+ *
+ * @param timestamp Tiempo de la notificación en milisegundos.
+ * @return String representando el tiempo transcurrido desde el timestamp.
+ */
 fun formatearTiempo(timestamp: Long): String {
     val ahora = System.currentTimeMillis()
     val diferencia = ahora - timestamp

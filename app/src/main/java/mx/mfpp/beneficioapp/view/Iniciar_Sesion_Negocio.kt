@@ -25,11 +25,19 @@ import mx.mfpp.beneficioapp.viewmodel.IniciarSesionNegocioViewModel
 import mx.mfpp.beneficioapp.viewmodel.LoginStateNegocio
 
 /**
- * Pantalla de inicio de sesión para negocios afiliados al programa Beneficio Joven.
+ * Pantalla de inicio de sesión para usuarios de negocios.
  *
- * Permite que los establecimientos registrados accedan con su correo o número de teléfono,
- * junto con su contraseña. Incluye la opción de recuperación de contraseña y acceso directo
- * al panel de promociones del negocio tras iniciar sesión.
+ * Permite que los usuarios de un negocio ingresen su correo y contraseña para acceder a su cuenta de negocio.
+ * Incluye funcionalidades para:
+ * - Ingresar correo electrónico y contraseña.
+ * - Validar el formulario y habilitar/deshabilitar el botón de inicio de sesión.
+ * - Navegar a la pantalla principal del negocio después de un inicio de sesión exitoso.
+ * - Mostrar mensajes de error en un [Snackbar] cuando el inicio de sesión falla.
+ * - Navegar a la pantalla de recuperación de contraseña si el usuario lo necesita.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param modifier [Modifier] opcional para personalizar la UI.
+ * @param viewModel Instancia de [IniciarSesionNegocioViewModel] para manejar el estado y la lógica de inicio de sesión.
  */
 @Composable
 fun Iniciar_Sesion_Negocio(
@@ -131,9 +139,9 @@ fun Iniciar_Sesion_Negocio(
         }
     }
 }
-
-
-
+/**
+ * Vista previa de la pantalla de inicio de sesión para negocios.
+ */
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun Iniciar_Sesion_NegocioPreview() {

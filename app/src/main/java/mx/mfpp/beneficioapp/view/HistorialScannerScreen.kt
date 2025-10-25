@@ -23,9 +23,16 @@ import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 
 /**
- * Pantalla principal del scanner QR para establecimientos.
+ * Pantalla que muestra el historial y la información para el escaneo de códigos QR.
  *
- * Muestra información del establecimiento y acceso al escáner QR.
+ * Esta pantalla permite al personal del establecimiento:
+ * - Visualizar el nombre y el ID del establecimiento.
+ * - Consultar instrucciones para el escaneo de QR.
+ * - Acceder al escáner QR mediante un botón flotante.
+ * - Visualizar información de estado y funcionalidad del escáner.
+ *
+ * @param navController Controlador de navegación para manejar la navegación entre pantallas.
+ * @param viewModel Instancia de [ScannerViewModel] utilizada para la gestión del estado del escáner.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

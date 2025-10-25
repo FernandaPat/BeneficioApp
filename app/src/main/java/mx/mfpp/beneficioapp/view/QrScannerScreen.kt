@@ -34,7 +34,21 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import java.util.concurrent.Executors
-
+/**
+ * Pantalla para escanear códigos QR en un establecimiento.
+ *
+ * Funcionalidades:
+ * - Solicita permiso de cámara si no está otorgado.
+ * - Muestra un PreviewView de la cámara con un marco para QR.
+ * - Detecta códigos QR en tiempo real usando ML Kit Barcode Scanning.
+ * - Valida el QR de manera remota a través del [ScannerViewModel].
+ * - Navega a la pantalla de detalle de la promoción si el QR es válido.
+ * - Muestra estados de carga e instrucciones para el usuario.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param idEstablecimiento ID del establecimiento en el que se escanea el QR.
+ * @param viewModel ViewModel encargado de la lógica de validación y manejo del QR.
+ */
 @androidx.annotation.OptIn(ExperimentalGetImage::class)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

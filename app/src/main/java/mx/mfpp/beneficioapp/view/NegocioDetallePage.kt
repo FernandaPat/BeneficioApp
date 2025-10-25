@@ -30,7 +30,20 @@ import mx.mfpp.beneficioapp.viewmodel.FavoritosViewModel
 import mx.mfpp.beneficioapp.viewmodel.NegocioDetalleViewModel
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-
+/**
+ * Pantalla de detalle de un establecimiento específico.
+ *
+ * Funcionalidades principales:
+ * - Muestra información completa del establecimiento (nombre, categoría, colonia, imagen).
+ * - Permite agregar o quitar el establecimiento de favoritos.
+ * - Muestra promociones activas del establecimiento.
+ * - Permite navegar al mapa para ver la ubicación exacta del negocio.
+ * - Maneja estados de carga, errores y recarga de favoritos.
+ *
+ * @param id ID del establecimiento a mostrar, como String. Se convierte a Int internamente.
+ * @param navController Controlador de navegación para moverse a otras pantallas.
+ * @param busquedaViewModel ViewModel compartido para acceder a la lista de establecimientos y favoritos.
+ */
 @Composable
 fun NegocioDetallePage(
     id: String?,
@@ -201,7 +214,15 @@ fun NegocioDetallePage(
         }
     }
 }
-
+/**
+ * Cabecera visual de la pantalla de detalle del establecimiento.
+ *
+ * Muestra la imagen principal del establecimiento y el botón de favorito.
+ *
+ * @param establecimiento Objeto del establecimiento que contiene su información y foto.
+ * @param esFavorito Estado actual de favorito del establecimiento.
+ * @param onToggleFavorito Callback que se ejecuta al presionar el botón de favorito.
+ */
 @Composable
 fun NegocioDetalleHeader(
     establecimiento: Establecimiento,
@@ -234,7 +255,18 @@ fun NegocioDetalleHeader(
         }
     }
 }
-
+/**
+ * Composable que representa una promoción activa del establecimiento.
+ *
+ * Muestra:
+ * - Imagen de la promoción.
+ * - Título y descripción de la promoción.
+ * - Fecha de expiración.
+ * - Botón "Aplicar" que ejecuta la acción definida por el callback.
+ *
+ * @param promocion Objeto que contiene los datos de la promoción.
+ * @param onAplicarClick Callback que se ejecuta al presionar el botón de aplicar.
+ */
 @Composable
 fun PromocionItem(
     promocion: PromocionJoven,
@@ -302,5 +334,3 @@ fun PromocionItem(
         }
     }
 }
-
-

@@ -24,6 +24,20 @@ import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import org.json.JSONObject
 import java.net.URLDecoder
 
+/**
+ * Muestra la pantalla de detalles de una promoción escaneada mediante un código QR.
+ *
+ * Esta función decodifica los datos recibidos del QR, extrae la información de la promoción,
+ * y permite al usuario activarla. También gestiona los estados de carga, éxito y error,
+ * mostrando la interfaz correspondiente para cada uno.
+ *
+ * @param navController Controlador de navegación para gestionar el flujo entre pantallas.
+ * @param qrData Cadena codificada en formato JSON proveniente del código QR, que contiene
+ * los datos de la promoción como número de tarjeta, fecha, nombre, y IDs relacionados.
+ *
+ * @see ScannerViewModel Para la gestión de la lógica de aplicación de promociones.
+ * @see SessionManager Para obtener información del establecimiento actual.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetallePromocionScreen(
@@ -312,7 +326,15 @@ fun DetallePromocionScreen(
         }
     }
 }
-
+/**
+ * Componente auxiliar que muestra una fila de información con una etiqueta y su valor.
+ *
+ * Se utiliza dentro de las tarjetas de detalle para presentar los datos de la promoción
+ * (por ejemplo, número de tarjeta, fecha o establecimiento).
+ *
+ * @param label Texto descriptivo de la información (por ejemplo: "Número de tarjeta:").
+ * @param value Valor asociado al campo (por ejemplo: "•••• 1234").
+ */
 @Composable
 fun InfoRow(label: String, value: String) {
     Column(

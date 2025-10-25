@@ -37,7 +37,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.filled.Close
 import mx.mfpp.beneficioapp.view.Pantalla
-
+/**
+ * Pantalla de mapa que muestra establecimientos y la ubicación actual del usuario.
+ *
+ * Funcionalidades principales:
+ * - Solicita y gestiona permisos de ubicación.
+ * - Obtiene la ubicación actual del usuario usando FusedLocationProviderClient.
+ * - Muestra la ubicación de los establecimientos en Google Maps con marcadores.
+ * - Permite filtrar para mostrar un solo negocio si se proporcionan latitud y longitud.
+ * - Muestra un BottomSheet con lista de establecimientos, incluyendo distancia desde el usuario.
+ * - Maneja estados de carga, errores y recarga de datos.
+ *
+ * @param navController Controlador de navegación para mover a otras pantallas.
+ * @param lat Latitud opcional para centrar el mapa en un negocio específico.
+ * @param lng Longitud opcional para centrar el mapa en un negocio específico.
+ * @param modifier Modificador opcional de Compose.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapaPage(
@@ -413,7 +428,19 @@ fun MapaPage(
         }
     }
 }
-
+/**
+ * Composable que representa una tarjeta de establecimiento en la lista del BottomSheet.
+ *
+ * Muestra:
+ * - Imagen del establecimiento.
+ * - Nombre, categoría, colonia y distancia desde la ubicación actual.
+ * - Clickable para navegar al detalle del establecimiento.
+ *
+ * @param establecimiento Objeto que contiene los datos del establecimiento.
+ * @param ubicacionActual Ubicación actual del usuario para calcular la distancia.
+ * @param onItemClick Callback que se ejecuta al presionar la tarjeta.
+ * @param modifier Modificador opcional de Compose.
+ */
 @Composable
 fun EstablecimientoCard(
     establecimiento: Establecimiento,
@@ -471,9 +498,13 @@ fun EstablecimientoCard(
         }
     }
 }
-
-// -------------------- Utiles --------------------
-
+/**
+ * Calcula la distancia en metros entre dos coordenadas LatLng usando la fórmula de Haversine.
+ *
+ * @param p1 Primera coordenada.
+ * @param p2 Segunda coordenada.
+ * @return Distancia en metros.
+ */
 private fun calcularDistancia(p1: LatLng, p2: LatLng): Double {
     val R = 6371000.0
     val lat1 = Math.toRadians(p1.latitude)
@@ -486,11 +517,26 @@ private fun calcularDistancia(p1: LatLng, p2: LatLng): Double {
     val c = 2 * atan2(sqrt(a), sqrt(1 - a))
     return R * c
 }
-
+/**
+ * Formatea una distancia en metros a una cadena legible.
+ *
+ * - Si es menor a 1000 m, se muestra en metros.
+ * - Si es mayor o igual a 1000 m, se muestra en kilómetros con un decimal.
+ *
+ * @param metros Distancia en metros.
+ * @return Distancia formateada como texto.
+ */
 private fun formatearDistancia(metros: Double): String =
     if (metros < 1000) "${metros.toInt()} m" else "${(metros / 1000).format(1)} km"
 
 private fun Double.format(digits: Int) = "%.${digits}f".format(this)
-
+/**
+ * Aproxima la igualdad de dos valores Double dentro de un margen de error.
+ *
+ * @param a Primer valor.
+ * @param b Segundo valor.
+ * @param eps Margen de tolerancia.
+ * @return true si los valores son aproximadamente iguales, false en caso contrario.
+ */
 private fun approxEqual(a: Double, b: Double, eps: Double = 0.00001): Boolean =
     kotlin.math.abs(a - b) <= eps

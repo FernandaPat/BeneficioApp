@@ -14,7 +14,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
-
+/**
+ * Pantalla que muestra los datos personales del usuario (joven).
+ *
+ * Permite al usuario visualizar información básica de su cuenta,
+ * incluyendo nombre, correo, teléfono y dirección. Maneja estados
+ * de carga, error y presenta la información en una Card estilizada.
+ *
+ * Funcionalidades:
+ * - Carga los datos del usuario usando [VerDatosPersonalesViewModel].
+ * - Muestra un indicador de carga mientras se obtienen los datos.
+ * - Muestra un mensaje de error si falla la carga.
+ * - Presenta la información personal en una Card con estilo consistente.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param vm ViewModel que maneja la lógica de obtención de los datos personales.
+ */
 @Composable
 fun VerDatosPersonalesPage(
     navController: NavController,
@@ -76,7 +91,14 @@ fun VerDatosPersonalesPage(
         }
     }
 }
-
+/**
+ * Componente reutilizable para mostrar un campo de información personal.
+ *
+ * Cada item muestra un label en morado y el valor correspondiente debajo.
+ *
+ * @param label Nombre del campo a mostrar (ej. "Correo electrónico").
+ * @param value Valor asociado al campo.
+ */
 @Composable
 fun DatoPersonalItem(label: String, value: String) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {

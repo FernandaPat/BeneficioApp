@@ -40,7 +40,20 @@ import mx.mfpp.beneficioapp.R
 import mx.mfpp.beneficioapp.viewmodel.PerfilViewModel
 import mx.mfpp.beneficioapp.viewmodel.SubirFotoJovenViewModel
 import mx.mfpp.beneficioapp.viewmodel.VerDatosPersonalesViewModel
-
+/**
+ * Pantalla de perfil del usuario donde puede ver y editar su información personal.
+ *
+ * Funcionalidades principales:
+ * - Muestra la foto de perfil del joven, con opción de cambiarla.
+ * - Permite subir una nueva foto y actualizarla en el servidor.
+ * - Muestra el nombre del usuario y carga los datos desde la ViewModel correspondiente.
+ * - Secciones de ajustes de cuenta: cambiar contraseña, ver datos personales y cerrar sesión.
+ * - Secciones de más información: ayuda y acerca de la Dirección de Juventud.
+ * - Diálogo de confirmación al cerrar sesión.
+ * - Botón flotante para guardar la nueva foto seleccionada.
+ *
+ * @param navController Controlador de navegación para moverse a otras pantallas.
+ */
 @Composable
 fun PerfilPage(navController: NavController) {
     var mostrarDialogo by remember { mutableStateOf(false) }
@@ -327,9 +340,8 @@ data class OpcionData(
     val texto: String,
     val onClick: (() -> Unit)? = null
 )
-
 /**
- * Componente reutilizable que muestra una sección con título y lista de opciones.
+ * Composable reutilizable que muestra una sección con título y lista de opciones.
  *
  * Cada sección se presenta como una tarjeta elevada con opciones que incluyen
  * iconos, texto y flechas indicadoras. Las opciones están separadas por divisores
@@ -394,7 +406,6 @@ fun SeccionOpciones(titulo: String, opciones: List<OpcionData>) {
         }
     }
 }
-
 /**
  * Función de preview para visualizar el diseño de la pantalla de perfil de usuario en Android Studio.
  *
@@ -403,6 +414,7 @@ fun SeccionOpciones(titulo: String, opciones: List<OpcionData>) {
  *
  * @see Preview Anotación que habilita la visualización en el panel de diseño de Android Studio
  */
+
 @Preview(showBackground = true)
 @Composable
 fun PerfilPagePreview() {

@@ -39,6 +39,17 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
+/**
+ * Pantalla para agregar una nueva promoción desde la vista del negocio.
+ *
+ * Permite al usuario seleccionar una imagen, escribir título, descripción y descuento,
+ * además de elegir las fechas de vigencia mediante selectores de fecha.
+ * Al finalizar, se guarda la promoción y se muestra un Snackbar en caso de error.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param viewModel ViewModel que gestiona el estado y la lógica de agregar una promoción.
+ * @param modifier Modificador opcional para personalizar el contenedor.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AgregarPromocion(
@@ -67,7 +78,6 @@ fun AgregarPromocion(
                 .padding(paddingValues)
                 .padding(top = 8.dp)
         ) {
-            // 📸 Imagen
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -109,7 +119,6 @@ fun AgregarPromocion(
                 }
             }
 
-            // 🧾 Campos de texto
             Etiqueta("Título", true)
             BeneficioOutlinedTextField(
                 value = viewModel.nombre.value,
@@ -131,7 +140,6 @@ fun AgregarPromocion(
                 placeholder = "Ej. 10% o 2x1"
             )
 
-            // 🗓️ Fechas
             RangoFechasPicker(
                 desde = viewModel.desde.value,
                 hasta = viewModel.hasta.value,
@@ -145,7 +153,6 @@ fun AgregarPromocion(
                 }
             )
 
-            // 🟣 Botón de enviar
             Spacer(Modifier.height(40.dp))
             Column(
                 modifier = Modifier
@@ -171,13 +178,9 @@ fun AgregarPromocion(
                         viewModel.guardarPromocion(
                             context = context,
                             onSuccess = {
-                                // ✅ Navega de inmediato
                                 navController.navigate(Pantalla.RUTA_INICIO_NEGOCIO) {
                                     popUpTo(Pantalla.RUTA_AGREGAR_PROMOCIONES) { inclusive = true }
                                 }
-
-
-                                // ✅ Detiene el loading
                                 viewModel.isLoading.value = false
                             },
                             onError = { msg ->
@@ -189,7 +192,6 @@ fun AgregarPromocion(
                         )
                     }
                 )
-
             }
 
             Spacer(Modifier.height(80.dp))
@@ -197,9 +199,20 @@ fun AgregarPromocion(
     }
 }
 
+/** Formato de fecha estándar dd/MM/yyyy. */
 @RequiresApi(Build.VERSION_CODES.O)
 val fmtDDMMYYYY: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
+/**
+ * Selector de fecha "Disponible desde".
+ *
+ * Muestra un campo de texto de solo lectura que abre un selector de fecha al tocarlo.
+ *
+ * @param value Valor actual de la fecha.
+ * @param onChange Callback que devuelve la fecha seleccionada.
+ * @param label Etiqueta del campo.
+ * @param modifier Modificador opcional.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -212,7 +225,7 @@ fun FechaDesdePicker(
     var showPicker by rememberSaveable { mutableStateOf(false) }
     val pickerState = rememberDatePickerState(initialSelectedDateMillis = null)
 
-    Etiqueta(label,true,  modifier = Modifier.padding(start = 4.dp))
+    Etiqueta(label, true, modifier = Modifier.padding(start = 4.dp))
     Box {
         BeneficioOutlinedTextField(
             value = value,
@@ -253,6 +266,18 @@ fun FechaDesdePicker(
     }
 }
 
+/**
+ * Selector de fecha "Hasta".
+ *
+ * Permite elegir una fecha límite de vigencia, con validación para evitar fechas anteriores
+ * a la fecha "Desde".
+ *
+ * @param value Valor actual del campo.
+ * @param onChange Callback con la fecha seleccionada y los días restantes de vigencia.
+ * @param label Etiqueta del campo.
+ * @param minDesde Fecha mínima seleccionable.
+ * @param modifier Modificador opcional.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -284,7 +309,7 @@ fun FechaHastaPicker(
         selectableDates = selectableDates
     )
 
-    Etiqueta(label,true, modifier = Modifier.padding(start = 4.dp))
+    Etiqueta(label, true, modifier = Modifier.padding(start = 4.dp))
     Box {
         BeneficioOutlinedTextField(
             value = value,
@@ -330,6 +355,15 @@ fun FechaHastaPicker(
     }
 }
 
+/**
+ * Componente que combina los selectores de fecha "Desde" y "Hasta",
+ * asegurando que la fecha final no sea anterior a la inicial.
+ *
+ * @param desde Fecha de inicio.
+ * @param hasta Fecha de finalización.
+ * @param onDesdeChange Callback para actualizar la fecha de inicio.
+ * @param onHastaChange Callback para actualizar la fecha final y duración.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RangoFechasPicker(
@@ -344,11 +378,7 @@ fun RangoFechasPicker(
 
     var errorHastaMsg by rememberSaveable { mutableStateOf<String?>(null) }
 
-
-
-    Column(horizontalAlignment = Alignment.Start, // 👈 Esto alinea a la izquierda
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
         FechaDesdePicker(
             value = desde,
             onChange = { nuevaDesde ->
@@ -362,9 +392,7 @@ fun RangoFechasPicker(
             }
         )
     }
-    Column (horizontalAlignment = Alignment.Start, // 👈 Esto alinea a la izquierda
-        modifier = Modifier.fillMaxWidth()
-    ){
+    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
         FechaHastaPicker(
             value = hasta,
             minDesde = desde,
@@ -381,20 +409,22 @@ fun RangoFechasPicker(
         )
     }
 
-        if (!errorHastaMsg.isNullOrEmpty()) {
-            Text(
-                text = errorHastaMsg!!,
-                color = MaterialTheme.colorScheme.error,
-                fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 4.dp),
-                textAlign = TextAlign.Center
-            )
-        }
-
+    if (!errorHastaMsg.isNullOrEmpty()) {
+        Text(
+            text = errorHastaMsg!!,
+            color = MaterialTheme.colorScheme.error,
+            fontSize = MaterialTheme.typography.bodySmall.fontSize,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, top = 4.dp),
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
+/**
+ * Vista previa de la pantalla [AgregarPromocion] para el modo diseño.
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

@@ -30,7 +30,20 @@ import kotlinx.coroutines.launch
 import mx.mfpp.beneficioapp.model.Promocion
 import mx.mfpp.beneficioapp.model.SessionManager
 import mx.mfpp.beneficioapp.viewmodel.PromocionesViewModel
-
+/**
+ * Pantalla que muestra la lista de promociones de un negocio.
+ *
+ * Funcionalidades principales:
+ * - Carga las promociones desde la ViewModel asociada al negocio actual.
+ * - Permite agregar una nueva promoción mediante un FloatingActionButton.
+ * - Cada item de promoción permite editar o eliminar la promoción.
+ * - Muestra un Snackbar con el mensaje de operación completada.
+ * - Maneja el diálogo de confirmación antes de eliminar una promoción.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param viewModel ViewModel asociado a las promociones.
+ * @param modifier Modificador opcional para personalizar la apariencia del layout.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Promociones(
@@ -124,7 +137,19 @@ fun Promociones(
 
     }
 }
-
+/**
+ * Item individual de la lista de promociones.
+ *
+ * Cada item muestra:
+ * - Imagen de la promoción (placeholder si no hay imagen).
+ * - Nombre y descripción de la promoción.
+ * - Botones para editar y eliminar la promoción.
+ *
+ * @param promo Datos de la promoción a mostrar.
+ * @param onEdit Callback que se ejecuta al presionar el botón de editar.
+ * @param onDelete Callback que se ejecuta al presionar el botón de eliminar.
+ * @param modifier Modificador opcional para personalizar el layout.
+ */
 @Composable
 private fun PromoListItem(
     promo: Promocion,
@@ -185,6 +210,21 @@ private fun PromoListItem(
         }
     }
 }
+/**
+ * Diálogo de confirmación para eliminar una promoción.
+ *
+ * Funcionalidades:
+ * - Muestra el mensaje de confirmación.
+ * - Permite cancelar la operación con "No".
+ * - Permite confirmar la eliminación con "Sí".
+ * - Muestra un CircularProgressIndicator si se está eliminando.
+ *
+ * @param visible Boolean que controla la visibilidad del diálogo.
+ * @param mensaje Texto del mensaje de confirmación.
+ * @param isDeleting Boolean que indica si la operación de eliminación está en curso.
+ * @param onConfirm Callback que se ejecuta al confirmar la eliminación.
+ * @param onDismiss Callback que se ejecuta al cancelar o cerrar el diálogo.
+ */
 @Composable
 fun ConfirmacionEliminarDialog(
     visible: Boolean,

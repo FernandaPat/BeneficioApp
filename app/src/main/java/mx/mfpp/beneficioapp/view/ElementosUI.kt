@@ -95,7 +95,21 @@ fun BotonMorado(
         )
     }
 }
-
+/**
+ * Botón reutilizable con indicador de carga.
+ *
+ * Muestra un botón morado personalizado que cambia su texto y estado según si
+ * se está procesando una acción (`isLoading`). Si está en modo de carga, el botón
+ * muestra un `CircularProgressIndicator` junto al texto y se desactiva temporalmente.
+ *
+ * @param textoNormal Texto mostrado cuando el botón está en estado normal.
+ * @param textoCargando Texto mostrado mientras la acción está en proceso (por defecto: "Procesando...").
+ * @param isLoading Indica si el botón debe mostrar el estado de carga.
+ * @param habilitado Determina si el botón está activo o deshabilitado (por defecto: `true`).
+ * @param onClick Acción a ejecutar cuando se presiona el botón.
+ *
+ * @see BotonMorado Componente base que define el estilo visual del botón.
+ */
 @Composable
 fun ButtonAction(
     textoNormal: String,
@@ -125,9 +139,6 @@ fun ButtonAction(
         }
     )
 }
-
-
-
 /**
  * Botón blanco con borde morado para acciones secundarias.
  *

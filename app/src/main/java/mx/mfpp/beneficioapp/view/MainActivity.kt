@@ -53,12 +53,21 @@ import mx.mfpp.beneficioapp.viewmodel.QRViewModel
 import mx.mfpp.beneficioapp.viewmodel.ScannerViewModel
 import java.net.URLDecoder
 import kotlin.getValue
-
 /**
- * Actividad principal de la aplicación Beneficio Joven.
+ * Actividad principal de la aplicación.
  *
- * Configura la interfaz principal, maneja la navegación y controla
- * la visibilidad de las barras del sistema.
+ * Se encarga de:
+ * - Inicializar todos los ViewModels necesarios.
+ * - Determinar la pantalla de inicio según el tipo de usuario y sesión.
+ * - Configurar la interfaz full-screen y la navegación de barras del sistema.
+ * - Inicializar la composición de Jetpack Compose con el tema y el host principal.
+ *
+ * ViewModels:
+ * - categoriasViewModel: Maneja las categorías de la app.
+ * - promocionesViewModel: Maneja las promociones de jóvenes.
+ * - busquedaViewModel: Maneja búsquedas y resultados.
+ * - scannerViewModel: Maneja la lógica del escáner QR.
+ * - qrViewModel: Maneja la visualización de códigos QR.
  */
 class MainActivity : ComponentActivity() {
     private val categoriasViewModel: CategoriasViewModel by viewModels()
@@ -103,10 +112,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
 /**
- * Componente principal que orquesta toda la aplicación.
+ * Composable principal que orquesta toda la navegación de la aplicación.
+ *
+ * Se encarga de:
+ * - Crear el NavController de la aplicación.
+ * - Determinar qué rutas deben ocultar la barra inferior.
+ * - Seleccionar entre barra inferior para jóvenes o negocios.
+ * - Inicializar el Scaffold con BottomBar condicional y AppNavHost.
+ *
+ * @param startDestination Ruta inicial de la aplicación.
+ * @param categoriasViewModel ViewModel de categorías.
+ * @param promocionesViewModel ViewModel de promociones.
+ * @param busquedaViewModel ViewModel de búsqueda.
+ * @param scannerViewModel ViewModel del escáner.
+ * @param qrViewModel ViewModel de QR.
+ * @param modifier Modificador opcional de Compose.
  */
 @Composable
 fun AppPrincipal(
@@ -185,9 +206,22 @@ fun AppPrincipal(
         )
     }
 }
-
 /**
- * Host de navegación principal que define todas las rutas de la aplicación.
+ * Host de navegación principal.
+ *
+ * Define todas las rutas de la aplicación, tanto para usuarios jóvenes como para negocios,
+ * incluyendo autenticación, promociones, perfil, mapas, resultados de búsqueda y detalles.
+ *
+ * Gestiona parámetros de rutas y redirecciones condicionales según sesión.
+ *
+ * @param startDestination Ruta inicial.
+ * @param categoriasViewModel ViewModel de categorías.
+ * @param promocionesViewModel ViewModel de promociones.
+ * @param busquedaViewModel ViewModel de búsqueda.
+ * @param scannerViewModel ViewModel del escáner QR.
+ * @param qrViewModel ViewModel de visualización de QR.
+ * @param navController Controlador de navegación para cambiar pantallas.
+ * @param modifier Modificador opcional de Compose.
  */
 @Composable
 fun AppNavHost(
@@ -462,14 +496,15 @@ fun AppNavHost(
         }
     }
 }
-
 /**
  * Barra de navegación inferior para usuarios jóvenes.
  *
- * Muestra las principales secciones de la aplicación con iconos animados
- * y efectos de selección.
+ * Muestra las principales secciones de la aplicación con:
+ * - Iconos animados y efecto de escala al seleccionarse.
+ * - Gradiente en el texto del ítem seleccionado.
+ * - Gestión de estado de selección y navegación con NavController.
  *
- * @param navController Controlador de navegación para manejar los cambios de pantalla
+ * @param navController Controlador de navegación que maneja los cambios de pantalla.
  */
 @Composable
 fun AppBottomBar(navController: NavHostController) {

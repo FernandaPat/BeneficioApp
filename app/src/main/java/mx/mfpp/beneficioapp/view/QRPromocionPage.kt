@@ -18,7 +18,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import mx.mfpp.beneficioapp.viewmodel.QRViewModel
-
+/**
+ * Pantalla que genera y muestra el código QR de una promoción para un joven específico.
+ *
+ * Funcionalidades principales:
+ * - Solicita al [QRViewModel] generar el QR para el joven y la promoción dados.
+ * - Muestra información de la promoción, como nombre, tarjeta, establecimiento y descripción.
+ * - Maneja estados de carga, error o QR generado.
+ * - Permite al usuario cancelar y regresar a la pantalla anterior.
+ *
+ * @param navController Controlador de navegación para moverse entre pantallas.
+ * @param viewModel ViewModel responsable de la generación y manejo del QR.
+ * @param idJoven ID del joven que recibirá el QR.
+ * @param idPromocion ID de la promoción que se convertirá en QR.
+ */
 @Composable
 fun QRPromocionPage(
     navController: NavController,
